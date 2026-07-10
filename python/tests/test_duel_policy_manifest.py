@@ -147,6 +147,18 @@ class DuelPolicyManifestTests(unittest.TestCase):
             self.assertGreaterEqual(action, 0)
             self.assertLess(action, 11)
 
+    def test_public_example_manifest_points_to_released_checkpoints(self):
+        repo_root = Path(__file__).resolve().parents[2]
+        manifest = load_manifest(repo_root / "configs" / "duel-policies.example.json")
+
+        bc = manifest["difficulties"]["bc"]
+        champion = manifest["difficulties"]["champion"]
+
+        self.assertEqual(bc["checkpoint"], "checkpoints/bc_open_baseline/bc_policy.pt")
+        self.assertEqual(champion["checkpoint"], "checkpoints/champion_robo/ppo_final.zip")
+        self.assertTrue((repo_root / bc["checkpoint"]).is_file())
+        self.assertTrue((repo_root / champion["checkpoint"]).is_file())
+
 
 if __name__ == "__main__":
     unittest.main()

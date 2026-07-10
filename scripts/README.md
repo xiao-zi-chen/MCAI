@@ -42,6 +42,7 @@ Windows PowerShell entry points for the public local RL stack.
 - `run-bc-duel.ps1`: run a direct BC checkpoint sidecar.
 - `run-duel-policy.ps1`: run a registered duel difficulty sidecar.
 - `run-duel-daemon.ps1`: keep the local duel sidecar running.
+- `test-ai-battle-live.ps1`: start or use a nonzero local worker, load `configs\duel-policies.example.json`, and smoke-test AI-vs-AI with the released checkpoints.
 - `test-bot-spawn.ps1`, `test-duel-readiness.ps1`, `test-lan-duel-access.ps1`: local smoke/readiness helpers only.
 
 Cloud deployment, authenticated player entry, private bundles, ReplayMod client setup, map staging, skins, leaderboards, and monitoring scripts are intentionally excluded from the public core.

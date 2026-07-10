@@ -10,9 +10,9 @@
       "policy_type": "mineflayer_pvp"
     },
     {
-      "id": "ppo_local_candidate_example",
+      "id": "champion_robo_20260702",
       "policy_type": "ppo",
-      "checkpoint": "runs/released-models/ppo_local_candidate/ppo_final.zip"
+      "checkpoint": "checkpoints/champion_robo/ppo_final.zip"
     }
   ]
 }

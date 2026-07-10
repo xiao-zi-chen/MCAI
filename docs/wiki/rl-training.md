@@ -40,7 +40,7 @@ Train BC from a demonstration directory:
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\train-bc.ps1 -Data runs\worker_000\demos\smoke -Out runs\worker_000\bc\smoke -Epochs 1 -BatchSize 256 -HiddenSize 128 -Seed 123
 ```
 
-BC checkpoints use `.pt` files. Selected released checkpoints can be documented as release artifacts and referenced by example manifests, but generated local checkpoints should not be committed.
+BC checkpoints use `.pt` files. The released quick-start BC checkpoint is `checkpoints\bc_open_baseline\bc_policy.pt`; generated local checkpoints should stay under `runs\`.
 
 ## PPO
 
@@ -98,10 +98,18 @@ Duel manifest schema/tooling is public:
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\register-duel-policy.ps1 -Command register -Difficulty bc -PolicyType bc -Checkpoint runs\worker_000\bc\smoke\bc_policy.pt
 ```
 
-The `champion` role/difficulty is part of the public manifest vocabulary. Actual champion checkpoint files should be published intentionally as release artifacts, not committed as generated source state.
+The `champion` role/difficulty is part of the public manifest vocabulary. The released Champion ROBO checkpoint is `checkpoints\champion_robo\ppo_final.zip`.
 
 Public schema examples:
 
 - `configs\policy-pool.example.json`
 - `configs\duel-policies.example.json`
 - `configs\league-candidates.example.json`
+
+Quick local checks:
+
+```powershell
+.\.venv\Scripts\python.exe -m mc_pvp_env.duel_policy_manifest --manifest configs\duel-policies.example.json preflight --difficulty bc
+.\.venv\Scripts\python.exe -m mc_pvp_env.duel_policy_manifest --manifest configs\duel-policies.example.json preflight --difficulty champion
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\test-ai-battle-live.ps1 -WorkerId 1 -StartWorker -AcceptEula -LeftDifficulty champion -RightDifficulty bc
+```

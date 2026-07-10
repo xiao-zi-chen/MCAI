@@ -78,7 +78,7 @@ For larger datasets, increase `-Episodes` and `-MaxStepsPerEpisode`, and keep th
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\train-bc.ps1 -Data runs\worker_000\demos\smoke -Out runs\worker_000\bc\smoke -Epochs 1 -BatchSize 256 -HiddenSize 128 -Seed 123
 ```
 
-Longer BC runs can write to `runs\worker_000\bc\<name>`. Publish selected checkpoints as release artifacts, not as source files.
+Longer BC runs can write to `runs\worker_000\bc\<name>`. Generated local checkpoints stay under `runs\`; the intentionally released quick-start BC checkpoint is `checkpoints\bc_open_baseline\bc_policy.pt`.
 
 ## 7. Train PPO
 
@@ -137,6 +137,19 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\register-duel-poli
 ```
 
 The public schema example is `configs\duel-policies.example.json`.
+
+Use the released checkpoint manifest directly:
+
+```powershell
+.\.venv\Scripts\python.exe -m mc_pvp_env.duel_policy_manifest --manifest configs\duel-policies.example.json preflight --difficulty bc
+.\.venv\Scripts\python.exe -m mc_pvp_env.duel_policy_manifest --manifest configs\duel-policies.example.json preflight --difficulty champion
+```
+
+Run Champion ROBO against the BC baseline:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\test-ai-battle-live.ps1 -WorkerId 1 -StartWorker -AcceptEula -LeftDifficulty champion -RightDifficulty bc
+```
 
 Run a local duel sidecar after a player starts a duel in the local worker:
 

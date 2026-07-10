@@ -32,7 +32,7 @@ configs/              Safe local defaults and example manifests
 docs/                 Architecture, protocol, training, runbook, and troubleshooting notes
 ```
 
-Private deployment assets, maps, skins, signed textures, live server operations, generated worlds, model checkpoints, and downloaded third-party binaries are intentionally not included.
+Private deployment assets, maps, skins, signed textures, live server operations, generated worlds, and downloaded third-party binaries are intentionally not included. The repository does include two small released checkpoints for quick reproduction: a BC baseline and the current Champion ROBO PPO policy.
 
 ## Quick Start
 
@@ -59,6 +59,29 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-all.ps1 `
   -JavaHome "<JDK 21 path>" `
   -GradleHome "<Gradle path>"
 ```
+
+Try the released checkpoints:
+
+```powershell
+.\.venv\Scripts\python.exe -m mc_pvp_env.duel_policy_manifest `
+  --manifest configs\duel-policies.example.json preflight --difficulty bc
+
+.\.venv\Scripts\python.exe -m mc_pvp_env.duel_policy_manifest `
+  --manifest configs\duel-policies.example.json preflight --difficulty champion
+```
+
+Watch Champion ROBO fight the BC baseline on a local private worker:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\test-ai-battle-live.ps1 `
+  -WorkerId 1 `
+  -StartWorker `
+  -AcceptEula `
+  -LeftDifficulty champion `
+  -RightDifficulty bc
+```
+
+`-AcceptEula` writes `eula=true` only when explicitly passed. Use it only if you agree to Mojang's Minecraft EULA.
 
 Start a local worker and run 100 random actions:
 
@@ -125,7 +148,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start-ppo-training
   -WorkerId 0 -AcceptEula -Rebuild -TotalTimesteps 2000 -Tui
 ```
 
-Generated runs, downloaded jars/tools, datasets, and checkpoints stay gitignored by default.
+Generated runs, downloaded jars/tools, datasets, and new local checkpoints stay gitignored by default. The intentionally released checkpoints live under `checkpoints/`.
 
 ## Documentation
 
@@ -133,6 +156,7 @@ Generated runs, downloaded jars/tools, datasets, and checkpoints stay gitignored
 - [Architecture overview](docs/wiki/overview.md)
 - [Runbook](docs/wiki/runbook.md)
 - [RL training](docs/wiki/rl-training.md)
+- [Released checkpoints](docs/wiki/released-checkpoints.md)
 - [JSONL protocol](docs/wiki/protocol.md)
 - [Troubleshooting](docs/wiki/troubleshooting.md)
 

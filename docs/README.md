@@ -5,6 +5,7 @@ Use these docs for the public local RL platform:
 - [wiki/overview.md](wiki/overview.md): architecture, repository layout, version expectations, and public/private boundaries.
 - [wiki/runbook.md](wiki/runbook.md): clone-to-run setup, tests, worker startup, rollout, data collection, BC, PPO, evaluation, and local duel commands.
 - [wiki/rl-training.md](wiki/rl-training.md): observation/action contracts, rewards, demonstration datasets, BC, PPO, policy pools, and model release conventions.
+- [wiki/released-checkpoints.md](wiki/released-checkpoints.md): included BC and Champion ROBO checkpoints, preflight checks, AI-vs-AI smoke, and player duel setup.
 - [wiki/protocol.md](wiki/protocol.md): Paper plugin and Mineflayer controller JSONL protocol.
 - [wiki/troubleshooting.md](wiki/troubleshooting.md): Windows, Java, Gradle, Node, Python, Paper, EULA, and port troubleshooting.
 - [open-source/repository-split-classification.md](open-source/repository-split-classification.md): rationale for the public-core/private-cloud split.

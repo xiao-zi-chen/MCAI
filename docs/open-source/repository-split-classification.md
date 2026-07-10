@@ -45,7 +45,7 @@ These contracts are shared by training, benchmarks, local duels, and the private
 | `docs/wiki/` | `SPLIT_OR_SCRUB` | Protocol, training, runbook, troubleshooting, and overview have public value. Duel-server docs contain private-player-server operations and should split into public local-duel docs plus private cloud ops docs. |
 | `docs/agent/` | `PRIVATE_CLOUD` | Current handoff includes local pins, private worker state, live smoke results, policy paths, arena coordinates, and operator notes. Keep private; extract only stable public facts into public docs. |
 | `docs/open-source/` | `OPEN_CORE` | New planning area for the split itself. This file can be committed publicly after any references to private details are acceptable. |
-| `runs/` | `GENERATED_EXCLUDE` | Generated workers, worlds, manifests, models, demos, evals, replay snapshots, leaderboards, and runtime configs. Do not publish source. Publish only intentionally selected sample manifests/checkpoints through a separate release process if desired. |
+| `runs/` | `GENERATED_EXCLUDE` | Generated workers, worlds, manifests, models, demos, evals, replay snapshots, leaderboards, and runtime configs. Do not publish source. Intentionally released small checkpoints belong under `checkpoints/`, not under generated worker state. |
 | `downloads/` | `GENERATED_EXCLUDE` | Downloaded Paper jars, portable Node, tools, schematics, mods, and other third-party artifacts. Do not commit. |
 | `.venv/`, `node_modules/`, `dist/`, `build/`, `.gradle/`, caches | `GENERATED_EXCLUDE` | Keep ignored. |
 | `docs.zip` | `GENERATED_EXCLUDE` | Untracked archive in current workspace. Do not include in the public split unless manually audited. |
