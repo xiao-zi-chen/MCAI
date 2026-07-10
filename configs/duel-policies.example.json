@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "difficulties": {
+    "bc": {
+      "checkpoint": "runs/released-models/bc_open_baseline/bc_policy.pt",
+      "created_at": "2026-07-07T00:00:00+0000",
+      "notes": "Example released BC checkpoint path.",
+      "policy_id": "",
+      "policy_type": "bc",
+      "source": "",
+      "updated_at": "2026-07-07T00:00:00+0000"
+    },
+    "champion": {
+      "checkpoint": "runs/released-models/ppo_local_champion/ppo_final.zip",
+      "created_at": "2026-07-07T00:00:00+0000",
+      "notes": "Example released PPO champion checkpoint path.",
+      "policy_id": "ppo_local_champion_example",
+      "policy_type": "ppo",
+      "source": "configs/policy-pool.example.json",
+      "updated_at": "2026-07-07T00:00:00+0000"
+    },
+    "script_easy": {
+      "checkpoint": "",
+      "created_at": "2026-07-07T00:00:00+0000",
+      "notes": "Built-in weak scripted policy.",
+      "policy_id": "weak_scripted",
+      "policy_type": "scripted",
+      "source": "",
+      "updated_at": "2026-07-07T00:00:00+0000"
+    },
+    "script_hard": {
+      "checkpoint": "",
+      "created_at": "2026-07-07T00:00:00+0000",
+      "notes": "Built-in curriculum scripted policy.",
+      "policy_id": "curriculum_scripted",
+      "policy_type": "scripted",
+      "source": "",
+      "updated_at": "2026-07-07T00:00:00+0000"
+    }
+  }
+}

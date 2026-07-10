@@ -1,0 +1,22 @@
+name: PVPRobo
+version: ${version}
+main: com.kya.pvprobo.PvPRoboPlugin
+api-version: '1.21'
+load: POSTWORLD
+description: Local-only no-render PvP RL control plugin.
+authors:
+  - PVPRobo contributors
+
+commands:
+  pvprobo:
+    description: Manage local PVPRobo duel mode.
+    usage: /pvprobo <help|spawn|target|difficulty|duel|arena|status>
+    permission: pvprobo.command
+
+permissions:
+  pvprobo.command:
+    description: Allows player-facing PVPRobo duel commands.
+    default: true
+  pvprobo.admin:
+    description: Allows PVPRobo development, arena, paste, and admin commands.
+    default: op

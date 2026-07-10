@@ -1,0 +1,18 @@
+{
+  "paper_version": "1.21",
+  "java_version": "21",
+  "host": "127.0.0.1",
+  "plugin_port": 25580,
+  "server_port": 25565,
+  "online_mode": false,
+  "view_distance": 4,
+  "simulation_distance": 4,
+  "spawn_mobs": false,
+  "weather": false,
+  "accept_eula": false,
+  "combat_mode": "hit_count",
+  "target_hits": 5,
+  "arena_count": 1,
+  "arena_spacing": 64,
+  "spectator_usernames": []
+}

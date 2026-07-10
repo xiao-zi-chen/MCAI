@@ -1,0 +1,134 @@
+control:
+  host: "127.0.0.1"
+  port: 25580
+  request-timeout-ms: 2000
+server:
+  display-name: "PVPRobo Local"
+  domain: "localhost"
+admission:
+  max-human-players: 20
+  bot-name-prefixes:
+    - "ROBO"
+    - "SCRIPT"
+  full-message: "PVPRobo human player slots are full. Please try again later."
+localization:
+  default-language: "en_us"
+  auto-detect-client-locale: true
+  difficulty-names:
+    zh_cn:
+      bc: "新手 ROBO"
+      ppo_mid: "熟练 ROBO"
+      ppo_high: "精英 ROBO"
+      script_easy: "入门 SCRIPT"
+      script_hard: "强劲 SCRIPT"
+      champion: "冠军 ROBO"
+  overrides: {}
+arena:
+  world: "world"
+  center:
+    x: 0.0
+    y: 64.0
+    z: 0.0
+  radius: 10.0
+  count: 1
+  spacing: 64.0
+  columns: 1
+  wall-height: 5
+  player-a:
+    x: -2.0
+    y: 64.0
+    z: 0.0
+    yaw: 90.0
+    pitch: 0.0
+  player-b:
+    x: 2.0
+    y: 64.0
+    z: 0.0
+    yaw: -90.0
+    pitch: 0.0
+episode:
+  max-ticks: 2400
+  combat-mode: "hit_count"
+  target-hits: 5
+spectators:
+  usernames: []
+duel:
+  world: "world"
+  arena-id: "arena_0"
+  default-robo-name: "ROBO"
+  enabled-difficulties:
+    - "bc"
+    - "ppo_mid"
+    - "ppo_high"
+    - "champion"
+    - "script_easy"
+    - "script_hard"
+  difficulty-order:
+    - "bc"
+    - "ppo_mid"
+    - "ppo_high"
+    - "champion"
+    - "script_easy"
+    - "script_hard"
+  difficulty-names:
+    bc: "Novice ROBO"
+    ppo_mid: "Skilled ROBO"
+    ppo_high: "Elite ROBO"
+    script_easy: "Basic SCRIPT"
+    script_hard: "Tough SCRIPT"
+    champion: "Champion ROBO"
+  default-target-hits: 50
+  reset-mode: "preserve_blocks"
+  auto-arena:
+    enabled: true
+    style: "champion_hall"
+    radius-x: 22
+    radius-z: 22
+    clear-below: 2
+    clear-above: 12
+  max-clear-build-volume: 200000
+  countdown-seconds: 3
+  knockout-enabled: false
+  knockout-drop-y: 3.0
+  allow-op-building: true
+  bounds:
+    center:
+      x: 0.0
+      y: 64.0
+      z: 0.0
+    radius-x: 22.0
+    radius-y: 13.0
+    radius-z: 22.0
+  player-spawn:
+    x: -2.0
+    y: 64.0
+    z: 0.0
+    yaw: -90.0
+    pitch: 0.0
+  robo-spawn:
+    x: 2.0
+    y: 64.0
+    z: 0.0
+    yaw: 90.0
+    pitch: 0.0
+  spectator-spawn:
+    x: 0.0
+    y: 66.0
+    z: 8.0
+    yaw: 180.0
+    pitch: 20.0
+  robo-standby-spawn:
+    x: 0.0
+    y: 66.0
+    z: 8.0
+    yaw: 180.0
+    pitch: 20.0
+lobby:
+  world: "world"
+  leash-radius: 80.0
+  spawn:
+    x: 0.0
+    y: 66.0
+    z: 12.0
+    yaw: 0.0
+    pitch: 0.0

@@ -1,0 +1,18 @@
+{
+  "candidates": [
+    {
+      "id": "curriculum_scripted",
+      "policy_type": "scripted",
+      "scripted_policy": "curriculum_scripted"
+    },
+    {
+      "id": "mineflayer_pvp",
+      "policy_type": "mineflayer_pvp"
+    },
+    {
+      "id": "ppo_local_candidate_example",
+      "policy_type": "ppo",
+      "checkpoint": "runs/released-models/ppo_local_candidate/ppo_final.zip"
+    }
+  ]
+}
