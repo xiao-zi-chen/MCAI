@@ -83,6 +83,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\test-ai-battle-liv
 
 `-AcceptEula` writes `eula=true` only when explicitly passed. Use it only if you agree to Mojang's Minecraft EULA.
 
+To watch from a Minecraft client instead of only running a smoke script, use [Local AI Battle Spectating](docs/wiki/local-ai-battle.md). It shows how to start worker 1, run the duel daemon, join with Minecraft Java Edition 1.21 at `127.0.0.1:25566`, open the in-game AI Battle menu, and recover if you spawn away from the arena or see the wrong game mode.
+
 Start a local worker and run 100 random actions:
 
 ```powershell
@@ -155,6 +157,7 @@ Generated runs, downloaded jars/tools, datasets, and new local checkpoints stay 
 - [Docs index](docs/README.md)
 - [Architecture overview](docs/wiki/overview.md)
 - [Runbook](docs/wiki/runbook.md)
+- [Local AI Battle spectating](docs/wiki/local-ai-battle.md)
 - [RL training](docs/wiki/rl-training.md)
 - [Released checkpoints](docs/wiki/released-checkpoints.md)
 - [JSONL protocol](docs/wiki/protocol.md)

@@ -4,6 +4,7 @@ Use these docs for the public local RL platform:
 
 - [wiki/overview.md](wiki/overview.md): architecture, repository layout, version expectations, and public/private boundaries.
 - [wiki/runbook.md](wiki/runbook.md): clone-to-run setup, tests, worker startup, rollout, data collection, BC, PPO, evaluation, and local duel commands.
+- [wiki/local-ai-battle.md](wiki/local-ai-battle.md): step-by-step local client flow for watching two AIs fight and troubleshooting spectator setup.
 - [wiki/rl-training.md](wiki/rl-training.md): observation/action contracts, rewards, demonstration datasets, BC, PPO, policy pools, and model release conventions.
 - [wiki/released-checkpoints.md](wiki/released-checkpoints.md): included BC and Champion ROBO checkpoints, preflight checks, AI-vs-AI smoke, and player duel setup.
 - [wiki/protocol.md](wiki/protocol.md): Paper plugin and Mineflayer controller JSONL protocol.

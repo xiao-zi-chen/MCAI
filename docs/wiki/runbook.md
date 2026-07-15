@@ -158,3 +158,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run-duel-policy.ps
 ```
 
 Local duel is for private playtesting on servers you control. Authenticated cloud entry and deployment automation are private extensions and are not part of the public core.
+
+## 10. Watch A Local AI Battle
+
+For a client-facing reproduction path, start with [local-ai-battle.md](local-ai-battle.md). It covers both a checkpoint-free `script_easy` vs `script_hard` AI Battle and the expected Minecraft client behavior: join worker 1 at `127.0.0.1:25566`, use the Ender Eye or `/pvprobo menu`, enter Spectator mode near the generated arena, and return to the lobby when the fight ends.
