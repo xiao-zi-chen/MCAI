@@ -15,7 +15,7 @@
   <img alt="Python" src="https://img.shields.io/badge/Python-3.11%2B-3776ab.svg">
 </p>
 
-PVP ROBO is an open research stack for training and evaluating Minecraft PvP agents on private local servers. It connects a headless PaperMC server, a custom Paper plugin, a bot runtime controller, and a Gymnasium-compatible Python environment through persistent localhost protocols.
+PVP ROBO is an open research stack for training and evaluating Minecraft PvP agents on private local servers. It connects a headless PaperMC server, a custom Paper plugin, Mineflayer-controlled bots, and a Gymnasium-compatible Python environment through persistent localhost protocols.
 
 The project is built for efficiency and reproducibility: structured observations, flat `np.float32` vectors, integer action arrays, in-place episode reset, mock-first tests, and Windows PowerShell scripts for setup, training, evaluation, and smoke runs.
 
@@ -25,7 +25,7 @@ This repository is for private local/offline research servers only. Do not use i
 
 ```text
 server-plugin/        Paper plugin for privileged state, arena reset, and episode control
-bot-controller/       Headless bot runtime controller; Mineflayer is the default backend
+bot-controller/       Mineflayer headless bot controller
 python/               Gymnasium env, protocols, BC/PPO tooling, evaluation, and tests
 scripts/              Windows PowerShell setup, build, run, train, and eval tools
 configs/              Safe local defaults and example manifests

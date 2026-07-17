@@ -8,7 +8,6 @@ import numpy as np
 
 from mc_pvp_env.actions import NEUTRAL_ACTION, curriculum_action_to_vector
 from mc_pvp_env.policy_pool import load_pool
-from mc_pvp_env.runtime_policy import RUNTIME_PVP_POLICY_TYPES, is_runtime_pvp_policy_type, normalize_runtime_pvp_policy_type
 
 
 @dataclass(frozen=True)
@@ -105,7 +104,7 @@ class PolicyPoolSampleOpponentPolicy:
                 seed=self.seed,
                 curriculum_steps=self.curriculum_steps,
             )
-        elif is_runtime_pvp_policy_type(candidate.policy_type):
+        elif candidate.policy_type == "mineflayer_pvp":
             policy = None
         else:
             raise ValueError(f"Unsupported policy pool candidate type: {candidate.policy_type}")
@@ -126,8 +125,8 @@ def load_policy_pool_candidates(path: str | Path) -> list[PolicyPoolCandidate]:
     ]
     champion_id = pool.get("champion_id")
     for entry in pool.get("policies", []):
-        policy_type = normalize_runtime_pvp_policy_type(str(entry.get("policy_type", "ppo")))
-        if policy_type not in {"ppo", "scripted"} | RUNTIME_PVP_POLICY_TYPES:
+        policy_type = str(entry.get("policy_type", "ppo"))
+        if policy_type not in {"ppo", "scripted", "mineflayer_pvp"}:
             continue
         policy_id = str(entry.get("id", ""))
         if not policy_id:

@@ -5,10 +5,10 @@ param(
     [double]$ArenaSpacing = 64.0,
     [int]$ArenaColumns = 0,
     [int]$MaxPlayers = 0,
-    [ValidateSet("none", "random", "controller_pvp", "mineflayer_pvp")]
+    [ValidateSet("none", "random", "mineflayer_pvp")]
     [string]$ScriptedOpponent = "none",
-    [string]$JavaHome = "C:\Program Files\Java\jdk-21.0.11",
-    [string]$GradleHome = "D:\gradle-8.7",
+    [string]$JavaHome = "",
+    [string]$GradleHome = "",
     [string]$NodeHome = "",
     [string]$OutDir = "",
     [double]$RequestTimeoutSeconds = 60.0,

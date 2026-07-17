@@ -12,7 +12,7 @@ Windows PowerShell entry points for the public local RL stack.
 ## Worker Lifecycle
 
 - `setup-worker.ps1`: prepare `runs\worker_NNN`, write configs, copy Paper/plugin jars, and write `eula=true` only with `-AcceptEula`.
-- `start-worker.ps1`: start Paper `--nogui`, start the bot runtime controller, and optionally run a rollout.
+- `start-worker.ps1`: start Paper `--nogui`, start Mineflayer controller, and optionally run a rollout.
 - `start-bot-controller.ps1`: start only the bot controller for an existing worker config.
 - `stop-workers.ps1`: stop generated worker processes.
 
@@ -30,7 +30,7 @@ Windows PowerShell entry points for the public local RL stack.
 - `eval-policy.ps1`: evaluate a policy through the generic evaluator.
 - `eval-ppo-policy.ps1`: evaluate a PPO `.zip` checkpoint.
 - `eval-ppo-matrix.ps1`: evaluate one PPO checkpoint against a fixed opponent matrix.
-- `eval-league.ps1`: evaluate a manifest of scripted, PPO, and controller-side runtime benchmark policies.
+- `eval-league.ps1`: evaluate a manifest of scripted, PPO, and Mineflayer benchmark policies.
 - `benchmark-scaling.ps1`: restart a worker across arena counts and write throughput summaries.
 - `plot-training-curves.ps1`: render reward and episode-length curves from SB3 monitor logs.
 

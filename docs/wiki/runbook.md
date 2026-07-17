@@ -22,7 +22,7 @@ The scripts use `.venv\Scripts\python.exe`. They intentionally reject system Pyt
 npm.cmd --prefix bot-controller install
 ```
 
-The default Mineflayer backend is pinned in `bot-controller/package-lock.json`.
+Mineflayer is pinned in `bot-controller/package-lock.json`.
 
 ## 3. Build And Test
 
@@ -42,7 +42,7 @@ If Java or Gradle is already on `PATH`, omit the matching parameter.
 
 ## 4. Start A Local Worker
 
-The first local smoke starts Paper `--nogui`, starts the bot runtime controller, and runs 100 random environment steps:
+The first local smoke starts Paper `--nogui`, starts the Mineflayer controller, and runs 100 random environment steps:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start-worker.ps1 -WorkerId 0 -JavaHome "<JDK 21 path>" -GradleHome "<Gradle path>" -NodeHome "<Node path>" -AcceptEula -Steps 100

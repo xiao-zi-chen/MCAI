@@ -11,7 +11,7 @@ param(
     [int]$NEpochs = 4,
     [string]$Device = "auto",
     [int]$PolicyHiddenSize = 128,
-    [ValidateSet("movement_only", "weak_scripted", "curriculum_scripted", "curriculum", "controller_pvp", "herobot_pvp", "mineflayer_pvp")]
+    [ValidateSet("movement_only", "weak_scripted", "curriculum_scripted", "curriculum", "mineflayer_pvp")]
     [string]$OpponentPolicy = "curriculum",
     [string]$OpponentCurriculumSteps = "5000,15000",
     [switch]$Tui

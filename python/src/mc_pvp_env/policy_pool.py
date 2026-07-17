@@ -6,8 +6,6 @@ import time
 from pathlib import Path
 from typing import Any
 
-from mc_pvp_env.runtime_policy import RUNTIME_PVP_POLICY_TYPES, normalize_runtime_pvp_policy_type
-
 
 SCHEMA_VERSION = 1
 
@@ -50,10 +48,8 @@ def register_policy(
 ) -> dict[str, Any]:
     if role not in {"frozen", "candidate", "champion"}:
         raise ValueError("role must be one of: frozen, candidate, champion")
-    policy_type = normalize_runtime_pvp_policy_type(policy_type)
-    allowed_policy_types = {"ppo", "bc", "scripted"} | RUNTIME_PVP_POLICY_TYPES
-    if policy_type not in allowed_policy_types:
-        raise ValueError("policy_type must be one of: ppo, bc, scripted, controller_pvp, herobot_pvp")
+    if policy_type not in {"ppo", "bc", "scripted", "mineflayer_pvp"}:
+        raise ValueError("policy_type must be one of: ppo, bc, scripted, mineflayer_pvp")
     checkpoint_path = Path(checkpoint) if checkpoint else Path()
     if policy_type in {"ppo", "bc"}:
         if not checkpoint:
@@ -120,7 +116,7 @@ def main() -> int:
     register = subparsers.add_parser("register", help="Register or update a checkpoint in the pool.")
     register.add_argument("--id", required=True)
     register.add_argument("--checkpoint", default="")
-    register.add_argument("--policy-type", default="ppo", choices=("ppo", "bc", "scripted", "controller_pvp", "herobot_pvp", "mineflayer_pvp"))
+    register.add_argument("--policy-type", default="ppo", choices=("ppo", "bc", "scripted", "mineflayer_pvp"))
     register.add_argument("--role", default="frozen", choices=("frozen", "candidate", "champion"))
     register.add_argument("--source-run", default="")
     register.add_argument("--metrics", default="")

@@ -4,7 +4,7 @@ param(
     [string]$Command = "register",
     [string]$Id = "",
     [string]$Checkpoint = "",
-    [ValidateSet("ppo", "bc", "scripted", "controller_pvp", "herobot_pvp", "mineflayer_pvp")]
+    [ValidateSet("ppo", "bc", "scripted", "mineflayer_pvp")]
     [string]$PolicyType = "ppo",
     [ValidateSet("frozen", "candidate", "champion")]
     [string]$Role = "frozen",

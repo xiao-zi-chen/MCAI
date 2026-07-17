@@ -58,9 +58,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\stop-workers.ps1 -
 
 `setup-worker.ps1` downloads Paper into `downloads\`. If the network is unavailable, place a compatible `paper-1.21.jar` in `downloads\` before running worker setup.
 
-## Bot Login Or Protocol Errors
+## Mineflayer Login Or Protocol Errors
 
-The default `mineflayer` backend serializes logins. Keep `spawn_login_throttle_ms` at the generated default unless you have a reason to tune it. Direct local Mineflayer workers should use `minecraft_version=auto`.
+The bot controller serializes logins by default. Keep `spawn_login_throttle_ms` at the generated default unless you have a reason to tune it. Direct local workers should use Mineflayer `version=auto`.
 
 ## Random Rollout Hangs
 

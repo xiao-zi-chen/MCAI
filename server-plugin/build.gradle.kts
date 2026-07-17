@@ -16,7 +16,6 @@ dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT")
     implementation("com.google.code.gson:gson:2.11.0")
 
-    testImplementation("io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.3")
     testImplementation("com.google.code.gson:gson:2.11.0")
 }
