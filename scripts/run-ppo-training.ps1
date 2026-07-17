@@ -14,7 +14,7 @@ param(
     [string]$ResumeCheckpoint = "",
     [int]$PolicyHiddenSize = 0,
     [string]$RunDir = "",
-    [ValidateSet("neutral", "movement_only", "weak_scripted", "curriculum_scripted", "curriculum", "controller_pvp", "herobot_pvp", "mineflayer_pvp", "policy_pool_sample")]
+    [ValidateSet("neutral", "movement_only", "weak_scripted", "curriculum_scripted", "curriculum", "mineflayer_pvp", "policy_pool_sample")]
     [string]$OpponentPolicy = "neutral",
     [string]$OpponentCurriculumSteps = "5000,15000",
     [string]$PolicyPoolManifest = "",

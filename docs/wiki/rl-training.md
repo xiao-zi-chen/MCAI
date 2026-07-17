@@ -20,9 +20,7 @@ The primary action API uses integer actions. Encoders live in:
 - `python/src/mc_pvp_env/actions.py`
 - `python/tests/test_actions.py`
 
-Supported scripted/opponent policy names include `neutral`, `movement_only`, `weak_scripted`, `curriculum_scripted`, `curriculum`, `controller_pvp`, `herobot_pvp`, legacy `mineflayer_pvp`, and `policy_pool_sample`.
-
-`controller_pvp` is the generic controller-side benchmark/adversary mode. Older manifests and scripts may still say `mineflayer_pvp`; those values are normalized to `controller_pvp` at load time. `herobot_pvp` is reserved for Fabric/HeRoBot worker runs and should be tracked as a separate backend lineage from the default Mineflayer worker.
+Supported scripted/opponent policy names include `neutral`, `movement_only`, `weak_scripted`, `curriculum_scripted`, `curriculum`, `mineflayer_pvp`, and `policy_pool_sample`.
 
 ## Demonstration Collection
 

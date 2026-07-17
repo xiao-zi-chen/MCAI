@@ -1,13 +1,12 @@
 import { decodeAction, neutralAction, randomAction } from "./action.js";
-import type { BotBackend } from "./backend.js";
 import type { BotConfig } from "./config.js";
 import type { JsonObject } from "./jsonl.js";
-import { createBotBackend } from "./backends/index.js";
+import { MineflayerAdapter } from "./mineflayerAdapter.js";
 
 export class BotController {
   constructor(
     private readonly config: BotConfig,
-    private readonly adapter: BotBackend = createBotBackend(config)
+    private readonly adapter: MineflayerAdapter = new MineflayerAdapter(config)
   ) {}
 
   async handle(message: JsonObject): Promise<JsonObject> {
@@ -104,7 +103,7 @@ export class BotController {
     for (const group of byArena.values()) {
       const scripted = group.find(bot => bot.role === "scripted" || /^SCRIPT[-_]/.test(bot.agent_id)) ?? group[1];
       if (scripted) {
-        if (this.config.scriptedOpponent === "controller_pvp") {
+        if (this.config.scriptedOpponent === "mineflayer_pvp") {
           this.adapter.applyPvpOpponent(scripted.agent_id, repeatTicks);
         } else {
           this.adapter.applyAction(scripted.agent_id, decodeAction(randomAction()), repeatTicks);

@@ -35,20 +35,16 @@ class PolicyPoolTests(unittest.TestCase):
         with self.assertRaises(FileNotFoundError):
             register_policy(temp_dir / "policy_pool.json", policy_id="missing", checkpoint=temp_dir / "missing.zip")
 
-    def test_scripted_and_controller_runtime_entries_do_not_require_checkpoint(self):
+    def test_scripted_and_mineflayer_entries_do_not_require_checkpoint(self):
         temp_dir = Path(tempfile.mkdtemp())
         manifest = temp_dir / "policy_pool.json"
         register_policy(manifest, policy_id="script_anchor", checkpoint="", policy_type="scripted")
         register_policy(manifest, policy_id="mineflayer_pvp", checkpoint="", policy_type="mineflayer_pvp")
-        register_policy(manifest, policy_id="controller_pvp", checkpoint="", policy_type="controller_pvp")
-        register_policy(manifest, policy_id="herobot_pvp", checkpoint="", policy_type="herobot_pvp")
 
         pool = load_pool(manifest)
         entries = {item["id"]: item for item in pool["policies"]}
         self.assertEqual(entries["script_anchor"]["checkpoint"], "")
-        self.assertEqual(entries["mineflayer_pvp"]["policy_type"], "controller_pvp")
-        self.assertEqual(entries["controller_pvp"]["policy_type"], "controller_pvp")
-        self.assertEqual(entries["herobot_pvp"]["policy_type"], "herobot_pvp")
+        self.assertEqual(entries["mineflayer_pvp"]["policy_type"], "mineflayer_pvp")
 
 
 if __name__ == "__main__":

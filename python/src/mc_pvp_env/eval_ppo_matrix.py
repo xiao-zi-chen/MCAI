@@ -10,10 +10,9 @@ from typing import Any
 
 from mc_pvp_env.config import EnvConfig
 from mc_pvp_env.eval_ppo import evaluate_ppo_policy, _parse_curriculum_steps
-from mc_pvp_env.runtime_policy import RUNTIME_PVP_POLICY_TYPES, normalize_runtime_pvp_policy_type
 
 
-DEFAULT_OPPONENTS = "movement_only,weak_scripted,curriculum_scripted,controller_pvp"
+DEFAULT_OPPONENTS = "movement_only,weak_scripted,curriculum_scripted,mineflayer_pvp"
 
 
 def main() -> int:
@@ -88,8 +87,8 @@ def main() -> int:
 
 
 def _parse_opponents(value: str) -> list[str]:
-    allowed = {"neutral", "movement_only", "weak_scripted", "curriculum_scripted", "curriculum"} | RUNTIME_PVP_POLICY_TYPES
-    opponents = [normalize_runtime_pvp_policy_type(item) for item in value.split(",") if item.strip()]
+    allowed = {"neutral", "movement_only", "weak_scripted", "curriculum_scripted", "curriculum", "mineflayer_pvp"}
+    opponents = [item.strip() for item in value.split(",") if item.strip()]
     if not opponents:
         raise ValueError("--opponents must contain at least one opponent policy")
     invalid = [item for item in opponents if item not in allowed]

@@ -1,9 +1,8 @@
 import mineflayer from "mineflayer";
 import type { Bot } from "mineflayer";
-import type { BotStatus, SpawnSpec } from "../backend.js";
-import type { BotConfig } from "../config.js";
-import type { DecodedAction } from "../action.js";
-import { canAttackTarget, directionTo, lookDirection, type AabbLike, type Vec3Like } from "../combatGeometry.js";
+import type { BotConfig } from "./config.js";
+import type { DecodedAction } from "./action.js";
+import { canAttackTarget, directionTo, lookDirection, type AabbLike, type Vec3Like } from "./combatGeometry.js";
 
 export type BotRuntime = {
   agentId: string;
@@ -15,13 +14,13 @@ export type BotRuntime = {
   actionTimer?: NodeJS.Timeout;
 };
 
-export class MineflayerBackend {
+export class MineflayerAdapter {
   private readonly bots = new Map<string, BotRuntime>();
   private lastSpawnAttemptMs = 0;
 
   constructor(private readonly config: BotConfig) {}
 
-  async spawn(specs: SpawnSpec[]): Promise<string[]> {
+  async spawn(specs: Array<{ agent_id?: string; username?: string; arena_id?: string; role?: string }>): Promise<string[]> {
     const created: string[] = [];
     for (const spec of specs) {
       const agentId = spec.agent_id ?? spec.username;
@@ -91,7 +90,7 @@ export class MineflayerBackend {
     }
   }
 
-  status(): BotStatus[] {
+  status(): Array<{ agent_id: string; username: string; arena_id: string; role: string; connected: boolean }> {
     return [...this.bots.values()].map(bot => ({
       agent_id: bot.agentId,
       username: bot.username,

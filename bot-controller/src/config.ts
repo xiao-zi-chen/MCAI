@@ -1,9 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import type { BotBackendKind, ScriptedOpponent } from "./backend.js";
 
 export type BotConfig = {
-  botBackend: BotBackendKind;
   host: string;
   botControllerPort: number;
   minecraftHost: string;
@@ -13,13 +11,12 @@ export type BotConfig = {
   actionRepeatTicks: number;
   watchdogTimeoutMs: number;
   spawnLoginThrottleMs: number;
-  scriptedOpponent: ScriptedOpponent;
+  scriptedOpponent: "none" | "random" | "mineflayer_pvp";
   spectatorUsernames: string[];
 };
 
 export function defaultConfig(): BotConfig {
   return {
-    botBackend: "mineflayer",
     host: "127.0.0.1",
     botControllerPort: 25581,
     minecraftHost: "127.0.0.1",
@@ -42,7 +39,6 @@ export function loadConfig(path?: string): BotConfig {
   const raw = JSON.parse(readFileSync(resolve(path), "utf8")) as Record<string, unknown>;
   return {
     ...base,
-    botBackend: botBackendValue(raw.bot_backend, base.botBackend),
     host: stringValue(raw.host, base.host),
     botControllerPort: numberValue(raw.bot_controller_port, base.botControllerPort),
     minecraftHost: stringValue(raw.minecraft_host, base.minecraftHost),
@@ -65,18 +61,8 @@ function numberValue(value: unknown, fallback: number): number {
   return typeof value === "number" ? value : fallback;
 }
 
-function botBackendValue(value: unknown, fallback: BotBackendKind): BotBackendKind {
-  if (value === "mineflayer" || value === "herobot") {
-    return value;
-  }
-  return fallback;
-}
-
-function scriptedOpponentValue(value: unknown, fallback: ScriptedOpponent): ScriptedOpponent {
-  if (value === "mineflayer_pvp") {
-    return "controller_pvp";
-  }
-  if (value === "random" || value === "controller_pvp") {
+function scriptedOpponentValue(value: unknown, fallback: BotConfig["scriptedOpponent"]): BotConfig["scriptedOpponent"] {
+  if (value === "random" || value === "mineflayer_pvp") {
     return value;
   }
   return fallback;

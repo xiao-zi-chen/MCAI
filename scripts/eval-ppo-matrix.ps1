@@ -6,14 +6,14 @@ param(
     [int]$Seed = 123,
     [int]$MaxStepsPerEpisode = 0,
     [int]$TargetHits = 50,
-    [string]$Opponents = "movement_only,weak_scripted,curriculum_scripted,controller_pvp",
+    [string]$Opponents = "movement_only,weak_scripted,curriculum_scripted,mineflayer_pvp",
     [string]$OpponentCurriculumSteps = "5000,15000",
     [string]$OutDir = "",
     [switch]$Stochastic,
     [switch]$UseSystemPython,
     [switch]$ManageWorker,
-    [string]$JavaHome = "C:\Program Files\Java\jdk-21.0.11",
-    [string]$GradleHome = "D:\gradle-8.7",
+    [string]$JavaHome = "",
+    [string]$GradleHome = "",
     [string]$NodeHome = "",
     [int]$ArenaCount = 1,
     [double]$ArenaSpacing = 64.0,
@@ -68,16 +68,14 @@ function Invoke-PythonMatrix($OpponentList, $OutputDir, $SeedOffset) {
 $opponentValues = @()
 foreach ($part in ($Opponents -split ",")) {
     $trimmed = $part.Trim()
-    if ($trimmed -eq "mineflayer_pvp") { $trimmed = "controller_pvp" }
     if ($trimmed -ne "") { $opponentValues += $trimmed }
 }
-$runtimeOpponentPolicies = @("controller_pvp", "herobot_pvp")
-$hasRuntimeOpponent = ($opponentValues | Where-Object { $runtimeOpponentPolicies -contains $_ }).Count -gt 0
-$hasPythonSide = ($opponentValues | Where-Object { $runtimeOpponentPolicies -notcontains $_ }).Count -gt 0
+$hasMineflayer = $opponentValues -contains "mineflayer_pvp"
+$hasPythonSide = ($opponentValues | Where-Object { $_ -ne "mineflayer_pvp" }).Count -gt 0
 
 if (-not $ManageWorker) {
-    if ($hasRuntimeOpponent -and $hasPythonSide) {
-        throw "Mixed controller-side and Python-side opponents require -ManageWorker so the script can restart the worker with the correct ScriptedOpponent mode."
+    if ($hasMineflayer -and $hasPythonSide) {
+        throw "Mixed mineflayer_pvp and Python-side opponents require -ManageWorker so the script can restart the worker with the correct ScriptedOpponent mode."
     }
     Invoke-PythonMatrix $Opponents $OutDir 0
     return
@@ -88,7 +86,7 @@ try {
     $index = 0
     foreach ($opponent in $opponentValues) {
         & (Join-Path $PSScriptRoot "stop-workers.ps1") -WorkerId $WorkerId
-        $scriptedOpponent = if ($runtimeOpponentPolicies -contains $opponent) { "controller_pvp" } else { "none" }
+        $scriptedOpponent = if ($opponent -eq "mineflayer_pvp") { "mineflayer_pvp" } else { "none" }
         & (Join-Path $PSScriptRoot "start-worker.ps1") -WorkerId $WorkerId -JavaHome $JavaHome -GradleHome $GradleHome -NodeHome $NodeHome -ArenaCount $ArenaCount -ArenaSpacing $ArenaSpacing -ArenaColumns $ArenaColumns -RequestTimeoutSeconds $RequestTimeoutSeconds -BotWatchdogTimeoutMs $BotWatchdogTimeoutMs -TargetHits $TargetHits -ScriptedOpponent $scriptedOpponent -Rebuild:$Rebuild -AcceptEula:$AcceptEula -SkipRollout
         $opponentOut = Join-Path $OutDir ("opponent_{0}" -f $opponent)
         Invoke-PythonMatrix $opponent $opponentOut $index
