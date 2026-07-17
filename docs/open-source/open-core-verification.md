@@ -2,6 +2,14 @@
 
 ## 2026-07-17
 
+Checks run for the native human hit-registration public update:
+
+- Red check: `D:\gradle-8.7\bin\gradle.bat test` failed before implementation because `CombatValidationPolicy` was missing.
+- Green check: `D:\gradle-8.7\bin\gradle.bat test` from `server-plugin/`, build/test successful after human attacker paths skipped plugin geometry validation.
+- Final plugin check: `D:\gradle-8.7\bin\gradle.bat cleanTest test` from `server-plugin/`, build/test successful.
+- Bot controller: `npm.cmd test` from `bot-controller/`, 13 tests passed.
+- Python package: `.\.venv\Scripts\python.exe -m unittest discover python\tests`, 57 tests passed.
+
 Checks run for the vanilla damage-tick public update:
 
 - Red check: `D:\gradle-8.7\bin\gradle.bat test` failed before implementation because `DuelDamagePolicy` was missing.

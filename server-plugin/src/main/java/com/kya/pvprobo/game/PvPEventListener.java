@@ -57,7 +57,7 @@ public final class PvPEventListener implements Listener {
                 event.setCancelled(true);
                 return;
             }
-            if (!CombatHitValidator.isValidHit(attacker, victim)) {
+            if (shouldValidateSyntheticOrBotAttack(attacker, victim) && !CombatHitValidator.isValidHit(attacker, victim)) {
                 event.setCancelled(true);
                 episodeState.addEvent("damage_rejected_invalid_hit:" + attacker.getName() + ":" + victim.getName());
                 return;
@@ -92,13 +92,24 @@ public final class PvPEventListener implements Listener {
                 episodeState.addEvent("damage_ignored:" + attacker.getName() + ":" + victim.getName());
                 return;
             }
-            plugin.getServer().getScheduler().runTask(plugin, () -> {
-                if (victim.isOnline() && !victim.isDead()) {
-                    victim.setHealth(DuelDamagePolicy.restoreHealthTarget(victim.getMaxHealth()));
-                }
-            });
+            if (DuelDamagePolicy.shouldScheduleHealthRestore(event.getFinalDamage())) {
+                plugin.getServer().getScheduler().runTask(plugin, () -> {
+                    if (victim.isOnline() && !victim.isDead()) {
+                        victim.setHealth(DuelDamagePolicy.restoreHealthTarget(victim.getMaxHealth()));
+                    }
+                });
+            }
             duelService.onEpisodeMaybeFinished(episodeState);
         }
+    }
+
+    private boolean shouldValidateSyntheticOrBotAttack(Player attacker, Player victim) {
+        return CombatValidationPolicy.shouldValidateSyntheticOrBotAttack(
+            attacker.getName(),
+            victim.getName(),
+            plugin.getConfig().getStringList("admission.bot-name-prefixes"),
+            plugin.getConfig().getString("duel.default-robo-name", "ROBO")
+        );
     }
 
     private boolean canScoreDamage(EpisodeState episodeState, Player attacker, Player victim) {

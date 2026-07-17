@@ -10,6 +10,10 @@ public final class DuelDamagePolicy {
         return Double.isFinite(finalDamage) && finalDamage > 0.0;
     }
 
+    public static boolean shouldScheduleHealthRestore(double finalDamage) {
+        return isCountableFinalDamage(finalDamage);
+    }
+
     public static double safePreDamageHealth(double currentHealth, double maxHealth, double finalDamage) {
         if (!isCountableFinalDamage(finalDamage) || maxHealth <= 0.0) {
             return currentHealth;

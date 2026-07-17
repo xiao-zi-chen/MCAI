@@ -32,4 +32,12 @@ final class DuelDamagePolicyTest {
         assertEquals(20.0, DuelDamagePolicy.restoreHealthTarget(20.0));
         assertEquals(40.0, DuelDamagePolicy.restoreHealthTarget(40.0));
     }
+
+    @Test
+    void schedulesHealthRestoreOnlyAfterPositiveFinalDamage() {
+        assertFalse(DuelDamagePolicy.shouldScheduleHealthRestore(0.0));
+        assertFalse(DuelDamagePolicy.shouldScheduleHealthRestore(-1.0));
+        assertTrue(DuelDamagePolicy.shouldScheduleHealthRestore(0.01));
+        assertTrue(DuelDamagePolicy.shouldScheduleHealthRestore(3.0));
+    }
 }

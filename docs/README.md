@@ -2,7 +2,7 @@
 
 Use these docs for the public local RL platform:
 
-Latest public update: through-wall hits are rejected by the Paper plugin and bot-side attack helpers now check target hitboxes before attacking. Hit-count PvP now scores only vanilla-effective damage events, so Minecraft damage ticks decide whether rapid follow-up hits count.
+Latest public update: human attack registration now trusts native Paper damage events, while ROBO/SCRIPT attacks keep transitional geometry validation. Hit-count PvP still scores only positive final damage events, so Minecraft damage ticks decide whether rapid follow-up hits count.
 
 - [wiki/overview.md](wiki/overview.md): architecture, repository layout, version expectations, and public/private boundaries.
 - [wiki/runbook.md](wiki/runbook.md): clone-to-run setup, tests, worker startup, rollout, data collection, BC, PPO, evaluation, and local duel commands.
