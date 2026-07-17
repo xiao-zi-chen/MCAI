@@ -1,5 +1,16 @@
 # Open-Core Verification Log
 
+## 2026-07-17
+
+Checks run for the through-wall hit validation public update:
+
+- Bot controller: `npm.cmd test` from `bot-controller/`, 13 tests passed.
+- Python package: `.\.venv\Scripts\python.exe -m unittest discover python\tests`, 57 tests passed.
+- Paper plugin: `D:\gradle-8.7\bin\gradle.bat test` from `server-plugin/`, build/test successful.
+- Public string scan: no external thanks, development-backend migration text, or damage-tick gate rollout text found in public docs/code.
+
+## 2026-07-07
+
 Date: 2026-07-07
 
 Checks run against this public repository candidate:

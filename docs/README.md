@@ -2,6 +2,8 @@
 
 Use these docs for the public local RL platform:
 
+Latest public update: through-wall hits are rejected by the Paper plugin and bot-side attack helpers now check target hitboxes before attacking. Hit-count PvP remains an immediate-hit mode without a damage-tick gate.
+
 - [wiki/overview.md](wiki/overview.md): architecture, repository layout, version expectations, and public/private boundaries.
 - [wiki/runbook.md](wiki/runbook.md): clone-to-run setup, tests, worker startup, rollout, data collection, BC, PPO, evaluation, and local duel commands.
 - [wiki/local-ai-battle.md](wiki/local-ai-battle.md): step-by-step local client flow for watching two AIs fight and troubleshooting spectator setup.

@@ -122,6 +122,8 @@ Hit-count semantics:
 
 - Only registered players count.
 - Configured spectators never count as attackers, victims, targets, or episode participants.
+- Counted hits must intersect the victim hitbox within reach and must not be blocked by a nearer solid block.
+- Counted hits clear Bukkit no-damage ticks so hit-count PvP remains an immediate-hit scoring mode.
 - First registered player to reach `target_hits` wins.
 - Timeouts remain truncations/draws according to Python env configuration.
 

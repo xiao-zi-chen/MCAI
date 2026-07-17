@@ -21,6 +21,14 @@ The project is built for efficiency and reproducibility: structured observations
 
 This repository is for private local/offline research servers only. Do not use it for public-server cheating, anticheat bypassing, stealth automation, or evasion.
 
+## Updates
+
+| Date | Highlights |
+| --- | --- |
+| 2026.07.17 | Added through-wall hit rejection and real line-of-sight snapshots. |
+| 2026.07.15 | Released local AI Battle spectating docs and Champion ROBO preflight flow. |
+| 2026.07.12 | Published the initial public local PvP RL stack with BC and Champion checkpoints. |
+
 ## What Is Inside
 
 ```text

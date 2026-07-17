@@ -2,6 +2,13 @@ import mineflayer from "mineflayer";
 import type { Bot } from "mineflayer";
 import type { BotConfig } from "./config.js";
 import type { DecodedAction } from "./action.js";
+import { canAttackTarget, directionTo, lookDirection, type AabbLike, type Vec3Like } from "./combatGeometry.js";
+
+type AttackTarget = Parameters<Bot["attack"]>[0] & {
+  position: Vec3Like;
+  height?: number;
+  width?: number;
+};
 
 export type BotRuntime = {
   agentId: string;
@@ -114,14 +121,21 @@ export class MineflayerAdapter {
     bot.setControlState("sprint", action.sprint);
     bot.setControlState("sneak", action.sneak);
     bot.quickBarSlot = action.hotbarSlot;
+    let aimedTarget: AttackTarget | undefined;
+    let aimedDirection: Vec3Like | undefined;
     if (action.lookPrimitive === "none") {
-      bot.look(bot.entity.yaw + action.yawDeltaRadians, clampPitch(bot.entity.pitch + action.pitchDeltaRadians), true);
+      const intendedYaw = bot.entity.yaw + action.yawDeltaRadians;
+      const intendedPitch = clampPitch(bot.entity.pitch + action.pitchDeltaRadians);
+      bot.look(intendedYaw, intendedPitch, true);
+      aimedDirection = lookDirection(intendedYaw, intendedPitch);
     } else {
-      this.lookAtNearestEnemy(runtime, action.lookPrimitive, targetUsername);
+      const aim = this.lookAtNearestEnemy(runtime, action.lookPrimitive, targetUsername);
+      aimedTarget = aim?.target;
+      aimedDirection = aim ? directionTo(botEye(bot), aim.point) : undefined;
     }
     if (action.attack) {
-      const target = bot.nearestEntity(entity => this.isTrainingOpponent(runtime, entity.username, targetUsername));
-      if (target) {
+      const target = aimedTarget ?? bot.nearestEntity(entity => this.isTrainingOpponent(runtime, entity.username, targetUsername));
+      if (target && this.canAttackCurrentTarget(bot, target, aimedDirection)) {
         bot.attack(target);
       }
     }
@@ -144,7 +158,8 @@ export class MineflayerAdapter {
       return;
     }
     const distance = bot.entity.position.distanceTo(target.position);
-    bot.lookAt(target.position.offset(0, 1.0, 0), true);
+    const aimPoint = target.position.offset(0, 1.0, 0);
+    bot.lookAt(aimPoint, true);
     if (distance > 2.7) {
       bot.setControlState("forward", true);
       bot.setControlState("sprint", true);
@@ -154,7 +169,7 @@ export class MineflayerAdapter {
       bot.setControlState("left", Math.floor(bot.time.age / 8) % 2 === 0);
       bot.setControlState("right", Math.floor(bot.time.age / 8) % 2 === 1);
     }
-    if (distance <= 3.2) {
+    if (distance <= 3.2 && this.canAttackCurrentTarget(bot, target, directionTo(botEye(bot), aimPoint))) {
       bot.attack(target);
     }
     const durationMs = Math.max(1, repeatTicks) * 50;
@@ -204,17 +219,19 @@ export class MineflayerAdapter {
     return disconnected;
   }
 
-  private lookAtNearestEnemy(runtime: BotRuntime, primitive: DecodedAction["lookPrimitive"], targetUsername?: string): void {
+  private lookAtNearestEnemy(runtime: BotRuntime, primitive: DecodedAction["lookPrimitive"], targetUsername?: string): { target: AttackTarget; point: Vec3Like } | undefined {
     const bot = runtime.bot;
     if (!bot) {
-      return;
+      return undefined;
     }
     const target = this.nearestTrainingOpponent(runtime, targetUsername);
     if (!target) {
-      return;
+      return undefined;
     }
     const yOffset = primitive === "enemy_head" ? 1.62 : primitive === "enemy_body" ? 1.0 : 0.2;
-    bot.lookAt(target.position.offset(0, yOffset, 0), true);
+    const point = target.position.offset(0, yOffset, 0);
+    bot.lookAt(point, true);
+    return { target, point };
   }
 
   private required(agentId: string): BotRuntime {
@@ -248,9 +265,53 @@ export class MineflayerAdapter {
     }
     return target.arenaId === runtime.arenaId;
   }
+
+  private canAttackCurrentTarget(bot: Bot, target: { position: Vec3Like; height?: number; width?: number }, directionOverride?: Vec3Like): boolean {
+    const reach = 3.5;
+    const eye = botEye(bot);
+    const direction = directionOverride ?? lookDirection(bot.entity.yaw, bot.entity.pitch);
+    const targetBox = targetAabb(target);
+    const block = raycastBlock(bot, eye, direction, reach);
+    const blockingDistance = block?.intersect ? distanceBetween(eye, block.intersect) : undefined;
+    return canAttackTarget({ eye, direction, targetBox, reach, blockingDistance });
+  }
 }
 
 function clampPitch(value: number): number {
   const limit = Math.PI / 2 - 0.001;
   return Math.max(-limit, Math.min(limit, value));
+}
+
+function targetAabb(target: { position: Vec3Like; height?: number; width?: number }): AabbLike {
+  const width = target.width ?? 0.6;
+  const height = target.height ?? 1.8;
+  const halfWidth = width / 2;
+  return {
+    minX: target.position.x - halfWidth,
+    minY: target.position.y,
+    minZ: target.position.z - halfWidth,
+    maxX: target.position.x + halfWidth,
+    maxY: target.position.y + height,
+    maxZ: target.position.z + halfWidth
+  };
+}
+
+function botEye(bot: Bot): Vec3Like {
+  return bot.entity.position.offset(0, bot.entity.height ?? 1.62, 0);
+}
+
+function raycastBlock(bot: Bot, eye: Vec3Like, direction: Vec3Like, reach: number): { intersect?: Vec3Like } | null {
+  const world = bot.world as unknown as { raycast?: (from: unknown, direction: unknown, range: number) => { intersect?: Vec3Like } | null };
+  if (typeof world.raycast !== "function") {
+    return null;
+  }
+  const from = eye as unknown as { offset?: (x: number, y: number, z: number) => { minus: (other: unknown) => unknown } };
+  const rayDirection = typeof from.offset === "function"
+    ? from.offset(direction.x, direction.y, direction.z).minus(eye)
+    : direction;
+  return world.raycast(eye, rayDirection, reach);
+}
+
+function distanceBetween(a: Vec3Like, b: Vec3Like): number {
+  return Math.hypot(b.x - a.x, b.y - a.y, b.z - a.z);
 }
