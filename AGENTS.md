@@ -9,7 +9,7 @@ Build and maintain a Windows-first, no-render Minecraft PvP reinforcement-learni
 ```text
 PaperMC --nogui server
 PVPRobo Paper plugin
-Mineflayer headless bot controller
+headless bot runtime controller, with Mineflayer as the default backend
 Python Gymnasium-compatible environment and training tools
 ```
 
@@ -42,7 +42,7 @@ Keep authenticated entry, cloud deployment, private maps, skins, signed textures
 
 ```text
 server-plugin/        Paper plugin
-bot-controller/       Node.js/TypeScript Mineflayer controller
+bot-controller/       Node.js/TypeScript bot runtime controller
 python/               Python package and tests
 scripts/              Windows PowerShell setup/build/run/train/eval tools
 configs/              Public local defaults and examples

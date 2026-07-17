@@ -6,7 +6,7 @@ param(
     [int]$Seed = 123,
     [int]$MaxStepsPerEpisode = 0,
     [int]$TargetHits = 0,
-    [ValidateSet("neutral", "movement_only", "weak_scripted", "curriculum_scripted", "curriculum", "mineflayer_pvp")]
+    [ValidateSet("neutral", "movement_only", "weak_scripted", "curriculum_scripted", "curriculum", "controller_pvp", "herobot_pvp", "mineflayer_pvp")]
     [string]$OpponentPolicy = "movement_only",
     [string]$OpponentCurriculumSteps = "5000,15000",
     [switch]$Stochastic

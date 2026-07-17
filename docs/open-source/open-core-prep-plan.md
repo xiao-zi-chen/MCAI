@@ -4,20 +4,18 @@ Date: 2026-07-07
 
 ## Goal
 
-Create a reviewable `open-core/` public repository candidate that can be copied into a standalone open-source repository without carrying private cloud-server operations, private assets, generated state, or local machine handoff data.
+Historical plan for creating the standalone open-source repository without carrying private cloud-server operations, private assets, generated state, or local machine handoff data.
 
 ## Directory Strategy
 
-Use `open-core/` as a non-destructive public snapshot inside the current private working repository.
-
-This keeps the active private tree intact while making the public release candidate easy to audit. The future public repository can be created from the contents of `open-core/` after review.
+The original staging approach used `open-core/` as a non-destructive public snapshot inside the private working repository. As of 2026-07-17, `PVPRobo-OpenSource` is the authoritative public repository and the old `PVPRobo-Server/open-core` snapshot is abandoned.
 
 ## Public Boundary
 
 Keep these in the public candidate:
 
 - Paper plugin core training/control protocol, privileged observations, arena reset, local duel protocol support, and tests.
-- Mineflayer headless bot controller and tests.
+- Headless bot runtime controller and tests, with Mineflayer as the default backend.
 - Python Gymnasium environment, protocol clients, action/observation code, BC/PPO tooling, data collection, evaluation, benchmark, local duel runner, manifest tooling, mocks, and tests.
 - Public default configs for local training, local bot control, local Paper worker setup, policy-pool examples, and duel manifest examples.
 - Windows PowerShell scripts for setup, build, worker lifecycle, rollout, data collection, BC, PPO, evaluation, benchmark, policy registration, and local duel smoke paths.
@@ -33,11 +31,11 @@ Keep these out of the public candidate:
 ## Work Packages
 
 1. Commit this plan and use it as the authoritative open-source preparation checklist.
-2. Create `open-core/` with public source directories and safe repository metadata.
+2. Create a public repository with public source directories and safe repository metadata.
 3. Scrub public plugin defaults and worker setup scripts so cloned users get local training defaults, not private cloud-server defaults.
 4. Split script indexes and docs so public users see build, setup, rollout, data collection, training, evaluation, and local duel commands only.
 5. Add public example manifests/configs with fake local paths and document where intentionally released BC/PPO checkpoints can be placed.
-6. Verify from `open-core/` using cheap checks first: file inventory scan, Python unit tests where dependencies are present, Node tests/build where dependencies are present, and Gradle build where local Java/Gradle are configured.
+6. Verify from the standalone public repository using cheap checks first: file inventory scan, Python unit tests where dependencies are present, Node tests/build where dependencies are present, and Gradle build where local Java/Gradle are configured.
 7. Commit each finished work package separately.
 
 ## Reproduction Standard

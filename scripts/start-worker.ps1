@@ -12,9 +12,11 @@ param(
     [int]$MaxHumanPlayers = 20,
     [double]$RequestTimeoutSeconds = 5.0,
     [int]$BotWatchdogTimeoutMs = 5000,
+    [ValidateSet("mineflayer", "herobot")]
+    [string]$BotBackend = "mineflayer",
     [int]$TargetHits = 50,
     [int]$Steps = 100,
-    [ValidateSet("none", "random", "mineflayer_pvp")]
+    [ValidateSet("none", "random", "controller_pvp", "mineflayer_pvp")]
     [string]$ScriptedOpponent = "none",
     [switch]$DuelMode,
     [switch]$ExposeLan,
@@ -83,7 +85,7 @@ if ((Test-PortInUse $serverPort) -or (Test-PortInUse $pluginPort) -or (Test-Port
     throw "Worker $WorkerId ports are already in use. Run scripts\stop-workers.ps1 -WorkerId $WorkerId before starting this worker."
 }
 
-& (Join-Path $PSScriptRoot "setup-worker.ps1") -WorkerId $WorkerId -JavaHome $JavaHome -GradleHome $GradleHome -NodeHome $NodeHome -SpectatorUsernames $SpectatorUsernames -OperatorUsernames $OperatorUsernames -ArenaCount $ArenaCount -ArenaSpacing $ArenaSpacing -ArenaColumns $ArenaColumns -MaxPlayers $MaxPlayers -MaxHumanPlayers $MaxHumanPlayers -RequestTimeoutSeconds $RequestTimeoutSeconds -BotWatchdogTimeoutMs $BotWatchdogTimeoutMs -TargetHits $TargetHits -ScriptedOpponent $ScriptedOpponent -DuelMode:$DuelMode -ExposeLan:$ExposeLan -Rebuild:$Rebuild -AcceptEula:$AcceptEula
+& (Join-Path $PSScriptRoot "setup-worker.ps1") -WorkerId $WorkerId -JavaHome $JavaHome -GradleHome $GradleHome -NodeHome $NodeHome -SpectatorUsernames $SpectatorUsernames -OperatorUsernames $OperatorUsernames -ArenaCount $ArenaCount -ArenaSpacing $ArenaSpacing -ArenaColumns $ArenaColumns -MaxPlayers $MaxPlayers -MaxHumanPlayers $MaxHumanPlayers -RequestTimeoutSeconds $RequestTimeoutSeconds -BotWatchdogTimeoutMs $BotWatchdogTimeoutMs -BotBackend $BotBackend -TargetHits $TargetHits -ScriptedOpponent $ScriptedOpponent -DuelMode:$DuelMode -ExposeLan:$ExposeLan -Rebuild:$Rebuild -AcceptEula:$AcceptEula
 
 if (-not (Test-Path -LiteralPath (Join-Path $workerDir "eula.txt"))) {
     throw "Minecraft EULA is not accepted. Rerun with -AcceptEula only if you agree to Mojang's EULA."

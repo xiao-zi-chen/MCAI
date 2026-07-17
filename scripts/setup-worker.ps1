@@ -13,8 +13,10 @@ param(
     [double]$RequestTimeoutSeconds = 5.0,
     [int]$BotWatchdogTimeoutMs = 5000,
     [int]$BotSpawnLoginThrottleMs = 3100,
+    [ValidateSet("mineflayer", "herobot")]
+    [string]$BotBackend = "mineflayer",
     [int]$TargetHits = 50,
-    [ValidateSet("none", "random", "mineflayer_pvp")]
+    [ValidateSet("none", "random", "controller_pvp", "mineflayer_pvp")]
     [string]$ScriptedOpponent = "none",
     [switch]$DuelMode,
     [switch]$ExposeLan,
@@ -435,6 +437,7 @@ Write-TextFile (Join-Path $workerDir "env.json") $envConfig
 
 $botConfig = @{
     host = "127.0.0.1"
+    bot_backend = $BotBackend
     bot_controller_port = $botPort
     minecraft_host = "127.0.0.1"
     minecraft_port = $minecraftBotPort
@@ -443,7 +446,7 @@ $botConfig = @{
     action_repeat_ticks = 2
     watchdog_timeout_ms = $BotWatchdogTimeoutMs
     spawn_login_throttle_ms = $BotSpawnLoginThrottleMs
-    scripted_opponent = $ScriptedOpponent
+    scripted_opponent = if ($ScriptedOpponent -eq "mineflayer_pvp") { "controller_pvp" } else { $ScriptedOpponent }
     spectator_usernames = $SpectatorUsernames
 } | ConvertTo-Json -Depth 4
 Write-TextFile (Join-Path $workerDir "bot.json") $botConfig
@@ -452,6 +455,7 @@ Write-Host "Worker prepared: $workerDir"
 Write-Host "server_port=$serverPort plugin_port=$pluginPort bot_port=$botPort"
 Write-Host "arena_count=$ArenaCount arena_spacing=$ArenaSpacing arena_columns=$resolvedArenaColumns"
 Write-Host "max_players=$resolvedMaxPlayers"
+Write-Host "bot_backend=$BotBackend"
 Write-Host "scripted_opponent=$ScriptedOpponent"
 Write-Host "duel_mode=$DuelMode"
 if ($ExposeLan) {

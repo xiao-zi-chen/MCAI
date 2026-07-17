@@ -56,10 +56,15 @@ public final class PvPEventListener implements Listener {
                 event.setCancelled(true);
                 return;
             }
+            if (!CombatHitValidator.isValidHit(attacker, victim)) {
+                event.setCancelled(true);
+                episodeState.addEvent("damage_rejected_invalid_hit:" + attacker.getName() + ":" + victim.getName());
+                return;
+            }
             boolean counted = episodeState.recordHit(attacker.getName(), victim.getName());
             if (counted) {
                 event.setDamage(0.0);
-                victim.setNoDamageTicks(0);
+                victim.setNoDamageTicks(Math.max(victim.getNoDamageTicks(), victim.getMaximumNoDamageTicks()));
                 duelService.onEpisodeMaybeFinished(episodeState);
                 return;
             }

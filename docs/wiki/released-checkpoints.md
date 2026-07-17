@@ -103,7 +103,7 @@ Join the local server at `127.0.0.1:25566`, then use the `/pvprobo menu` item fl
 /pvprobo duel start champion
 ```
 
-The daemon reads the `champion` entry from `configs\duel-policies.example.json`, loads `checkpoints/champion_robo/ppo_final.zip`, and applies actions through the headless Mineflayer controller.
+The daemon reads the `champion` entry from `configs\duel-policies.example.json`, loads `checkpoints/champion_robo/ppo_final.zip`, and applies actions through the headless bot runtime controller.
 
 ## Notes
 

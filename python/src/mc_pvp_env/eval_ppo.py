@@ -13,6 +13,7 @@ from mc_pvp_env.config import EnvConfig
 from mc_pvp_env.env import MinecraftPvpEnv
 from mc_pvp_env.expert import make_opponent_policy
 from mc_pvp_env.protocol import JsonlClient, PROTOCOL_VERSION
+from mc_pvp_env.runtime_policy import normalize_runtime_pvp_policy_type
 
 
 def evaluate_ppo_policy(
@@ -134,7 +135,7 @@ def main() -> int:
     parser.add_argument(
         "--opponent-policy",
         default="movement_only",
-        choices=("neutral", "movement_only", "weak_scripted", "curriculum_scripted", "curriculum", "mineflayer_pvp"),
+        choices=("neutral", "movement_only", "weak_scripted", "curriculum_scripted", "curriculum", "controller_pvp", "herobot_pvp", "mineflayer_pvp"),
     )
     parser.add_argument("--opponent-curriculum-steps", default="5000,15000")
     parser.add_argument("--stochastic", action="store_true", help="Sample actions instead of using deterministic argmax.")
@@ -149,7 +150,7 @@ def main() -> int:
         episodes=args.episodes,
         seed=args.seed,
         max_steps_per_episode=args.max_steps_per_episode,
-        opponent_policy=args.opponent_policy,
+        opponent_policy=normalize_runtime_pvp_policy_type(args.opponent_policy),
         opponent_curriculum_steps=_parse_curriculum_steps(args.opponent_curriculum_steps),
         deterministic=not args.stochastic,
     )

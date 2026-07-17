@@ -19,6 +19,7 @@ public final class SnapshotService {
         snapshot.put("id", "snapshot");
         snapshot.put("type", "snapshot");
         snapshot.put("arena_id", episodeState.arenaId());
+        snapshot.put("episode_id", episodeState.episodeId());
         snapshot.put("tick", episodeState.tick());
         snapshot.put("phase", episodeState.phase());
         snapshot.put("combat_mode", episodeState.combatMode());
@@ -63,13 +64,22 @@ public final class SnapshotService {
         for (String name : episodeState.registeredPlayers()) {
             Player player = Bukkit.getPlayerExact(name);
             if (player != null) {
-                players.add(playerSnapshot(player));
+                players.add(playerSnapshot(player, opponentFor(episodeState, name)));
             }
         }
         return players;
     }
 
-    private Map<String, Object> playerSnapshot(Player player) {
+    private Player opponentFor(EpisodeState episodeState, String playerName) {
+        for (String name : episodeState.registeredPlayers()) {
+            if (!name.equals(playerName)) {
+                return Bukkit.getPlayerExact(name);
+            }
+        }
+        return null;
+    }
+
+    private Map<String, Object> playerSnapshot(Player player, Player opponent) {
         Location loc = player.getLocation();
         Vector velocity = player.getVelocity();
         Map<String, Object> snapshot = new LinkedHashMap<>();
@@ -83,7 +93,11 @@ public final class SnapshotService {
         snapshot.put("attack_cooldown", player.getAttackCooldown());
         snapshot.put("hurt_time", player.getNoDamageTicks());
         snapshot.put("on_ground", player.isOnGround());
-        snapshot.put("line_of_sight", true);
+        snapshot.put("line_of_sight", opponent != null && CombatHitValidator.hasLineOfSightTo(player, opponent));
+        snapshot.put("sprinting", player.isSprinting());
+        snapshot.put("sneaking", player.isSneaking());
+        snapshot.put("selected_hotbar_slot", player.getInventory().getHeldItemSlot());
+        snapshot.put("food_level", player.getFoodLevel());
         return snapshot;
     }
 

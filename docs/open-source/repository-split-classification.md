@@ -25,7 +25,7 @@ These contracts are shared by training, benchmarks, local duels, and the private
 | Area | Public contract |
 | --- | --- |
 | Plugin protocol | Persistent localhost JSONL schema, request/response types, `status.duel`, `status.duels`, reset/start/observe/wait/done, duel helpers. |
-| Bot protocol | Spawn/status/action/despawn messages and Mineflayer controller action application semantics. |
+| Bot protocol | Spawn/status/action/despawn messages and bot runtime action application semantics. |
 | Observations | Flat `np.float32` Gymnasium observation format and snapshot-to-vector flattening contract. |
 | Actions | Low-level action vector and higher-level discrete/curriculum action encodings. |
 | Model formats | BC `.pt`, PPO/SB3 `.zip`, evaluation result schema, training curve inputs, policy IDs. |
@@ -38,7 +38,7 @@ These contracts are shared by training, benchmarks, local duels, and the private
 | Path | Classification | Notes and required action |
 | --- | --- | --- |
 | `server-plugin/` | `SPLIT_OR_SCRUB` | Core Paper plugin belongs public for state extraction, arena reset, hit-count rules, local duel flow, protocol server, and tests. Player-facing operations such as production leaderboard behavior, signed skin handling, private venue defaults, and replay/arena asset operations should be reviewed and either made generic/optional or moved to private extension code. |
-| `bot-controller/` | `OPEN_CORE` | Mineflayer headless controller is part of the public Route A stack. Keep protocol, config, action application, spawn/despawn, tests, and local scripted benchmark modes public. |
+| `bot-controller/` | `OPEN_CORE` | Headless bot runtime controller is part of the public Route A stack. Keep protocol, config, action application, spawn/despawn, backend adapters, tests, and local scripted benchmark modes public. |
 | `python/` | `OPEN_CORE` | Main Gymnasium env, protocol clients, action encoding, observation flattening, BC/PPO, benchmark, duel runner, manifests, policy pool, mocks, and tests belong public. Remove only private generated paths from examples/docs. |
 | `scripts/` | `SPLIT_OR_SCRUB` | Training/build/setup scripts are public. Authenticated LAN/cloud deployment, private bundle, client ReplayMod helper, and operator-specific readiness checks should move private or become sanitized public examples. |
 | `configs/` | `SPLIT_OR_SCRUB` | Default training configs are public. Private duel configs can remain only as sanitized examples if they contain no real domain, signed skin textures, private coordinates, or operator choices. |
@@ -77,8 +77,8 @@ These contracts are shared by training, benchmarks, local duels, and the private
 
 | Path group | Classification | Notes |
 | --- | --- | --- |
-| `bot-controller/package.json`, `package-lock.json`, `tsconfig.json`, `README.md` | `OPEN_CORE` | Public Node/Mineflayer package. Keep Mineflayer version pin and setup docs. |
-| `bot-controller/src/action.ts`, `config.ts`, `controller.ts`, `index.ts`, `jsonl.ts`, `mineflayerAdapter.ts` | `OPEN_CORE` | Public headless controller implementation. |
+| `bot-controller/package.json`, `package-lock.json`, `tsconfig.json`, `README.md` | `OPEN_CORE` | Public Node bot-controller package. Keep default Mineflayer backend version pin and setup docs. |
+| `bot-controller/src/action.ts`, `config.ts`, `controller.ts`, `index.ts`, `jsonl.ts`, `backend.ts`, `backends/` | `OPEN_CORE` | Public headless controller implementation and backend adapters. |
 | `bot-controller/src/tests/**` | `OPEN_CORE` | Public tests for action/protocol/controller behavior. |
 | `bot-controller/dist/`, `bot-controller/node_modules/` | `GENERATED_EXCLUDE` | Keep ignored. |
 
@@ -152,7 +152,7 @@ These contracts are shared by training, benchmarks, local duels, and the private
 
 ```text
 server-plugin/        Core Paper plugin: protocol, state, reset, local duel, tests
-bot-controller/       Headless Mineflayer controller
+bot-controller/       Headless bot runtime controller
 python/               Gymnasium env, BC/PPO, evaluation, manifests, tests
 scripts/              Public setup/build/train/eval/local-duel PowerShell tools
 configs/              Safe local defaults and example manifests/configs

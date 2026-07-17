@@ -73,13 +73,22 @@ Common requests:
 {"v":1,"id":"b-7","type":"despawn","agent_ids":["ROBO_D0","SCRIPT_H0"]}
 ```
 
-`despawn` cleanly ends selected Mineflayer runtimes while keeping the controller and other bots online. The duel daemon uses it for temporary AI Battle participants. `disconnect` remains full-controller shutdown.
+`despawn` cleanly ends selected bot runtimes while keeping the controller and other bots online. The duel daemon uses it for temporary AI Battle participants. `disconnect` remains full-controller shutdown.
+
+`bot_backend` is a controller config value, not a hot-loop message field:
+
+```text
+mineflayer   default verified backend
+herobot      command-transport adapter slice reserved for Fabric/HeRoBot workers
+```
 
 Bot-controller `scripted_opponent` modes:
 
 - `none`: Python controls all action vectors.
 - `random`: random legal actions for scripted-role bots.
-- `mineflayer_pvp`: private local autonomous PvP loop for scripted-role bots.
+- `controller_pvp`: controller-side local PvP loop for scripted-role bots.
+
+Legacy configs may still use `mineflayer_pvp`; the controller normalizes that value to `controller_pvp`.
 
 ## Action Vector
 
@@ -122,6 +131,8 @@ Hit-count semantics:
 
 - Only registered players count.
 - Configured spectators never count as attackers, victims, targets, or episode participants.
+- Counted hits must pass server-side ray and line-of-sight validation, so through-pillar or missed-ray damage events are rejected.
+- After a counted hit, Bukkit no-damage ticks are restored so repeated damage events do not double-count one swing.
 - First registered player to reach `target_hits` wins.
 - Timeouts remain truncations/draws according to Python env configuration.
 
