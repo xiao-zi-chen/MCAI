@@ -9,21 +9,6 @@ import org.junit.jupiter.api.Test;
 
 final class CombatHitValidatorTest {
     @Test
-    void noDamageTicksDoNotBlockScoredHits() {
-        assertFalse(CombatHitValidator.isDamageImmune(20));
-        assertFalse(CombatHitValidator.isDamageImmune(11));
-        assertFalse(CombatHitValidator.isDamageImmune(0));
-    }
-
-    @Test
-    void noDamageTickMaximumDoesNotBlockScoredHits() {
-        assertFalse(CombatHitValidator.isDamageImmune(12, 12));
-        assertFalse(CombatHitValidator.isDamageImmune(7, 12));
-        assertFalse(CombatHitValidator.isDamageImmune(6, 12));
-        assertFalse(CombatHitValidator.isDamageImmune(1, 0));
-    }
-
-    @Test
     void viewRayMustIntersectVictimHitboxWithinReach() {
         Vector eye = new Vector(0.0, 1.62, 0.0);
         Vector forward = new Vector(0.0, 0.0, -1.0);

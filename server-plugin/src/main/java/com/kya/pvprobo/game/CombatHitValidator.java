@@ -47,14 +47,6 @@ public final class CombatHitValidator {
         return blockHit == null;
     }
 
-    static boolean isDamageImmune(int noDamageTicks) {
-        return isDamageImmune(noDamageTicks, 20);
-    }
-
-    static boolean isDamageImmune(int noDamageTicks, int maximumNoDamageTicks) {
-        return false;
-    }
-
     static boolean isBlockHitBeforeVictim(double blockDistance, double victimDistance) {
         return blockDistance <= victimDistance + BLOCK_EPSILON;
     }

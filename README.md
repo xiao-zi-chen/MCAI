@@ -25,7 +25,7 @@ This repository is for private local/offline research servers only. Do not use i
 
 | Date | Highlights |
 | --- | --- |
-| 2026.07.17 | Added through-wall hit rejection and real line-of-sight snapshots. |
+| 2026.07.17 | Added through-wall hit rejection, real line-of-sight snapshots, and vanilla-effective damage-tick scoring. Thanks to [励励lili](https://space.bilibili.com/383268814) and [MistWhy](https://space.bilibili.com/2129888402) for reporting combat-rule issues. |
 | 2026.07.15 | Released local AI Battle spectating docs and Champion ROBO preflight flow. |
 | 2026.07.12 | Published the initial public local PvP RL stack with BC and Champion checkpoints. |
 

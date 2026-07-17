@@ -7,6 +7,7 @@ import java.util.List;
 import org.bukkit.event.block.Action;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
@@ -42,7 +43,7 @@ public final class PvPEventListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onDamage(EntityDamageByEntityEvent event) {
         if (event.getEntity() instanceof Player victim && event.getDamager() instanceof Player attacker) {
             if (episodeRegistry.isSpectator(attacker.getName()) || episodeRegistry.isSpectator(victim.getName())) {
@@ -61,15 +62,51 @@ public final class PvPEventListener implements Listener {
                 episodeState.addEvent("damage_rejected_invalid_hit:" + attacker.getName() + ":" + victim.getName());
                 return;
             }
-            boolean counted = episodeState.recordHit(attacker.getName(), victim.getName());
-            if (counted) {
-                event.setDamage(0.0);
-                victim.setNoDamageTicks(0);
-                duelService.onEpisodeMaybeFinished(episodeState);
+            if (canScoreDamage(episodeState, attacker, victim)
+                && DuelDamagePolicy.isCountableFinalDamage(event.getFinalDamage())) {
+                double safeHealth = DuelDamagePolicy.safePreDamageHealth(victim.getHealth(), victim.getMaxHealth(), event.getFinalDamage());
+                if (safeHealth > victim.getHealth()) {
+                    victim.setHealth(safeHealth);
+                }
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onDamageMonitor(EntityDamageByEntityEvent event) {
+        if (event.getEntity() instanceof Player victim && event.getDamager() instanceof Player attacker) {
+            if (episodeRegistry.isSpectator(attacker.getName()) || episodeRegistry.isSpectator(victim.getName())) {
                 return;
             }
-            episodeState.addEvent("damage_ignored:" + attacker.getName() + ":" + victim.getName());
+            EpisodeState episodeState = episodeRegistry.stateForPlayer(attacker.getName());
+            if (episodeState == null) {
+                return;
+            }
+            if (!canScoreDamage(episodeState, attacker, victim)
+                || !DuelDamagePolicy.isCountableFinalDamage(event.getFinalDamage())) {
+                episodeState.addEvent("damage_ignored:" + attacker.getName() + ":" + victim.getName());
+                return;
+            }
+            boolean counted = episodeState.recordHit(attacker.getName(), victim.getName());
+            if (!counted) {
+                episodeState.addEvent("damage_ignored:" + attacker.getName() + ":" + victim.getName());
+                return;
+            }
+            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                if (victim.isOnline() && !victim.isDead()) {
+                    victim.setHealth(DuelDamagePolicy.restoreHealthTarget(victim.getMaxHealth()));
+                }
+            });
+            duelService.onEpisodeMaybeFinished(episodeState);
         }
+    }
+
+    private boolean canScoreDamage(EpisodeState episodeState, Player attacker, Player victim) {
+        return episodeState.active()
+            && "hit_count".equals(episodeState.combatMode())
+            && episodeState.isRegisteredPlayer(attacker.getName())
+            && episodeState.isRegisteredPlayer(victim.getName())
+            && !attacker.getName().equals(victim.getName());
     }
 
     @EventHandler

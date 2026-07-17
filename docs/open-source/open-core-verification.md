@@ -2,12 +2,19 @@
 
 ## 2026-07-17
 
+Checks run for the vanilla damage-tick public update:
+
+- Red check: `D:\gradle-8.7\bin\gradle.bat test` failed before implementation because `DuelDamagePolicy` was missing.
+- Green check: `D:\gradle-8.7\bin\gradle.bat test` from `server-plugin/`, build/test successful after restoring vanilla-effective scoring.
+- Bot controller: `npm.cmd test` from `bot-controller/`, 13 tests passed.
+- Python package: `.\.venv\Scripts\python.exe -m unittest discover python\tests`, 57 tests passed.
+
 Checks run for the through-wall hit validation public update:
 
 - Bot controller: `npm.cmd test` from `bot-controller/`, 13 tests passed.
 - Python package: `.\.venv\Scripts\python.exe -m unittest discover python\tests`, 57 tests passed.
 - Paper plugin: `D:\gradle-8.7\bin\gradle.bat test` from `server-plugin/`, build/test successful.
-- Public string scan: no external thanks, development-backend migration text, or damage-tick gate rollout text found in public docs/code.
+- Public string scan: no development-backend migration text or damage-tick gate rollout text found in public docs/code.
 
 ## 2026-07-07
 
