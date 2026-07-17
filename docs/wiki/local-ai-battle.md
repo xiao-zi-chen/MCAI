@@ -8,7 +8,7 @@ Use this only on private local or LAN servers you control. Do not use PVPRobo fo
 
 - One Paper `--nogui` worker on `localhost`.
 - The PVPRobo Paper plugin.
-- The Mineflayer bot controller.
+- The bot runtime controller, using the default Mineflayer backend.
 - A Python duel daemon that listens for in-game duel or AI Battle requests.
 - A normal Minecraft Java Edition client joining as a viewer.
 
@@ -104,7 +104,7 @@ In game:
 3. Choose `Tough SCRIPT` / `script_hard` as fighter 2.
 4. Wait for the loading/countdown titles.
 
-The plugin moves the viewer to `duel.spectator-spawn` near the generated arena, switches the viewer to Spectator mode, and shows an AI Battle scoreboard. The daemon drives both generated Mineflayer participants. At the end, temporary AI bots are despawned and the viewer returns to the lobby.
+The plugin moves the viewer to `duel.spectator-spawn` near the generated arena, switches the viewer to Spectator mode, and shows an AI Battle scoreboard. The daemon drives both generated bot participants through the runtime controller. At the end, temporary AI bots are despawned and the viewer returns to the lobby.
 
 ## If You Cannot See The Arena
 

@@ -7,6 +7,7 @@ from typing import Any
 import numpy as np
 
 from mc_pvp_env.actions import NEUTRAL_ACTION, curriculum_action_to_vector
+from mc_pvp_env.runtime_policy import is_runtime_pvp_policy_type
 
 
 EXPERT_POLICY_NAME = "heuristic_expert_v1"
@@ -224,7 +225,7 @@ def make_opponent_policy(
     policy_pool_weights: tuple[float, float, float] = (0.5, 0.3, 0.2),
 ):
     normalized = name.strip().lower()
-    if normalized in ("", "neutral", "none", "mineflayer_pvp"):
+    if normalized in ("", "neutral", "none") or is_runtime_pvp_policy_type(normalized):
         return None
     if normalized == "movement_only":
         return MovementOnlyTargetPolicy(seed=seed)

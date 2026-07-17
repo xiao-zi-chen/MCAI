@@ -1,14 +1,15 @@
 # Open-Core Verification Log
 
-## 2026-07-17 PvP Rule Update
+## 2026-07-17 Standalone Repository Sync
 
-Checks run after narrowing the public update to PvP hit parity and the updated Champion ROBO checkpoint:
+Checks run against `C:\Project\GameAI\PVPRobo-OpenSource` after syncing the public HeRoBot backend slice and PvP hit-parity fixes:
 
-- Development-backend scan: source, scripts, configs, and runtime docs contain no in-progress backend publication terms.
-- Bot controller: cleared stale `bot-controller/dist`, then `npm.cmd test`, 13 tests passed.
+- Bot controller: `npm.cmd test`, 18 tests passed.
 - Python package: `PYTHONPATH=C:\Project\GameAI\PVPRobo-OpenSource\python\src .\.venv\Scripts\python.exe -m unittest discover -s python\tests`, 57 tests passed.
 - Paper plugin: `D:\gradle-8.7\bin\gradle.bat -p server-plugin build`, build successful.
-- Champion preflight: `python -m mc_pvp_env.duel_policy_manifest --manifest configs\duel-policies.example.json preflight --difficulty champion`, loaded `checkpoints\champion_robo\ppo_final.zip` with `observation_size=31` and `action=10`.
+- Public boundary spot-check: `setup-worker.ps1` and `start-worker.ps1` only gained public `bot_backend` / `controller_pvp` wiring; private skin, monitoring, authenticated-entry, and deployment defaults were not copied from `PVPRobo-Server`.
+
+`PVPRobo-OpenSource` is now the authoritative public repository. The old `PVPRobo-Server/open-core` snapshot is abandoned and should not be used for future public updates.
 
 ## 2026-07-07 Initial Candidate
 

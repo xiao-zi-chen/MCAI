@@ -3,8 +3,9 @@ import assert from "node:assert/strict";
 import { BotController } from "../controller.js";
 import { defaultConfig } from "../config.js";
 import type { DecodedAction } from "../action.js";
+import type { BotBackend, BotStatus } from "../backend.js";
 
-class FakeAdapter {
+class FakeAdapter implements BotBackend {
   public applied: Array<{ agentId: string; action: DecodedAction; repeatTicks: number; targetUsername?: string }> = [];
   public cleared: Array<string | undefined> = [];
   public despawned: string[] = [];
@@ -18,7 +19,7 @@ class FakeAdapter {
     return this.bots.map(bot => bot.agent_id);
   }
 
-  status() {
+  status(): BotStatus[] {
     return this.bots;
   }
 
@@ -69,11 +70,11 @@ test("controller forwards explicit human target username", async () => {
     id: "b-human",
     type: "apply_action",
     agent_id: "ROBO",
-    target_username: "HumanPlayer",
+    target_username: "KyaKayKya",
     action: [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 3, 2, 2]
   });
   assert.equal(response.type, "apply_action_ack");
-  assert.equal(adapter.applied[0].targetUsername, "HumanPlayer");
+  assert.equal(adapter.applied[0].targetUsername, "KyaKayKya");
 });
 
 test("controller handles status and clear controls", async () => {
@@ -111,12 +112,12 @@ test("controller applies random scripted opponent per arena", async () => {
   assert.equal(adapter.applied[1].agentId, "SCRIPT-A0");
 });
 
-test("controller applies mineflayer pvp scripted opponent per arena", async () => {
+test("controller applies controller pvp scripted opponent per arena", async () => {
   const adapter = new FakeAdapter();
-  const controller = new BotController({ ...defaultConfig(), scriptedOpponent: "mineflayer_pvp" }, adapter as never);
+  const controller = new BotController({ ...defaultConfig(), scriptedOpponent: "controller_pvp" }, adapter);
   const response = await controller.handle({
     v: 1,
-    id: "b-5",
+    id: "b-controller-pvp",
     type: "act",
     repeat_ticks: 3,
     actions: {

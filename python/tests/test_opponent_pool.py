@@ -27,6 +27,7 @@ class OpponentPoolTests(unittest.TestCase):
                     "policies": [
                         {"id": "champ", "policy_type": "ppo", "role": "champion", "checkpoint": str(checkpoint)},
                         {"id": "mf", "policy_type": "mineflayer_pvp", "role": "frozen", "checkpoint": ""},
+                        {"id": "hero", "policy_type": "herobot_pvp", "role": "frozen", "checkpoint": ""},
                     ],
                 }
             ),
@@ -37,13 +38,14 @@ class OpponentPoolTests(unittest.TestCase):
         by_id = {item.policy_id: item for item in candidates}
         self.assertEqual(by_id["curriculum_scripted"].weight_class, "anchor")
         self.assertEqual(by_id["champ"].weight_class, "champion")
-        self.assertEqual(by_id["mf"].policy_type, "mineflayer_pvp")
+        self.assertEqual(by_id["mf"].policy_type, "controller_pvp")
+        self.assertEqual(by_id["hero"].policy_type, "herobot_pvp")
 
     def test_sampling_weights_can_force_champion_group(self):
         policy = PolicyPoolSampleOpponentPolicy(
             [
                 PolicyPoolCandidate("anchor", "scripted", "anchor", scripted_policy="movement_only", weight_class="anchor"),
-                PolicyPoolCandidate("champ", "mineflayer_pvp", "champion", weight_class="champion"),
+                PolicyPoolCandidate("champ", "controller_pvp", "champion", weight_class="champion"),
                 PolicyPoolCandidate("old", "scripted", "frozen", scripted_policy="weak_scripted", weight_class="older"),
             ],
             seed=7,

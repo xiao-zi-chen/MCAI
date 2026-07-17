@@ -15,6 +15,7 @@ from mc_pvp_env.ppo_warmstart import (
     warm_start_ppo_from_bc,
 )
 from mc_pvp_env.protocol import JsonlClient, PROTOCOL_VERSION
+from mc_pvp_env.runtime_policy import normalize_runtime_pvp_policy_type
 
 
 def main() -> int:
@@ -37,7 +38,7 @@ def main() -> int:
     parser.add_argument(
         "--opponent-policy",
         default="neutral",
-        choices=("neutral", "movement_only", "weak_scripted", "curriculum_scripted", "curriculum", "mineflayer_pvp", "policy_pool_sample"),
+        choices=("neutral", "movement_only", "weak_scripted", "curriculum_scripted", "curriculum", "controller_pvp", "herobot_pvp", "mineflayer_pvp", "policy_pool_sample"),
         help="Scripted opponent used by env.step during online PPO.",
     )
     parser.add_argument(
@@ -53,6 +54,7 @@ def main() -> int:
     )
     parser.add_argument("--tui", action="store_true", help="Show a Rich terminal monitor during training.")
     args = parser.parse_args()
+    args.opponent_policy = normalize_runtime_pvp_policy_type(args.opponent_policy)
     if args.resume_checkpoint and args.bc_checkpoint:
         raise ValueError("--resume-checkpoint and --bc-checkpoint are mutually exclusive; resumed PPO checkpoints already contain policy weights")
 

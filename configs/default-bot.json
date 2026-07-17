@@ -1,5 +1,6 @@
 {
   "host": "127.0.0.1",
+  "bot_backend": "mineflayer",
   "bot_controller_port": 25581,
   "minecraft_host": "127.0.0.1",
   "minecraft_port": 25565,

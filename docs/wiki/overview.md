@@ -11,9 +11,9 @@ Paper plugin control server
   <Minecraft server state/control>
 PaperMC --nogui
 
-Python scripts / Mineflayer controller
+Python scripts / bot runtime controller
   <persistent JSONL TCP>
-Mineflayer headless bots
+Mineflayer headless bots by default; HeRoBot command backend is reserved for Fabric workers
   <Minecraft protocol>
 PaperMC --nogui
 ```
@@ -24,7 +24,7 @@ The hot loop uses persistent localhost connections. It does not use HTTP per ste
 
 ```text
 server-plugin/        Paper plugin: protocol, state extraction, resets, local duel hooks, tests
-bot-controller/       Mineflayer headless bot controller and tests
+bot-controller/       Headless bot runtime controller and tests
 python/               Gymnasium env, protocols, BC/PPO, evaluation, benchmarks, manifests, tests
 scripts/              Windows PowerShell setup/build/run/train/eval tools
 configs/              Public local defaults and example manifests
@@ -55,7 +55,8 @@ Authenticated player entry, cloud deployment, real maps, skins, signed texture v
 - Java: 21
 - Gradle: 8.x
 - Node: 22.x
+- Bot backend: `mineflayer` by default
 - Mineflayer: `4.37.1`
 - Python: 3.12
 
-Direct local Mineflayer workers use `minecraft_version=auto` by default in generated worker configs unless overridden.
+Direct local Mineflayer workers use `minecraft_version=auto` by default in generated worker configs unless overridden. The `herobot` backend is available as a command-transport adapter slice for future Fabric/HeRoBot workers; do not compare `herobot_pvp` and `controller_pvp` results as the same backend lineage.

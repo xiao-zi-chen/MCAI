@@ -16,9 +16,10 @@ from mc_pvp_env.env import MinecraftPvpEnv
 from mc_pvp_env.expert import make_opponent_policy
 from mc_pvp_env.observations import flatten_snapshot
 from mc_pvp_env.protocol import JsonlClient, PROTOCOL_VERSION
+from mc_pvp_env.runtime_policy import RUNTIME_PVP_POLICY_TYPES, is_runtime_pvp_policy_type, normalize_runtime_pvp_policy_type
 
 
-SUPPORTED_POLICY_TYPES = {"scripted", "ppo", "mineflayer_pvp"}
+SUPPORTED_POLICY_TYPES = {"scripted", "ppo"} | RUNTIME_PVP_POLICY_TYPES
 
 
 @dataclass(frozen=True)
@@ -44,7 +45,7 @@ class LeaguePolicy:
             except ImportError as exc:
                 raise RuntimeError("PPO league candidates require stable-baselines3; install python[sb3].") from exc
             self._model = PPO.load(candidate.checkpoint, device="cpu")
-        elif candidate.policy_type != "mineflayer_pvp":
+        elif not is_runtime_pvp_policy_type(candidate.policy_type):
             raise ValueError(f"Unsupported league policy type: {candidate.policy_type}")
 
     def action_vector(
@@ -55,7 +56,7 @@ class LeaguePolicy:
         opponent_name: str,
         max_episode_ticks: int,
     ) -> np.ndarray:
-        if self.candidate.policy_type == "mineflayer_pvp":
+        if is_runtime_pvp_policy_type(self.candidate.policy_type):
             return NEUTRAL_ACTION.copy()
         obs = flatten_snapshot(snapshot, self_name, opponent_name, max_episode_ticks)
         if self._model is not None:
@@ -101,7 +102,7 @@ def evaluate_league(
         for left_index, left in enumerate(candidates):
             for right in candidates[left_index + 1:]:
                 for left_candidate, right_candidate in ((left, right), (right, left)):
-                    if left_candidate.policy_type == "mineflayer_pvp":
+                    if is_runtime_pvp_policy_type(left_candidate.policy_type):
                         rows.append(_skipped_matchup(left_candidate.policy_id, right_candidate.policy_id))
                         continue
                     rows.append(
@@ -158,7 +159,7 @@ def load_league_manifest(path: str | Path) -> list[LeagueCandidate]:
         if not isinstance(entry, dict):
             raise ValueError("league candidate entries must be objects")
         policy_id = str(entry.get("id", entry.get("policy_id", ""))).strip()
-        policy_type = str(entry.get("policy_type", "")).strip()
+        policy_type = normalize_runtime_pvp_policy_type(str(entry.get("policy_type", "")).strip())
         if not policy_id:
             raise ValueError("league candidate missing id")
         if policy_id in seen:
@@ -278,7 +279,7 @@ def _skipped_matchup(left_policy: str, right_policy: str) -> dict[str, Any]:
         "left_policy": left_policy,
         "right_policy": right_policy,
         "status": "skipped",
-        "skip_reason": "mineflayer_pvp can only be evaluated as the scripted-role opponent in the current worker topology",
+        "skip_reason": "controller-side scripted-role opponent can only be evaluated as the right-side runtime-controlled opponent in the current worker topology",
         "episodes": 0,
         "left_win_rate": 0.0,
         "right_win_rate": 0.0,
