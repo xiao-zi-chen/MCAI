@@ -1,5 +1,7 @@
 # PVP ROBO
 
+> Language: English | [简体中文](README.zh-CN.md)
+
 <p align="center">
   <img src="docs/assets/pvp-robo-cover.png" alt="PVP ROBO cover" width="900">
 </p>

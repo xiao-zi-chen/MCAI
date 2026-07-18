@@ -1,5 +1,7 @@
 # PVPRobo Open-Core Docs
 
+> Language: English | [简体中文](README.zh-CN.md)
+
 Use these docs for the public local RL platform:
 
 Latest public update: human attack registration now trusts native Paper damage events, while ROBO/SCRIPT attacks keep transitional geometry validation. Hit-count PvP still scores only positive final damage events, so Minecraft damage ticks decide whether rapid follow-up hits count.

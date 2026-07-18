@@ -1,5 +1,13 @@
 # Open-Core Verification Log
 
+## 2026-07-18
+
+Checks run for the Simplified Chinese documentation update:
+
+- Added `README.zh-CN.md` and `docs/README.zh-CN.md`.
+- Verified root/docs language-switch links and referenced public docs paths exist.
+- No code behavior changed; full test suites were not rerun for this documentation-only update.
+
 ## 2026-07-17
 
 Checks run for the native human hit-registration public update:
