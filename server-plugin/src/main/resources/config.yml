@@ -2,15 +2,35 @@ control:
   host: "127.0.0.1"
   port: 25580
   request-timeout-ms: 2000
+monitoring:
+  enabled: true
+  host: "127.0.0.1"
+  port: 25582
+  auth-token: ""
+  history:
+    sample-interval-seconds: 20
+    max-samples: 4320
+  recordings:
+    directory: ""
 server:
   display-name: "PVPRobo Local"
   domain: "localhost"
 admission:
+  player-auth-mode: "offline"
+  protect-reserved-names-in-offline-mode: true
+  reserved-name-message: "This PVPRobo name is reserved. Please choose another name."
   max-human-players: 20
   bot-name-prefixes:
     - "ROBO"
     - "SCRIPT"
   full-message: "PVPRobo human player slots are full. Please try again later."
+afk:
+  enabled: true
+  warn-after-seconds: 900
+  kick-after-seconds: 1200
+  check-interval-seconds: 30
+  warning-message: "You have been idle for a while. Move or use the PVPRobo menu to keep your slot."
+  kick-message: "You were disconnected for being idle so another player can use the PVPRobo slot."
 localization:
   default-language: "en_us"
   auto-detect-client-locale: true
@@ -52,10 +72,15 @@ episode:
   target-hits: 5
 spectators:
   usernames: []
+replay:
+  enabled: true
+  directory: "replays"
+  max-volume: 120000
 duel:
   world: "world"
   arena-id: "arena_0"
   default-robo-name: "ROBO"
+  bot-combat-backend: "mineflayer"
   enabled-difficulties:
     - "bc"
     - "ppo_mid"
@@ -77,8 +102,27 @@ duel:
     script_easy: "Basic SCRIPT"
     script_hard: "Tough SCRIPT"
     champion: "Champion ROBO"
+  robo-skin:
+    enabled: true
+    file: "skins/ROBO.png"
+    model: "slim"
+    url: ""
+    texture-value: ""
+    texture-signature: ""
+  script-skin:
+    enabled: false
+    file: "skins/SCRIPT.png"
+    model: "slim"
+    url: ""
+    texture-value: ""
+    texture-signature: ""
   default-target-hits: 50
   reset-mode: "preserve_blocks"
+  arena-pool:
+    enabled: true
+    count: 0
+    columns: 0
+    spacing: 56.0
   auto-arena:
     enabled: true
     style: "champion_hall"
@@ -132,3 +176,11 @@ lobby:
     z: 12.0
     yaw: 0.0
     pitch: 0.0
+leaderboard:
+  enabled: false
+  offset:
+    x: 0.0
+    y: 5.0
+    z: 10.0
+  column-spacing-x: 4.5
+  line-spacing: 0.28

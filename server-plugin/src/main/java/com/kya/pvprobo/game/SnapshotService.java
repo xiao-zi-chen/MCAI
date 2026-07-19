@@ -19,6 +19,7 @@ public final class SnapshotService {
         snapshot.put("id", "snapshot");
         snapshot.put("type", "snapshot");
         snapshot.put("arena_id", episodeState.arenaId());
+        snapshot.put("episode_id", episodeState.episodeId());
         snapshot.put("tick", episodeState.tick());
         snapshot.put("phase", episodeState.phase());
         snapshot.put("combat_mode", episodeState.combatMode());
@@ -93,6 +94,10 @@ public final class SnapshotService {
         snapshot.put("hurt_time", player.getNoDamageTicks());
         snapshot.put("on_ground", player.isOnGround());
         snapshot.put("line_of_sight", opponent != null && CombatHitValidator.hasLineOfSightTo(player, opponent));
+        snapshot.put("sprinting", player.isSprinting());
+        snapshot.put("sneaking", player.isSneaking());
+        snapshot.put("selected_hotbar_slot", player.getInventory().getHeldItemSlot());
+        snapshot.put("food_level", player.getFoodLevel());
         return snapshot;
     }
 

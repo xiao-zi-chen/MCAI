@@ -9,6 +9,7 @@ param(
     [string]$ArenaId = "arena_0",
     [int]$MaxSteps = 0,
     [double]$WaitTimeoutSeconds = 120.0,
+    [string]$RecordDir = "__default__",
     [switch]$UseSystemPython
 )
 
@@ -22,6 +23,9 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 . (Join-Path $PSScriptRoot "python-env.ps1")
 $workerName = "worker_{0:D3}" -f $WorkerId
 $envConfig = Join-Path $repoRoot "runs\$workerName\env.json"
+if ($RecordDir -eq "__default__") {
+    $RecordDir = Join-Path $repoRoot "runs\$workerName\duel-records"
+}
 if ($Manifest -eq "") {
     $Manifest = Join-Path $repoRoot "runs\duel\duel-policies.json"
 }
@@ -47,6 +51,9 @@ $argsList = @(
 )
 if ($MaxSteps -gt 0) {
     $argsList += @("--max-steps", $MaxSteps)
+}
+if ($RecordDir -ne "") {
+    $argsList += @("--record-dir", $RecordDir)
 }
 
 & $pythonExe @argsList

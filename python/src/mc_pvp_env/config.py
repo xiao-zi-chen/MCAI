@@ -33,6 +33,9 @@ class EnvConfig:
     loss_reward: float = -1.0
     timeout_reward: float = -0.25
     action_mode: str = "curriculum_discrete"
+    server_runtime: str = "paper-1.21"
+    minecraft_version: str = "1.21"
+    bot_backend: str = "mineflayer"
 
     @classmethod
     def from_json(cls, path: str | Path) -> "EnvConfig":

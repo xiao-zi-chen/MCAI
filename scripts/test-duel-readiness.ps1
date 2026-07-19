@@ -2,6 +2,8 @@ param(
     [int]$WorkerId = 1,
     [string]$Manifest = "",
     [string[]]$Difficulties = @("bc", "ppo_mid", "ppo_high", "champion", "script_easy", "script_hard"),
+    [string]$SchematicName = "sumo_arena.schem",
+    [string]$LobbySchematicName = "ancient_chinese_town.schem",
     [switch]$RequireRunning,
     [switch]$UseSystemPython
 )
@@ -19,6 +21,10 @@ $workerDir = Join-Path $repoRoot "runs\$workerName"
 $envConfig = Join-Path $workerDir "env.json"
 $botConfig = Join-Path $workerDir "bot.json"
 $pluginConfig = Join-Path $workerDir "plugins\PVPRobo\config.yml"
+$roboSkin = Join-Path $workerDir "plugins\PVPRobo\skins\ROBO.png"
+$worldEditJar = Join-Path $workerDir "plugins\WorldEdit.jar"
+$schematic = Join-Path $workerDir "plugins\WorldEdit\schematics\pvprobo\$SchematicName"
+$lobbySchematic = Join-Path $workerDir "plugins\WorldEdit\schematics\pvprobo\$LobbySchematicName"
 if ($Manifest -eq "") {
     $Manifest = Join-Path $repoRoot "runs\duel\duel-policies.json"
 }
@@ -39,6 +45,23 @@ function Test-File($Name, $Path) {
     return $exists
 }
 
+function Get-YamlSectionValue($Text, $SectionName, $Key, $Default) {
+    $inSection = $false
+    foreach ($line in ($Text -split "\r?\n")) {
+        if ($line -match "^\s{2}$([Regex]::Escape($SectionName)):\s*$") {
+            $inSection = $true
+            continue
+        }
+        if ($inSection -and $line -match "^\s{2}\S") {
+            break
+        }
+        if ($inSection -and $line -match "^\s{4}$([Regex]::Escape($Key)):\s+(.+?)\s*$") {
+            return $Matches[1].Trim('"')
+        }
+    }
+    return $Default
+}
+
 function Get-ListenPid($Port) {
     $line = netstat -ano | Where-Object { $_ -match "^\s*TCP\s+\S+:$Port\s+\S+\s+LISTENING\s+(\d+)\s*$" } | Select-Object -First 1
     if ($null -eq $line) { return $null }
@@ -50,12 +73,37 @@ Test-File "worker_dir" $workerDir | Out-Null
 $hasEnv = Test-File "env_config" $envConfig
 $hasBot = Test-File "bot_config" $botConfig
 Test-File "plugin_config" $pluginConfig | Out-Null
+Test-File "robo_skin" $roboSkin | Out-Null
+Add-Check "worldedit_jar_optional" $true ($(if (Test-Path -LiteralPath $worldEditJar) { $worldEditJar } else { "missing; auto arena does not require WorldEdit" }))
+Add-Check "staged_schematic_optional" $true ($(if (Test-Path -LiteralPath $schematic) { $schematic } else { "missing; auto arena does not require sumo schematic" }))
+Add-Check "lobby_schematic_optional" $true ($(if (Test-Path -LiteralPath $lobbySchematic) { $lobbySchematic } else { "missing; configured lobby spawn will be used" }))
 $hasManifest = Test-File "duel_policy_manifest" $Manifest
 
 if (Test-Path -LiteralPath $pluginConfig) {
     $pluginConfigText = Get-Content -LiteralPath $pluginConfig -Raw
     Add-Check "auto_arena_enabled" ($pluginConfigText -match "(?ms)auto-arena:\s*\r?\n\s+enabled:\s+true") "duel.auto-arena.enabled=true"
+    Add-Check "arena_pool_enabled" ($pluginConfigText -match "(?ms)arena-pool:\s*\r?\n\s+enabled:\s+true") "duel.arena-pool.enabled=true"
+    $humanLimitMatch = [Regex]::Match($pluginConfigText, "(?m)^\s+max-human-players:\s+(-?\d+)\s*$")
+    $radiusXMatch = [Regex]::Match($pluginConfigText, "(?m)^\s+radius-x:\s+([0-9.]+)\s*$")
+    $humanLimit = if ($humanLimitMatch.Success) { [int]$humanLimitMatch.Groups[1].Value } else { -1 }
+    $playerAuthModeMatch = [Regex]::Match($pluginConfigText, "(?m)^\s+player-auth-mode:\s+`"?([^`"\r\n]+)`"?\s*$")
+    $reservedNameProtectionMatch = [Regex]::Match($pluginConfigText, "(?m)^\s+protect-reserved-names-in-offline-mode:\s+(true|false)\s*$")
+    $playerAuthMode = if ($playerAuthModeMatch.Success) { $playerAuthModeMatch.Groups[1].Value } else { "online" }
+    $reservedNameProtection = if ($reservedNameProtectionMatch.Success) { $reservedNameProtectionMatch.Groups[1].Value } else { "false" }
+    Add-Check "player_auth_mode_config" (@("online", "offline") -contains $playerAuthMode) "admission.player-auth-mode=$playerAuthMode"
+    Add-Check "reserved_name_protection" ($reservedNameProtection -eq "true") "admission.protect-reserved-names-in-offline-mode=$reservedNameProtection"
+    $arenaPoolCount = [int](Get-YamlSectionValue $pluginConfigText "arena-pool" "count" "1")
+    $arenaPoolColumns = [int](Get-YamlSectionValue $pluginConfigText "arena-pool" "columns" "1")
+    $effectiveArenaPoolCount = if ($humanLimit -gt 0) { [Math]::Max([Math]::Max(1, $arenaPoolCount), $humanLimit) } elseif ($arenaPoolCount -gt 0) { $arenaPoolCount } else { 1 }
+    $effectiveArenaPoolColumns = if ($arenaPoolColumns -gt 0) { $arenaPoolColumns } else { [Math]::Ceiling([Math]::Sqrt([Math]::Max(1, $effectiveArenaPoolCount))) }
+    $arenaPoolSpacing = [double](Get-YamlSectionValue $pluginConfigText "arena-pool" "spacing" "0.0")
+    $radiusX = if ($radiusXMatch.Success) { [double]$radiusXMatch.Groups[1].Value } else { 22.0 }
+    Add-Check "arena_pool_capacity" ($humanLimit -lt 0 -or $effectiveArenaPoolCount -ge $humanLimit) "arena_pool.count=$arenaPoolCount effective=$effectiveArenaPoolCount admission.max-human-players=$humanLimit"
+    Add-Check "arena_pool_columns" ($effectiveArenaPoolColumns -ge 1) "arena_pool.columns=$arenaPoolColumns effective=$effectiveArenaPoolColumns"
+    Add-Check "arena_pool_spacing" ($arenaPoolSpacing -ge (($radiusX * 2.0) + 8.0)) "arena_pool.spacing=$arenaPoolSpacing radius_x=$radiusX"
     Add-Check "knockout_disabled" ($pluginConfigText -match "(?m)^\s+knockout-enabled:\s+false\s*$") "duel.knockout-enabled=false"
+    Add-Check "replay_enabled" ($pluginConfigText -match "(?ms)^replay:\s*\r?\n\s+enabled:\s+true") "replay.enabled=true"
+    Add-Check "replay_directory" ($pluginConfigText -match "(?m)^\s+directory:\s+`"replays`"\s*$") "replay.directory=replays"
 }
 
 $pluginPort = 25580 + ($WorkerId * 10)

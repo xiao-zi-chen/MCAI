@@ -1,6 +1,5 @@
 package com.kya.pvprobo.game;
 
-import org.bukkit.Material;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import java.util.List;
@@ -17,9 +16,11 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.event.player.PlayerLocaleChangeEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
@@ -29,15 +30,22 @@ public final class PvPEventListener implements Listener {
     private final Plugin plugin;
     private final EpisodeRegistry episodeRegistry;
     private final DuelService duelService;
+    private final AfkService afkService;
 
-    public PvPEventListener(Plugin plugin, EpisodeRegistry episodeRegistry, DuelService duelService) {
+    public PvPEventListener(Plugin plugin, EpisodeRegistry episodeRegistry, DuelService duelService, AfkService afkService) {
         this.plugin = plugin;
         this.episodeRegistry = episodeRegistry;
         this.duelService = duelService;
+        this.afkService = afkService;
     }
 
     @EventHandler
     public void onLogin(PlayerLoginEvent event) {
+        String reservedNameMessage = duelService.reservedLoginNameMessage(event.getPlayer(), event.getHostname());
+        if (reservedNameMessage != null) {
+            event.disallow(PlayerLoginEvent.Result.KICK_OTHER, reservedNameMessage);
+            return;
+        }
         if (!duelService.canAdmitLogin(event.getPlayer())) {
             event.disallow(PlayerLoginEvent.Result.KICK_FULL, duelService.admissionFullMessage());
         }
@@ -46,6 +54,8 @@ public final class PvPEventListener implements Listener {
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onDamage(EntityDamageByEntityEvent event) {
         if (event.getEntity() instanceof Player victim && event.getDamager() instanceof Player attacker) {
+            afkService.recordActivity(attacker);
+            afkService.recordActivity(victim);
             if (episodeRegistry.isSpectator(attacker.getName()) || episodeRegistry.isSpectator(victim.getName())) {
                 return;
             }
@@ -72,24 +82,46 @@ public final class PvPEventListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = false)
     public void onDamageMonitor(EntityDamageByEntityEvent event) {
         if (event.getEntity() instanceof Player victim && event.getDamager() instanceof Player attacker) {
             if (episodeRegistry.isSpectator(attacker.getName()) || episodeRegistry.isSpectator(victim.getName())) {
                 return;
             }
-            EpisodeState episodeState = episodeRegistry.stateForPlayer(attacker.getName());
+            EpisodeState episodeState = stateForCombat(attacker, victim);
             if (episodeState == null) {
                 return;
             }
-            if (!canScoreDamage(episodeState, attacker, victim)
-                || !DuelDamagePolicy.isCountableFinalDamage(event.getFinalDamage())) {
-                episodeState.addEvent("damage_ignored:" + attacker.getName() + ":" + victim.getName());
+            String ignoredReason = CombatDamageDiagnostics.ignoredReason(
+                episodeState,
+                attacker.getName(),
+                victim.getName(),
+                event.getFinalDamage(),
+                event.isCancelled()
+            );
+            if (!ignoredReason.isBlank()) {
+                episodeState.addEvent(CombatDamageDiagnostics.ignoredEvent(
+                    ignoredReason,
+                    attacker.getName(),
+                    victim.getName(),
+                    event.getFinalDamage(),
+                    episodeState.phase(),
+                    victim.getNoDamageTicks(),
+                    attacker.getAttackCooldown()
+                ));
                 return;
             }
             boolean counted = episodeState.recordHit(attacker.getName(), victim.getName());
             if (!counted) {
-                episodeState.addEvent("damage_ignored:" + attacker.getName() + ":" + victim.getName());
+                episodeState.addEvent(CombatDamageDiagnostics.ignoredEvent(
+                    "record_rejected",
+                    attacker.getName(),
+                    victim.getName(),
+                    event.getFinalDamage(),
+                    episodeState.phase(),
+                    victim.getNoDamageTicks(),
+                    attacker.getAttackCooldown()
+                ));
                 return;
             }
             if (DuelDamagePolicy.shouldScheduleHealthRestore(event.getFinalDamage())) {
@@ -108,8 +140,17 @@ public final class PvPEventListener implements Listener {
             attacker.getName(),
             victim.getName(),
             plugin.getConfig().getStringList("admission.bot-name-prefixes"),
-            plugin.getConfig().getString("duel.default-robo-name", "ROBO")
+            plugin.getConfig().getString("duel.default-robo-name", "ROBO"),
+            plugin.getConfig().getString("duel.bot-combat-backend", "mineflayer")
         );
+    }
+
+    private EpisodeState stateForCombat(Player attacker, Player victim) {
+        EpisodeState episodeState = episodeRegistry.stateForPlayer(attacker.getName());
+        if (episodeState != null) {
+            return episodeState;
+        }
+        return episodeRegistry.stateForPlayer(victim.getName());
     }
 
     private boolean canScoreDamage(EpisodeState episodeState, Player attacker, Player victim) {
@@ -122,6 +163,7 @@ public final class PvPEventListener implements Listener {
 
     @EventHandler
     public void onDeath(PlayerDeathEvent event) {
+        event.getDrops().removeIf(duelService::isUtilityItem);
         if (episodeRegistry.isSpectator(event.getEntity().getName())) {
             return;
         }
@@ -135,6 +177,7 @@ public final class PvPEventListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         String name = event.getPlayer().getName();
+        afkService.recordActivity(event.getPlayer());
         if (episodeRegistry.isSpectator(name)) {
             event.getPlayer().setGameMode(GameMode.SPECTATOR);
             return;
@@ -145,6 +188,11 @@ public final class PvPEventListener implements Listener {
         if (episodeState != null) {
             episodeState.addEvent("join:" + name);
         }
+    }
+
+    @EventHandler
+    public void onLocaleChange(PlayerLocaleChangeEvent event) {
+        plugin.getServer().getScheduler().runTask(plugin, () -> duelService.refreshLocalizedPlayer(event.getPlayer()));
     }
 
     @EventHandler
@@ -170,6 +218,7 @@ public final class PvPEventListener implements Listener {
         if (!(event.getWhoClicked() instanceof Player player)) {
             return;
         }
+        afkService.recordActivity(player);
         List<String> messages = aiBattleMenu
             ? duelService.handleAiBattleMenuClick(player, event.getCurrentItem())
             : duelService.handleMenuClick(player, event.getCurrentItem());
@@ -182,20 +231,23 @@ public final class PvPEventListener implements Listener {
     }
 
     @EventHandler
+    public void onDropItem(PlayerDropItemEvent event) {
+        afkService.recordActivity(event.getPlayer());
+        if (duelService.isUtilityItem(event.getItemDrop().getItemStack())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
     public void onInteract(PlayerInteractEvent event) {
+        afkService.recordActivity(event.getPlayer());
         if (event.getItem() == null) {
             return;
         }
         if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) {
             return;
         }
-        Material type = event.getItem().getType();
-        if (type != Material.NETHER_STAR
-            && type != Material.ENDER_EYE
-            && type != Material.WOODEN_SWORD
-            && type != Material.DIAMOND_SWORD
-            && type != Material.NETHERITE_SWORD
-            && type != Material.IRON_SWORD) {
+        if (!duelService.isUtilityItem(event.getItem())) {
             return;
         }
         for (String message : duelService.handleUtilityItem(event.getPlayer(), event.getItem())) {
@@ -214,11 +266,13 @@ public final class PvPEventListener implements Listener {
             && event.getFrom().getBlockZ() == event.getTo().getBlockZ()) {
             return;
         }
+        afkService.recordActivity(event.getPlayer());
         duelService.enforceMovementBounds(event.getPlayer());
     }
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
+        afkService.recordActivity(event.getPlayer());
         if (duelService.shouldProtect(event.getPlayer())) {
             event.setCancelled(true);
         }
@@ -226,6 +280,7 @@ public final class PvPEventListener implements Listener {
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
+        afkService.recordActivity(event.getPlayer());
         if (duelService.shouldProtect(event.getPlayer())) {
             event.setCancelled(true);
         }
@@ -233,6 +288,7 @@ public final class PvPEventListener implements Listener {
 
     @EventHandler
     public void onBucketFill(PlayerBucketFillEvent event) {
+        afkService.recordActivity(event.getPlayer());
         if (duelService.shouldProtect(event.getPlayer())) {
             event.setCancelled(true);
         }
@@ -240,6 +296,7 @@ public final class PvPEventListener implements Listener {
 
     @EventHandler
     public void onBucketEmpty(PlayerBucketEmptyEvent event) {
+        afkService.recordActivity(event.getPlayer());
         if (duelService.shouldProtect(event.getPlayer())) {
             event.setCancelled(true);
         }
@@ -252,6 +309,7 @@ public final class PvPEventListener implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
+        afkService.forget(event.getPlayer());
         duelService.handleQuit(event.getPlayer());
         if (episodeRegistry.isSpectator(event.getPlayer().getName())) {
             return;
@@ -259,6 +317,7 @@ public final class PvPEventListener implements Listener {
         EpisodeState episodeState = episodeRegistry.stateForPlayer(event.getPlayer().getName());
         if (episodeState != null) {
             episodeState.playerQuit(event.getPlayer().getName());
+            duelService.onEpisodeMaybeFinished(episodeState);
         }
     }
 }

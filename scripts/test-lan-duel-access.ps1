@@ -89,7 +89,7 @@ if ($ExpectedIp -ne "") {
 }
 
 if (-not $configAllowsLan) {
-    Write-Host "LAN access is not configured. Start a nonzero local duel worker with:"
+    Write-Host "LAN access is not configured. Start worker1 with:"
     Write-Host "powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start-duel-worker.ps1 -WorkerId $WorkerId -AcceptEula -ExposeLan"
 }
 if ($RequireRunning -and -not $lanReady) {

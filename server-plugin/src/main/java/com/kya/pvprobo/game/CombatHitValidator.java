@@ -9,8 +9,8 @@ import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
 public final class CombatHitValidator {
-    private static final double ENTITY_REACH = 3.5;
-    private static final double HITBOX_EXPANSION = 0.1;
+    private static final double ENTITY_REACH = 3.0;
+    private static final double HITBOX_EXPANSION = 0.0;
     private static final double BLOCK_EPSILON = 0.01;
 
     private CombatHitValidator() {
@@ -49,6 +49,14 @@ public final class CombatHitValidator {
 
     static boolean isBlockHitBeforeVictim(double blockDistance, double victimDistance) {
         return blockDistance <= victimDistance + BLOCK_EPSILON;
+    }
+
+    static double entityReach() {
+        return ENTITY_REACH;
+    }
+
+    static double hitboxExpansion() {
+        return HITBOX_EXPANSION;
     }
 
     static boolean rayIntersectsBox(Vector origin, Vector direction, BoundingBox box, double maxDistance) {

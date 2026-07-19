@@ -6,7 +6,6 @@ build-backend = "setuptools.build_meta"
 name = "mc-pvp-env"
 version = "0.1.0"
 description = "No-render Minecraft PvP Gymnasium environment for private local research servers."
-license = "MIT"
 requires-python = ">=3.11"
 dependencies = [
   "gymnasium>=1.0,<2",

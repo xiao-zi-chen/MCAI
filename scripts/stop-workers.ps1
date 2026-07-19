@@ -43,14 +43,16 @@ function Get-WorkerPorts($Id, $WorkerPath) {
     [void]$ports.Add(25565 + $Id)
     [void]$ports.Add(25580 + ($Id * 10))
     [void]$ports.Add(25581 + ($Id * 10))
+    [void]$ports.Add(25583 + ($Id * 10))
 
-    # Optional local proxy experiments may add extra frontend ports. Include
-    # both common adjacent ports and any explicit bind port written by configs.
+    # Authenticated duel workers add a Velocity proxy in front of the local Paper
+    # backend. Include both the default proxy port and any explicit bind port
+    # written by the generated Velocity config.
     [void]$ports.Add(25575 + $Id)
     [void]$ports.Add(25576 + $Id)
     $velocityConfigs = @(
-        (Join-Path $WorkerPath "proxy\proxy.toml"),
-        (Join-Path $WorkerPath "proxy-bot\proxy.toml")
+        (Join-Path $WorkerPath "velocity\velocity.toml"),
+        (Join-Path $WorkerPath "velocity-bot\velocity.toml")
     )
     foreach ($velocityConfig in $velocityConfigs) {
         if (Test-Path -LiteralPath $velocityConfig) {

@@ -27,6 +27,7 @@ PVP ROBO 是一套用于在本地私有服务器上训练和评估 Minecraft PvP
 
 | 日期 | 重点 |
 | --- | --- |
+| 2026.07.19 | 修复 ROBO reach parity：Mineflayer 攻击检查和 synthetic validation 统一限制到 Minecraft 原版实体交互距离。感谢 [刮泥Charlie](https://space.bilibili.com/171229828) 发现 reach 问题。 |
 | 2026.07.17 | 加入隔墙命中拒绝、真实视线快照、原版有效伤害刻计分，并让人类玩家攻击的命中注册回到 Paper 原生机制。感谢 [励励lili](https://space.bilibili.com/383268814)、[MistWhy](https://space.bilibili.com/2129888402) 和 [科琳Colleen](https://space.bilibili.com/355912988) 发现战斗规则问题。 |
 | 2026.07.15 | 发布本地 AI Battle 观战文档和 Champion ROBO 预检流程。 |
 | 2026.07.12 | 发布首个公开版本地 PvP RL 栈，包含 BC baseline 和 Champion checkpoint。 |

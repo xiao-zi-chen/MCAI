@@ -10,9 +10,10 @@ from typing import Any
 
 from mc_pvp_env.config import EnvConfig
 from mc_pvp_env.eval_ppo import evaluate_ppo_policy, _parse_curriculum_steps
+from mc_pvp_env.runtime_policy import RUNTIME_PVP_POLICY_TYPES, normalize_runtime_pvp_policy_type
 
 
-DEFAULT_OPPONENTS = "movement_only,weak_scripted,curriculum_scripted,mineflayer_pvp"
+DEFAULT_OPPONENTS = "movement_only,weak_scripted,curriculum_scripted,controller_pvp"
 
 
 def main() -> int:
@@ -25,6 +26,7 @@ def main() -> int:
     parser.add_argument("--max-steps-per-episode", type=int, default=None)
     parser.add_argument("--target-hits", type=int, default=None)
     parser.add_argument("--opponents", default=DEFAULT_OPPONENTS)
+    parser.add_argument("--policy-lineage", default="unspecified")
     parser.add_argument("--opponent-curriculum-steps", default="5000,15000")
     parser.add_argument("--stochastic", action="store_true", help="Sample actions instead of deterministic argmax.")
     args = parser.parse_args()
@@ -51,6 +53,12 @@ def main() -> int:
             opponent_curriculum_steps=curriculum_steps,
             deterministic=not args.stochastic,
         )
+        summary = _apply_lineage_to_summary(
+            summary,
+            config=config,
+            policy_lineage=args.policy_lineage,
+            opponent_policy=opponent,
+        )
         rows.append(summary)
         print(
             "eval_matrix "
@@ -67,6 +75,10 @@ def main() -> int:
         "episodes": args.episodes,
         "seed": args.seed,
         "target_hits": config.target_hits,
+        "server_runtime": config.server_runtime,
+        "minecraft_version": config.minecraft_version,
+        "bot_backend": config.bot_backend,
+        "policy_lineage": args.policy_lineage,
         "max_steps_per_episode": args.max_steps_per_episode,
         "opponents": opponents,
         "opponent_curriculum_steps": list(curriculum_steps),
@@ -87,8 +99,8 @@ def main() -> int:
 
 
 def _parse_opponents(value: str) -> list[str]:
-    allowed = {"neutral", "movement_only", "weak_scripted", "curriculum_scripted", "curriculum", "mineflayer_pvp"}
-    opponents = [item.strip() for item in value.split(",") if item.strip()]
+    allowed = {"neutral", "movement_only", "weak_scripted", "curriculum_scripted", "curriculum"} | RUNTIME_PVP_POLICY_TYPES
+    opponents = [normalize_runtime_pvp_policy_type(item) for item in value.split(",") if item.strip()]
     if not opponents:
         raise ValueError("--opponents must contain at least one opponent policy")
     invalid = [item for item in opponents if item not in allowed]
@@ -97,10 +109,37 @@ def _parse_opponents(value: str) -> list[str]:
     return opponents
 
 
+def _apply_lineage_to_summary(
+    summary: dict[str, Any],
+    *,
+    config: EnvConfig,
+    policy_lineage: str,
+    opponent_policy: str,
+) -> dict[str, Any]:
+    enriched = dict(summary)
+    enriched["policy_lineage"] = policy_lineage
+    enriched["server_runtime"] = config.server_runtime
+    enriched["minecraft_version"] = config.minecraft_version
+    enriched["bot_backend"] = config.bot_backend
+    enriched["opponent_policy"] = opponent_policy
+    enriched["opponent_lineage"] = {
+        "policy_type": opponent_policy,
+        "bot_backend": config.bot_backend,
+        "server_runtime": config.server_runtime,
+        "minecraft_version": config.minecraft_version,
+    }
+    return enriched
+
+
 def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
     fields = [
         "policy",
+        "policy_lineage",
         "opponent_policy",
+        "opponent_lineage_json",
+        "server_runtime",
+        "minecraft_version",
+        "bot_backend",
         "episodes",
         "win_rate",
         "loss_rate",
@@ -121,6 +160,7 @@ def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
         writer.writeheader()
         for row in rows:
             flat = {field: row.get(field, "") for field in fields}
+            flat["opponent_lineage_json"] = json.dumps(row.get("opponent_lineage", {}), sort_keys=True)
             flat["phase_counts_json"] = json.dumps(row.get("phase_counts", {}), sort_keys=True)
             writer.writerow(flat)
 

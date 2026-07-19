@@ -91,7 +91,7 @@ public final class PluginCommandHandler {
         response.put("arenas", episodeRegistry.status());
         Map<String, Object> duelStatus = duelService.protocolStatus();
         response.put("duel", duelStatus);
-        response.put("duels", List.of(duelStatus));
+        response.put("duels", duelService.protocolStatuses());
         return response;
     }
 

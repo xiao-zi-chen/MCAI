@@ -54,9 +54,8 @@ export function rayIntersectsAabb(origin: Vec3Like, direction: Vec3Like, box: Aa
   let tMax = maxDistance;
 
   for (const axis of ["x", "y", "z"] as const) {
-    const key = axis.toUpperCase() as "X" | "Y" | "Z";
-    const min = box[`min${key}`];
-    const max = box[`max${key}`];
+    const min = box[`min${axis.toUpperCase() as "X" | "Y" | "Z"}`];
+    const max = box[`max${axis.toUpperCase() as "X" | "Y" | "Z"}`];
     const originValue = origin[axis];
     const directionValue = dir[axis];
     if (Math.abs(directionValue) < EPSILON) {

@@ -62,8 +62,10 @@ class ExpertPolicyTests(unittest.TestCase):
     def test_make_opponent_policy_supports_neutral(self):
         self.assertIsNone(make_opponent_policy("neutral"))
 
-    def test_make_opponent_policy_defers_mineflayer_pvp_to_bot_controller(self):
+    def test_make_opponent_policy_defers_controller_runtime_pvp_to_bot_controller(self):
         self.assertIsNone(make_opponent_policy("mineflayer_pvp"))
+        self.assertIsNone(make_opponent_policy("controller_pvp"))
+        self.assertIsNone(make_opponent_policy("herobot_pvp"))
 
 
 if __name__ == "__main__":

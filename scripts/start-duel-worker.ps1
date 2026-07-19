@@ -5,10 +5,17 @@ param(
     [string]$NodeHome = "",
     [string[]]$SpectatorUsernames = @(),
     [string[]]$OperatorUsernames = @(),
+    [int]$ArenaCount = 0,
     [int]$MaxPlayers = 20,
     [int]$MaxHumanPlayers = 20,
+    [string]$ServerDomain = "localhost",
+    [string]$MonitoringHost = "127.0.0.1",
+    [string]$MonitoringAuthToken = "",
     [double]$RequestTimeoutSeconds = 30.0,
     [int]$BotWatchdogTimeoutMs = 30000,
+    [string]$RoboSkinUrl = "",
+    [string]$RoboSkinTextureValue = "",
+    [string]$RoboSkinTextureSignature = "",
     [switch]$ExposeLan,
     [switch]$Rebuild,
     [switch]$AcceptEula
@@ -19,6 +26,7 @@ $ErrorActionPreference = "Stop"
 if ($WorkerId -eq 0) {
     throw "start-duel-worker.ps1 is intentionally isolated from worker 0. Use -WorkerId 1 unless the user explicitly authorizes another nonzero worker."
 }
+$resolvedArenaCount = if ($ArenaCount -gt 0) { $ArenaCount } elseif ($MaxHumanPlayers -gt 0) { $MaxHumanPlayers } else { 1 }
 
 & (Join-Path $PSScriptRoot "start-worker.ps1") `
     -WorkerId $WorkerId `
@@ -27,13 +35,19 @@ if ($WorkerId -eq 0) {
     -NodeHome $NodeHome `
     -SpectatorUsernames $SpectatorUsernames `
     -OperatorUsernames $OperatorUsernames `
-    -ArenaCount 1 `
+    -ArenaCount $resolvedArenaCount `
     -MaxPlayers $MaxPlayers `
     -MaxHumanPlayers $MaxHumanPlayers `
+    -ServerDomain $ServerDomain `
+    -MonitoringHost $MonitoringHost `
+    -MonitoringAuthToken $MonitoringAuthToken `
     -RequestTimeoutSeconds $RequestTimeoutSeconds `
     -BotWatchdogTimeoutMs $BotWatchdogTimeoutMs `
     -TargetHits 50 `
     -ScriptedOpponent none `
+    -RoboSkinUrl $RoboSkinUrl `
+    -RoboSkinTextureValue $RoboSkinTextureValue `
+    -RoboSkinTextureSignature $RoboSkinTextureSignature `
     -DuelMode `
     -ExposeLan:$ExposeLan `
     -Rebuild:$Rebuild `

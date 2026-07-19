@@ -1,14 +1,13 @@
 import mineflayer from "mineflayer";
 import type { Bot } from "mineflayer";
-import type { BotConfig } from "./config.js";
-import type { DecodedAction } from "./action.js";
-import { canAttackTarget, directionTo, lookDirection, type AabbLike, type Vec3Like } from "./combatGeometry.js";
+import type { BotStatus, SpawnSpec } from "../backend.js";
+import type { BotConfig, RestrictedMouseProfile } from "../config.js";
+import { defaultRestrictedMouseProfile } from "../config.js";
+import type { DecodedAction } from "../action.js";
+import { swordActionToVirtualHidFrameV1, type NormalizedSwordPvpActionV1, type NormalizedVirtualHidFrameV1 } from "../actionAbi.js";
+import { canAttackTarget, directionTo, lookDirection, type AabbLike, type Vec3Like } from "../combatGeometry.js";
 
-type AttackTarget = Parameters<Bot["attack"]>[0] & {
-  position: Vec3Like;
-  height?: number;
-  width?: number;
-};
+const VANILLA_ENTITY_INTERACTION_RANGE = 3.0;
 
 export type BotRuntime = {
   agentId: string;
@@ -20,13 +19,13 @@ export type BotRuntime = {
   actionTimer?: NodeJS.Timeout;
 };
 
-export class MineflayerAdapter {
+export class MineflayerBackend {
   private readonly bots = new Map<string, BotRuntime>();
   private lastSpawnAttemptMs = 0;
 
   constructor(private readonly config: BotConfig) {}
 
-  async spawn(specs: Array<{ agent_id?: string; username?: string; arena_id?: string; role?: string }>): Promise<string[]> {
+  async spawn(specs: SpawnSpec[]): Promise<string[]> {
     const created: string[] = [];
     for (const spec of specs) {
       const agentId = spec.agent_id ?? spec.username;
@@ -96,7 +95,7 @@ export class MineflayerAdapter {
     }
   }
 
-  status(): Array<{ agent_id: string; username: string; arena_id: string; role: string; connected: boolean }> {
+  status(): BotStatus[] {
     return [...this.bots.values()].map(bot => ({
       agent_id: bot.agentId,
       username: bot.username,
@@ -121,7 +120,7 @@ export class MineflayerAdapter {
     bot.setControlState("sprint", action.sprint);
     bot.setControlState("sneak", action.sneak);
     bot.quickBarSlot = action.hotbarSlot;
-    let aimedTarget: AttackTarget | undefined;
+    let aimedTarget: { position: Vec3Like; height?: number; width?: number } | undefined;
     let aimedDirection: Vec3Like | undefined;
     if (action.lookPrimitive === "none") {
       const intendedYaw = bot.entity.yaw + action.yawDeltaRadians;
@@ -136,7 +135,7 @@ export class MineflayerAdapter {
     if (action.attack) {
       const target = aimedTarget ?? bot.nearestEntity(entity => this.isTrainingOpponent(runtime, entity.username, targetUsername));
       if (target && this.canAttackCurrentTarget(bot, target, aimedDirection)) {
-        bot.attack(target);
+        bot.attack(target as Parameters<Bot["attack"]>[0]);
       }
     }
     if (action.use) {
@@ -144,6 +143,22 @@ export class MineflayerAdapter {
     }
     const durationMs = Math.max(1, repeatTicks) * 50;
     runtime.actionTimer = setTimeout(() => this.clearControls(agentId), durationMs);
+  }
+
+  applyRestrictedAction(agentId: string, action: NormalizedSwordPvpActionV1): NormalizedVirtualHidFrameV1 {
+    const runtime = this.required(agentId);
+    if (!runtime.bot) {
+      return {
+        ...swordActionToVirtualHidFrameV1(action),
+        status: "dropped",
+        status_reasons: ["bot_not_available"],
+      };
+    }
+    this.clearControls(agentId);
+    const frame = applyRestrictedFrameToMineflayerBot(runtime.bot, action, this.config.restrictedMouseProfile);
+    const durationMs = Math.max(1, frame.control_step_ticks) * 50;
+    runtime.actionTimer = setTimeout(() => this.clearControls(agentId), durationMs);
+    return frame;
   }
 
   applyPvpOpponent(agentId: string, repeatTicks: number): void {
@@ -219,7 +234,7 @@ export class MineflayerAdapter {
     return disconnected;
   }
 
-  private lookAtNearestEnemy(runtime: BotRuntime, primitive: DecodedAction["lookPrimitive"], targetUsername?: string): { target: AttackTarget; point: Vec3Like } | undefined {
+  private lookAtNearestEnemy(runtime: BotRuntime, primitive: DecodedAction["lookPrimitive"], targetUsername?: string): { target: { position: Vec3Like; height?: number; width?: number }; point: Vec3Like } | undefined {
     const bot = runtime.bot;
     if (!bot) {
       return undefined;
@@ -267,7 +282,7 @@ export class MineflayerAdapter {
   }
 
   private canAttackCurrentTarget(bot: Bot, target: { position: Vec3Like; height?: number; width?: number }, directionOverride?: Vec3Like): boolean {
-    const reach = 3.5;
+    const reach = VANILLA_ENTITY_INTERACTION_RANGE;
     const eye = botEye(bot);
     const direction = directionOverride ?? lookDirection(bot.entity.yaw, bot.entity.pitch);
     const targetBox = targetAabb(target);
@@ -275,6 +290,67 @@ export class MineflayerAdapter {
     const blockingDistance = block?.intersect ? distanceBetween(eye, block.intersect) : undefined;
     return canAttackTarget({ eye, direction, targetBox, reach, blockingDistance });
   }
+}
+
+export function applyRestrictedFrameToMineflayerBot(
+  bot: Bot,
+  action: NormalizedSwordPvpActionV1,
+  mouseProfile: RestrictedMouseProfile = defaultRestrictedMouseProfile(),
+): NormalizedVirtualHidFrameV1 {
+  const requestedFrame = swordActionToVirtualHidFrameV1(action);
+  const { dx, dy, reasons } = clipMouseCounts(requestedFrame.mouse_dx, requestedFrame.mouse_dy, mouseProfile);
+  let frame: NormalizedVirtualHidFrameV1 = {
+    ...requestedFrame,
+    mouse_dx: dx,
+    mouse_dy: dy,
+    status: reasons.length > 0 ? "clipped" : requestedFrame.status,
+    status_reasons: reasons,
+  };
+  bot.setControlState("forward", frame.keys.forward);
+  bot.setControlState("back", frame.keys.back);
+  bot.setControlState("left", frame.keys.left);
+  bot.setControlState("right", frame.keys.right);
+  bot.setControlState("jump", frame.keys.jump);
+  bot.setControlState("sprint", frame.keys.sprint);
+  bot.setControlState("sneak", frame.keys.sneak);
+
+  const intendedYaw = bot.entity.yaw + frame.mouse_dx * mouseProfile.radiansPerCount;
+  const intendedPitch = clampPitch(bot.entity.pitch + frame.mouse_dy * mouseProfile.radiansPerCount);
+  bot.look(intendedYaw, intendedPitch, true);
+
+  if (frame.mouse_buttons.use) {
+    bot.activateItem();
+  }
+  if (!frame.mouse_buttons.attack) {
+    return frame;
+  }
+  const swingArm = (bot as unknown as { swingArm?: (hand: "left" | "right") => void }).swingArm;
+  if (typeof swingArm !== "function") {
+    return {
+      ...frame,
+      status: "dropped",
+      status_reasons: [...frame.status_reasons, "attack_pulse_unavailable"],
+    };
+  }
+  swingArm.call(bot, "right");
+  return frame;
+}
+
+function clipMouseCounts(dx: number, dy: number, profile: RestrictedMouseProfile): { dx: number; dy: number; reasons: string[] } {
+  const clippedDx = clamp(dx, -profile.maxDxPerStep, profile.maxDxPerStep);
+  const clippedDy = clamp(dy, -profile.maxDyPerStep, profile.maxDyPerStep);
+  const reasons: string[] = [];
+  if (clippedDx !== dx) {
+    reasons.push("mouse_dx_clipped");
+  }
+  if (clippedDy !== dy) {
+    reasons.push("mouse_dy_clipped");
+  }
+  return { dx: clippedDx, dy: clippedDy, reasons };
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
 }
 
 function clampPitch(value: number): number {

@@ -2,8 +2,7 @@
   "name": "pvprobo-bot-controller",
   "version": "0.1.0",
   "private": true,
-  "description": "Local-only Mineflayer bot controller for PVPRobo.",
-  "license": "MIT",
+  "description": "Local-only bot runtime controller for PVPRobo.",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",

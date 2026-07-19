@@ -3,9 +3,19 @@ import assert from "node:assert/strict";
 import { BotController } from "../controller.js";
 import { defaultConfig } from "../config.js";
 import type { DecodedAction } from "../action.js";
+import type { BotBackend, BotStatus } from "../backend.js";
+import type { NormalizedSwordPvpActionV1, NormalizedVirtualHidFrameV1 } from "../actionAbi.js";
 
-class FakeAdapter {
+type RestrictedActionAck = {
+  action_requested: NormalizedSwordPvpActionV1;
+  action_executed: NormalizedVirtualHidFrameV1;
+  action_execution_status: string;
+  action_execution_status_reasons: string[];
+};
+
+class FakeAdapter implements BotBackend {
   public applied: Array<{ agentId: string; action: DecodedAction; repeatTicks: number; targetUsername?: string }> = [];
+  public restricted: Array<{ agentId: string; action: NormalizedSwordPvpActionV1 }> = [];
   public cleared: Array<string | undefined> = [];
   public despawned: string[] = [];
   public disconnected = false;
@@ -18,12 +28,46 @@ class FakeAdapter {
     return this.bots.map(bot => bot.agent_id);
   }
 
-  status() {
+  status(): BotStatus[] {
     return this.bots;
   }
 
   applyAction(agentId: string, action: DecodedAction, repeatTicks: number, targetUsername?: string): void {
     this.applied.push({ agentId, action, repeatTicks, targetUsername });
+  }
+
+  applyRestrictedAction(agentId: string, action: NormalizedSwordPvpActionV1): NormalizedVirtualHidFrameV1 {
+    this.restricted.push({ agentId, action });
+    return {
+      abi_version: "VirtualHIDFrameV1",
+      sequence_id: action.sequence_id,
+      source_sequence_id: action.sequence_id,
+      execute_tick: action.observation_tick + 1,
+      execute_time_ms: action.policy_time_ms + 1,
+      control_step_ticks: action.control_step_ticks,
+      keys: {
+        forward: action.move_forward === 1,
+        back: action.move_forward === -1,
+        left: action.move_strafe === -1,
+        right: action.move_strafe === 1,
+        jump: action.jump_hold,
+        sprint: action.sprint_hold,
+        sneak: action.sneak_hold,
+      },
+      mouse_buttons: { attack: action.attack_pulse, use: action.use_pulse },
+      mouse_dx: action.mouse_dx,
+      mouse_dy: action.mouse_dy,
+      wheel_dy: 0,
+      recenter: {
+        requested: action.recenter_request,
+        busy: false,
+        phase: "idle",
+        target_x: action.recenter_target_x,
+        target_y: action.recenter_target_y,
+      },
+      status: "executed",
+      status_reasons: [],
+    };
   }
 
   applyPvpOpponent(agentId: string, repeatTicks: number): void {
@@ -69,11 +113,61 @@ test("controller forwards explicit human target username", async () => {
     id: "b-human",
     type: "apply_action",
     agent_id: "ROBO",
-    target_username: "HumanPlayer",
+    target_username: "KyaKayKya",
     action: [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 3, 2, 2]
   });
   assert.equal(response.type, "apply_action_ack");
-  assert.equal(adapter.applied[0].targetUsername, "HumanPlayer");
+  assert.equal(adapter.applied[0].targetUsername, "KyaKayKya");
+});
+
+test("controller applies restricted action and returns execution record", async () => {
+  const adapter = new FakeAdapter();
+  const controller = new BotController(defaultConfig(), adapter);
+  const response = await controller.handle({
+    v: 1,
+    id: "b-restricted",
+    type: "apply_restricted_action",
+    agent_id: "ROBO-A0",
+    action: {
+      abi_version: "SwordPvPActionV1",
+      sequence_id: 4,
+      observation_tick: 20,
+      policy_time_ms: 100,
+      control_step_ticks: 2,
+      move_forward: 1,
+      move_strafe: -1,
+      attack_pulse: true,
+      mouse_dx: 3,
+      mouse_dy: -2,
+    },
+  });
+
+  assert.equal(response.type, "apply_restricted_action_ack");
+  assert.equal(response.accepted, true);
+  assert.equal(adapter.restricted.length, 1);
+  assert.equal(adapter.restricted[0].agentId, "ROBO-A0");
+  const ack = response as typeof response & RestrictedActionAck;
+  assert.equal(ack.action_requested.sequence_id, 4);
+  assert.equal(ack.action_executed.abi_version, "VirtualHIDFrameV1");
+  assert.equal(ack.action_execution_status, "executed");
+  assert.deepEqual(ack.action_execution_status_reasons, []);
+});
+
+test("controller rejects restricted top-level targeting fields", async () => {
+  const adapter = new FakeAdapter();
+  const controller = new BotController(defaultConfig(), adapter);
+  const response = await controller.handle({
+    v: 1,
+    id: "b-restricted-forbidden",
+    type: "apply_restricted_action",
+    agent_id: "ROBO-A0",
+    target_username: "SCRIPT-A0",
+    action: { abi_version: "SwordPvPActionV1", sequence_id: 5 },
+  });
+
+  assert.equal(response.type, "error");
+  assert.match(String(response.error), /forbidden restricted action fields/);
+  assert.equal(adapter.restricted.length, 0);
 });
 
 test("controller handles status and clear controls", async () => {
@@ -111,12 +205,12 @@ test("controller applies random scripted opponent per arena", async () => {
   assert.equal(adapter.applied[1].agentId, "SCRIPT-A0");
 });
 
-test("controller applies mineflayer pvp scripted opponent per arena", async () => {
+test("controller applies controller pvp scripted opponent per arena", async () => {
   const adapter = new FakeAdapter();
-  const controller = new BotController({ ...defaultConfig(), scriptedOpponent: "mineflayer_pvp" }, adapter as never);
+  const controller = new BotController({ ...defaultConfig(), scriptedOpponent: "controller_pvp" }, adapter);
   const response = await controller.handle({
     v: 1,
-    id: "b-5",
+    id: "b-controller-pvp",
     type: "act",
     repeat_ticks: 3,
     actions: {

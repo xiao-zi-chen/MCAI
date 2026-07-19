@@ -45,23 +45,56 @@ public final class ArenaService {
         EpisodeState episodeState = episodeRegistry.state(arenaId);
         World world = duelWorld();
         setGameRules(world);
-        prepareDuelArena(world);
-        cleanupDuelArena(world);
-        resetPlayer(episodeState, leftName, location(world, "duel.player-spawn"));
-        resetPlayer(episodeState, rightName, location(world, "duel.robo-spawn"));
+        prepareDuelArena(world, arenaId);
+        cleanupDuelArena(world, arenaId);
+        resetPlayer(episodeState, leftName, duelLocation(arenaId, "duel.player-spawn"));
+        resetPlayer(episodeState, rightName, duelLocation(arenaId, "duel.robo-spawn"));
     }
 
     public void prepareDuelArena() {
         World world = duelWorld();
         setGameRules(world);
-        prepareDuelArena(world);
+        for (int index = 0; index < duelArenaPoolCount(); index++) {
+            prepareDuelArena(world, "arena_" + index);
+        }
     }
 
     public void resetDuelParticipant(String arenaId, String name, boolean leftSide) {
         EpisodeState episodeState = episodeRegistry.state(arenaId);
         World world = duelWorld();
         setGameRules(world);
-        resetPlayer(episodeState, name, location(world, leftSide ? "duel.player-spawn" : "duel.robo-spawn"));
+        resetPlayer(episodeState, name, duelLocation(arenaId, leftSide ? "duel.player-spawn" : "duel.robo-spawn"));
+    }
+
+    public Location duelLocation(String arenaId, String path) {
+        return offsetDuelLocation(arenaId, location(duelWorld(), path));
+    }
+
+    public Location offsetDuelLocation(String arenaId, Location base) {
+        World world = duelWorld();
+        Location origin = location(world, "duel.bounds.center");
+        Location center = duelArenaCenter(arenaId);
+        double dx = base.getX() - origin.getX();
+        double dy = base.getY() - origin.getY();
+        double dz = base.getZ() - origin.getZ();
+        return new Location(world, center.getX() + dx, center.getY() + dy, center.getZ() + dz, base.getYaw(), base.getPitch());
+    }
+
+    public boolean insideDuelBounds(String arenaId, Location location) {
+        Location center = duelArenaCenter(arenaId);
+        double radiusX = plugin.getConfig().getDouble("duel.bounds.radius-x", plugin.getConfig().getDouble("arena.radius", 10.0));
+        double radiusY = plugin.getConfig().getDouble("duel.bounds.radius-y", 8.0);
+        double radiusZ = plugin.getConfig().getDouble("duel.bounds.radius-z", plugin.getConfig().getDouble("arena.radius", 10.0));
+        return location.getWorld() != null
+            && center.getWorld() != null
+            && location.getWorld().equals(center.getWorld())
+            && Math.abs(location.getX() - center.getX()) <= radiusX
+            && Math.abs(location.getY() - center.getY()) <= radiusY
+            && Math.abs(location.getZ() - center.getZ()) <= radiusZ;
+    }
+
+    public double knockoutYThreshold(String arenaId, double drop) {
+        return duelArenaCenter(arenaId).getY() - Math.max(0.1, drop);
     }
 
     public void cleanupArena() {
@@ -81,8 +114,8 @@ public final class ArenaService {
         }
     }
 
-    private void cleanupDuelArena(World world) {
-        Location center = location(world, "duel.bounds.center");
+    private void cleanupDuelArena(World world, String arenaId) {
+        Location center = duelArenaCenter(arenaId);
         double radiusX = plugin.getConfig().getDouble("duel.bounds.radius-x", plugin.getConfig().getDouble("arena.radius", 10.0));
         double radiusY = plugin.getConfig().getDouble("duel.bounds.radius-y", 8.0);
         double radiusZ = plugin.getConfig().getDouble("duel.bounds.radius-z", plugin.getConfig().getDouble("arena.radius", 10.0));
@@ -113,7 +146,7 @@ public final class ArenaService {
         }
     }
 
-    private void prepareDuelArena(World world) {
+    private void prepareDuelArena(World world, String arenaId) {
         if (!plugin.getConfig().getBoolean("duel.auto-arena.enabled", false)) {
             return;
         }
@@ -121,7 +154,7 @@ public final class ArenaService {
         if (!"champion_hall".equalsIgnoreCase(style)) {
             return;
         }
-        Location center = location(world, "duel.bounds.center");
+        Location center = duelArenaCenter(arenaId);
         int radiusX = Math.max(8, plugin.getConfig().getInt("duel.auto-arena.radius-x", 22));
         int radiusZ = Math.max(8, plugin.getConfig().getInt("duel.auto-arena.radius-z", 22));
         int clearBelow = Math.max(1, plugin.getConfig().getInt("duel.auto-arena.clear-below", 2));
@@ -312,6 +345,21 @@ public final class ArenaService {
         return 0;
     }
 
+    private int duelArenaIndex(String arenaId) {
+        String normalized = EpisodeRegistry.normalizeArenaId(arenaId);
+        if (normalized.startsWith("arena_")) {
+            try {
+                int parsed = Integer.parseInt(normalized.substring("arena_".length()));
+                if (parsed >= 0 && parsed < duelArenaPoolCount()) {
+                    return parsed;
+                }
+            } catch (NumberFormatException ignored) {
+                return 0;
+            }
+        }
+        return 0;
+    }
+
     private Location arenaCenter(int arenaId) {
         Location origin = location("arena.center");
         double spacing = plugin.getConfig().getDouble("arena.spacing", 64.0);
@@ -319,6 +367,27 @@ public final class ArenaService {
         int row = arenaId / columns;
         int col = arenaId % columns;
         return origin.clone().add(col * spacing, 0.0, row * spacing);
+    }
+
+    private Location duelArenaCenter(String arenaId) {
+        Location origin = location(duelWorld(), "duel.bounds.center");
+        if (!plugin.getConfig().getBoolean("duel.arena-pool.enabled", false)) {
+            return origin;
+        }
+        double spacing = plugin.getConfig().getDouble("duel.arena-pool.spacing", 56.0);
+        int columns = DuelArenaPoolSizing.columns(plugin.getConfig().getInt("duel.arena-pool.columns", 0), duelArenaPoolCount());
+        int index = duelArenaIndex(arenaId);
+        int row = index / columns;
+        int col = index % columns;
+        return origin.clone().add(col * spacing, 0.0, row * spacing);
+    }
+
+    private int duelArenaPoolCount() {
+        return DuelArenaPoolSizing.sessionCount(
+            plugin.getConfig().getBoolean("duel.arena-pool.enabled", false),
+            plugin.getConfig().getInt("duel.arena-pool.count", 0),
+            plugin.getConfig().getInt("admission.max-human-players", -1)
+        );
     }
 
     private Location playerLocation(int arenaId, String playerPath) {

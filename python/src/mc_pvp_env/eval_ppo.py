@@ -13,6 +13,7 @@ from mc_pvp_env.config import EnvConfig
 from mc_pvp_env.env import MinecraftPvpEnv
 from mc_pvp_env.expert import make_opponent_policy
 from mc_pvp_env.protocol import JsonlClient, PROTOCOL_VERSION
+from mc_pvp_env.runtime_policy import normalize_runtime_pvp_policy_type
 
 
 def evaluate_ppo_policy(
@@ -56,6 +57,11 @@ def evaluate_ppo_policy(
             _request(setup_plugin, "register_players", arena_id=config.arena, players=[config.self_name, config.opponent_name])
             _request(setup_bot, "hello", role="ppo-eval")
             _request(setup_bot, "spawn", bots=config.bot_specs())
+            _wait_for_players(
+                setup_plugin,
+                arena_id=config.arena,
+                names=[config.self_name, config.opponent_name],
+            )
             setup_plugin.close()
             setup_bot.close()
             setup_plugin = None
@@ -134,7 +140,7 @@ def main() -> int:
     parser.add_argument(
         "--opponent-policy",
         default="movement_only",
-        choices=("neutral", "movement_only", "weak_scripted", "curriculum_scripted", "curriculum", "mineflayer_pvp"),
+        choices=("neutral", "movement_only", "weak_scripted", "curriculum_scripted", "curriculum", "controller_pvp", "herobot_pvp", "mineflayer_pvp"),
     )
     parser.add_argument("--opponent-curriculum-steps", default="5000,15000")
     parser.add_argument("--stochastic", action="store_true", help="Sample actions instead of using deterministic argmax.")
@@ -149,7 +155,7 @@ def main() -> int:
         episodes=args.episodes,
         seed=args.seed,
         max_steps_per_episode=args.max_steps_per_episode,
-        opponent_policy=args.opponent_policy,
+        opponent_policy=normalize_runtime_pvp_policy_type(args.opponent_policy),
         opponent_curriculum_steps=_parse_curriculum_steps(args.opponent_curriculum_steps),
         deterministic=not args.stochastic,
     )
@@ -166,6 +172,32 @@ def _request(client: JsonlClient, msg_type: str, **fields):
     if reply.get("type") == "error":
         raise RuntimeError(reply.get("error", "protocol error"))
     return reply
+
+
+def _wait_for_players(
+    client,
+    *,
+    arena_id: str,
+    names: list[str],
+    attempts: int = 80,
+    sleep_seconds: float = 0.25,
+) -> dict[str, Any]:
+    expected = {str(name) for name in names}
+    snapshot: dict[str, Any] = {}
+    for _attempt in range(max(1, attempts)):
+        snapshot = client.request({
+            "v": PROTOCOL_VERSION,
+            "id": f"ppo-eval-wait-{time.time_ns()}",
+            "type": "snapshot_request",
+            "arena_id": arena_id,
+        })
+        players = snapshot.get("players", []) if isinstance(snapshot, dict) else []
+        present = {str(player.get("name")) for player in players if isinstance(player, dict)}
+        if expected.issubset(present):
+            return snapshot
+        if sleep_seconds > 0:
+            time.sleep(sleep_seconds)
+    raise RuntimeError(f"missing players {sorted(expected - present)} in eval setup snapshot: {snapshot}")
 
 
 def _parse_curriculum_steps(value: str) -> tuple[int, int]:

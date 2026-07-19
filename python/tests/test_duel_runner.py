@@ -1,10 +1,12 @@
 import unittest
+import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
 import numpy as np
 
 from mc_pvp_env.config import EnvConfig
+from mc_pvp_env.duel_recording import load_duel_record_dataset
 from mc_pvp_env.duel_runner import make_policy_predictor, run_auto_duel_daemon, run_bc_duel
 from mc_pvp_env.duel_policy_manifest import DuelPolicy
 from mc_pvp_env.mocks import MockBotController, MockPluginServer
@@ -35,8 +37,34 @@ class DuelRunnerTests(unittest.TestCase):
             plugin.close()
             bot.close()
 
+    def test_runner_writes_duel_record_when_enabled(self):
+        plugin = MockPluginServer()
+        bot = MockBotController()
+        try:
+            config = EnvConfig(plugin_port=plugin.port, bot_port=bot.port, max_episode_ticks=10)
+            with tempfile.TemporaryDirectory() as tmp:
+                summary = run_bc_duel(
+                    Path("unused.pt"),
+                    config,
+                    player_name="SCRIPT-A0",
+                    robo_name="ROBO-A0",
+                    max_steps=2,
+                    wait_timeout_seconds=2.0,
+                    predictor=lambda _obs: 4,
+                    record_dir=tmp,
+                )
+                self.assertEqual(summary.steps, 2)
+                dataset = load_duel_record_dataset(tmp)
+                self.assertEqual(len(dataset.episode_files), 1)
+                arrays = dataset.load_episode(dataset.episode_files[0])
+                self.assertEqual(arrays["action_id"].shape, (2, 2))
+                self.assertEqual(arrays["action_id"][0, 0], 4)
+        finally:
+            plugin.close()
+            bot.close()
+
     def test_auto_daemon_detects_human_duel_and_forwards_target_username(self):
-        plugin = MockPluginServer(self_name="ROBO", opponent_name="HumanPlayer")
+        plugin = MockPluginServer(self_name="ROBO", opponent_name="KyaKayKya")
         bot = MockBotController()
         try:
             config = EnvConfig(plugin_port=plugin.port, bot_port=bot.port, max_episode_ticks=10)
@@ -61,8 +89,38 @@ class DuelRunnerTests(unittest.TestCase):
             applied = [request for request in bot.actions if request["type"] == "apply_action"]
             self.assertGreaterEqual(len(applied), 1)
             self.assertEqual(applied[0]["agent_id"], "ROBO")
-            self.assertEqual(applied[0]["target_username"], "HumanPlayer")
+            self.assertEqual(applied[0]["target_username"], "KyaKayKya")
             self.assertEqual(applied[0]["action"][7], 1)
+        finally:
+            plugin.close()
+            bot.close()
+
+    def test_auto_daemon_despawns_generated_player_duel_robo_after_session(self):
+        plugin = MockPluginServer(self_name="ROBO_A1", opponent_name="KyaKayKya", arena_id="arena_1")
+        bot = MockBotController()
+        try:
+            config = EnvConfig(plugin_port=plugin.port, bot_port=bot.port, max_episode_ticks=10)
+            import mc_pvp_env.duel_runner as duel_runner
+
+            original_resolve = duel_runner.resolve_difficulty
+            original_predictor = duel_runner.make_policy_predictor
+            try:
+                duel_runner.resolve_difficulty = lambda _manifest, difficulty: DuelPolicy(difficulty, "bc", Path("unused.pt"))
+                duel_runner.make_policy_predictor = lambda _policy: (lambda _obs: 4)
+                summary = run_auto_duel_daemon(
+                    config,
+                    Path("unused-manifest.json"),
+                    max_sessions=1,
+                    wait_timeout_seconds=2.0,
+                    max_steps=2,
+                )
+            finally:
+                duel_runner.resolve_difficulty = original_resolve
+                duel_runner.make_policy_predictor = original_predictor
+            self.assertEqual(summary.sessions, 1)
+            remaining = {item["agent_id"] for item in bot.bots}
+            self.assertNotIn("ROBO_A1", remaining)
+            self.assertIn("ROBO", remaining)
         finally:
             plugin.close()
             bot.close()

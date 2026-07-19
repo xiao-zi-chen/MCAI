@@ -20,6 +20,29 @@ final class CombatHitValidatorTest {
     }
 
     @Test
+    void legacyHitValidatorUsesVanillaEntityInteractionRange() {
+        Vector eye = new Vector(0.0, 1.62, 0.0);
+        Vector forward = new Vector(0.0, 0.0, -1.0);
+        BoundingBox legalVictim = new BoundingBox(-0.3, 0.0, -3.2, 0.3, 1.8, -2.9);
+        BoundingBox extendedVictim = new BoundingBox(-0.3, 0.0, -3.35, 0.3, 1.8, -3.05);
+
+        assertTrue(CombatHitValidator.entityReach() <= 3.0);
+        assertTrue(CombatHitValidator.hitboxExpansion() <= 0.01);
+        assertTrue(CombatHitValidator.rayIntersectsBox(
+            eye,
+            forward,
+            legalVictim.expand(CombatHitValidator.hitboxExpansion()),
+            CombatHitValidator.entityReach()
+        ));
+        assertFalse(CombatHitValidator.rayIntersectsBox(
+            eye,
+            forward,
+            extendedVictim.expand(CombatHitValidator.hitboxExpansion()),
+            CombatHitValidator.entityReach()
+        ));
+    }
+
+    @Test
     void blockHitAtOrBeforeVictimDistanceRejectsHit() {
         assertTrue(CombatHitValidator.isBlockHitBeforeVictim(2.0, 2.2));
         assertTrue(CombatHitValidator.isBlockHitBeforeVictim(2.0, 2.0));

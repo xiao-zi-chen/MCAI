@@ -4,7 +4,8 @@ import socket
 import threading
 from typing import Any
 
-from mc_pvp_env.protocol import decode_jsonl, encode_jsonl, PROTOCOL_VERSION
+from mc_pvp_env.action_abi import SwordPvPActionV1, VirtualHIDFrameV1
+from mc_pvp_env.protocol import JsonlClient, decode_jsonl, encode_jsonl, PROTOCOL_VERSION
 
 
 def make_snapshot(tick: int = 0, phase: str = "running", self_name: str = "ROBO-A0", opponent_name: str = "SCRIPT-A0") -> dict[str, Any]:
@@ -13,6 +14,7 @@ def make_snapshot(tick: int = 0, phase: str = "running", self_name: str = "ROBO-
         "id": "snapshot",
         "type": "snapshot",
         "arena_id": "arena_0",
+        "episode_id": "mock-episode",
         "tick": tick,
         "phase": phase,
         "combat_mode": "hit_count",
@@ -34,6 +36,10 @@ def make_snapshot(tick: int = 0, phase: str = "running", self_name: str = "ROBO-
                 "hurt_time": 0.0,
                 "on_ground": True,
                 "line_of_sight": True,
+                "sprinting": False,
+                "sneaking": False,
+                "selected_hotbar_slot": 0,
+                "food_level": 20,
             },
             {
                 "name": opponent_name,
@@ -46,6 +52,10 @@ def make_snapshot(tick: int = 0, phase: str = "running", self_name: str = "ROBO-
                 "hurt_time": 0.0,
                 "on_ground": True,
                 "line_of_sight": True,
+                "sprinting": False,
+                "sneaking": False,
+                "selected_hotbar_slot": 0,
+                "food_level": 20,
             },
         ],
         "events": [],
@@ -71,6 +81,9 @@ class _JsonlMockServer:
             pass
         self._sock.close()
         self._thread.join(timeout=1.0)
+
+    def client(self) -> JsonlClient:
+        return JsonlClient(self.host, self.port, name=type(self).__name__)
 
     def _serve(self) -> None:
         while not self._stop.is_set():
@@ -101,6 +114,7 @@ class MockPluginServer(_JsonlMockServer):
         self,
         self_name: str = "ROBO-A0",
         opponent_name: str = "SCRIPT-A0",
+        arena_id: str = "arena_0",
         difficulty: str = "bc",
         mode: str = "player_duel",
         phase: str = "running",
@@ -109,6 +123,7 @@ class MockPluginServer(_JsonlMockServer):
         self.tick = 0
         self.self_name = self_name
         self.opponent_name = opponent_name
+        self.arena_id = arena_id
         self.difficulty = difficulty
         self.mode = mode
         self.phase = phase
@@ -140,7 +155,7 @@ class MockPluginServer(_JsonlMockServer):
                 "duel": {
                     "active": self.tick < 8,
                     "mode": self.mode,
-                    "arena_id": "arena_0",
+                    "arena_id": self.arena_id,
                     "player": "" if self.mode == "ai_battle" else self.opponent_name,
                     "robo": self.self_name,
                     "difficulty": self.difficulty,
@@ -153,7 +168,7 @@ class MockPluginServer(_JsonlMockServer):
                     {
                         "active": self.tick < 8,
                         "mode": self.mode,
-                        "arena_id": "arena_0",
+                        "arena_id": self.arena_id,
                         "player": "" if self.mode == "ai_battle" else self.opponent_name,
                         "robo": self.self_name,
                         "difficulty": self.difficulty,
@@ -189,6 +204,7 @@ class MockPluginServer(_JsonlMockServer):
 class MockBotController(_JsonlMockServer):
     def __init__(self):
         self.actions: list[dict[str, Any]] = []
+        self.spawn_requests: list[dict[str, Any]] = []
         self.bots: list[dict[str, Any]] = []
         super().__init__(self._handle)
 
@@ -199,6 +215,7 @@ class MockBotController(_JsonlMockServer):
         if req_type == "status":
             return {"v": 1, "id": request["id"], "type": "status", "ok": True, "bots": self.bots}
         if req_type == "spawn":
+            self.spawn_requests.append(request)
             for bot in request.get("bots", []):
                 if isinstance(bot, dict):
                     self.bots.append({
@@ -215,6 +232,28 @@ class MockBotController(_JsonlMockServer):
         if req_type == "apply_action":
             self.actions.append(request)
             return {"v": 1, "id": request["id"], "type": "apply_action_ack", "accepted": True}
+        if req_type == "apply_restricted_action":
+            self.actions.append(request)
+            requested = SwordPvPActionV1.from_dict(request["action"])
+            executed = VirtualHIDFrameV1(
+                sequence_id=requested.sequence_id,
+                source_sequence_id=requested.sequence_id,
+                execute_tick=requested.observation_tick,
+                execute_time_ms=requested.policy_time_ms,
+                control_step_ticks=requested.control_step_ticks,
+                mouse_dx=requested.mouse_dx,
+                mouse_dy=requested.mouse_dy,
+            )
+            return {
+                "v": 1,
+                "id": request["id"],
+                "type": "apply_restricted_action_ack",
+                "accepted": True,
+                "action_requested": requested.to_dict(),
+                "action_executed": executed.to_dict(),
+                "action_execution_status": executed.status.value,
+                "action_execution_status_reasons": list(executed.status_reasons),
+            }
         if req_type == "clear_controls":
             return {"v": 1, "id": request["id"], "type": "clear_controls_ack", "ok": True}
         if req_type == "despawn":

@@ -13,7 +13,28 @@ public final class CombatValidationPolicy {
         List<String> botPrefixes,
         String defaultRoboName
     ) {
+        return shouldValidateSyntheticOrBotAttack(attackerName, victimName, botPrefixes, defaultRoboName, "mineflayer");
+    }
+
+    public static boolean shouldValidateSyntheticOrBotAttack(
+        String attackerName,
+        String victimName,
+        List<String> botPrefixes,
+        String defaultRoboName,
+        String botCombatBackend
+    ) {
+        if (!usesSyntheticAttackValidation(botCombatBackend)) {
+            return false;
+        }
         return isBotControlledName(attackerName, botPrefixes, defaultRoboName);
+    }
+
+    static boolean usesSyntheticAttackValidation(String botCombatBackend) {
+        if (botCombatBackend == null || botCombatBackend.isBlank()) {
+            return false;
+        }
+        String normalized = botCombatBackend.trim().toLowerCase(Locale.ROOT);
+        return normalized.equals("synthetic") || normalized.equals("legacy_synthetic");
     }
 
     static boolean isBotControlledName(String name, List<String> botPrefixes, String defaultRoboName) {

@@ -6,13 +6,13 @@
       "scripted_policy": "curriculum_scripted"
     },
     {
-      "id": "mineflayer_pvp",
-      "policy_type": "mineflayer_pvp"
+      "id": "controller_pvp",
+      "policy_type": "controller_pvp"
     },
     {
-      "id": "champion_robo_20260702",
+      "id": "ppo_20260702_mineflayer_pvp_continue4_32k",
       "policy_type": "ppo",
-      "checkpoint": "checkpoints/champion_robo/ppo_final.zip"
+      "checkpoint": "runs/worker_000/training/ppo_20260702-mineflayer_pvp_continue4_32k/ppo_final.zip"
     }
   ]
 }

@@ -15,6 +15,7 @@ public final class EpisodeRegistry {
     private final Set<String> spectatorUsernames;
     private final Map<String, EpisodeState> states = new ConcurrentHashMap<>();
     private final Map<String, String> playerArena = new ConcurrentHashMap<>();
+    private final Map<String, String> canonicalPlayerNames = new ConcurrentHashMap<>();
 
     public EpisodeRegistry(int maxTicks, int targetHits) {
         this(maxTicks, targetHits, List.of());
@@ -35,7 +36,7 @@ public final class EpisodeRegistry {
         if (isSpectator(playerName)) {
             return null;
         }
-        String arenaId = playerArena.get(playerName);
+        String arenaId = playerArena.get(normalizeName(playerName));
         return arenaId == null ? null : state(arenaId);
     }
 
@@ -43,14 +44,18 @@ public final class EpisodeRegistry {
         EpisodeState state = state(arenaId);
         List<String> previous = state.registeredPlayers();
         for (String player : previous) {
-            playerArena.remove(player, state.arenaId());
+            String normalized = normalizeName(player);
+            playerArena.remove(normalized, state.arenaId());
+            canonicalPlayerNames.remove(normalized);
         }
         List<String> trainingPlayers = players.stream()
             .filter(player -> !isSpectator(player))
             .toList();
         state.registerPlayers(trainingPlayers);
         for (String player : trainingPlayers) {
-            playerArena.put(player, state.arenaId());
+            String normalized = normalizeName(player);
+            playerArena.put(normalized, state.arenaId());
+            canonicalPlayerNames.put(normalized, player);
         }
     }
 
@@ -59,7 +64,7 @@ public final class EpisodeRegistry {
     }
 
     public List<String> allRegisteredPlayers() {
-        return new ArrayList<>(playerArena.keySet());
+        return new ArrayList<>(canonicalPlayerNames.values());
     }
 
     public boolean isSpectator(String playerName) {
@@ -82,13 +87,21 @@ public final class EpisodeRegistry {
     }
 
     public void cleanup(String arenaId) {
-        state(arenaId).cleanup();
+        EpisodeState state = state(arenaId);
+        for (String player : state.registeredPlayers()) {
+            String normalized = normalizeName(player);
+            playerArena.remove(normalized, state.arenaId());
+            canonicalPlayerNames.remove(normalized);
+        }
+        state.cleanup();
     }
 
     public void cleanupAll() {
         for (EpisodeState state : states.values()) {
             state.cleanup();
         }
+        playerArena.clear();
+        canonicalPlayerNames.clear();
     }
 
     public static String normalizeArenaId(String arenaId) {

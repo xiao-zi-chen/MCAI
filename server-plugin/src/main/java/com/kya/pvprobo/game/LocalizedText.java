@@ -3,6 +3,7 @@ package com.kya.pvprobo.game;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
@@ -48,6 +49,7 @@ public final class LocalizedText {
         Map.entry("difficulty.script_easy.desc", "A simple SCRIPT fighter for warming up."),
         Map.entry("difficulty.script_hard.desc", "A tougher SCRIPT fighter with stronger pressure."),
         Map.entry("duel.active", "A PVPRobo duel or AI battle is already active. Stop it before starting another fight."),
+        Map.entry("duel.arena_busy", "All PVPRobo arenas are busy. Please wait for a fight to finish."),
         Map.entry("duel.loading", "Getting the arena ready: {0} vs {1} on {2}. First to {3} hits wins."),
         Map.entry("ai.loading", "Setting up AI Battle: {0} ({1}) vs {2} ({3}). First to {4} hits wins."),
         Map.entry("ai.battle_draw", "AI Battle Draw"),
@@ -101,7 +103,7 @@ public final class LocalizedText {
         Map.entry("menu.admin.paste_arena.lore2", "并保存默认对战坐标。"),
         Map.entry("item.menu", "PVPRobo 菜单"),
         Map.entry("item.menu.lore", "右键打开对战菜单。"),
-        Map.entry("item.start", "挑战 {0}"),
+        Map.entry("item.start", "挑战{0}"),
         Map.entry("item.start.robo.lore", "右键进入擂台。"),
         Map.entry("item.start.robo_strong.lore", "右键来一场更硬的对局。"),
         Map.entry("item.ai.lore", "右键安排一场 AI 对决。"),
@@ -111,7 +113,7 @@ public final class LocalizedText {
         Map.entry("difficulty.champion", "冠军 ROBO"),
         Map.entry("difficulty.script_easy", "入门 SCRIPT"),
         Map.entry("difficulty.script_hard", "强劲 SCRIPT"),
-        Map.entry("difficulty.challenge", "挑战 {0}"),
+        Map.entry("difficulty.challenge", "挑战{0}"),
         Map.entry("difficulty.locked", "{0} 未解锁"),
         Map.entry("difficulty.unavailable", "{0} 暂时不能挑战。"),
         Map.entry("difficulty.locked_lore", "这个 AI 还没有配置好。"),
@@ -123,6 +125,7 @@ public final class LocalizedText {
         Map.entry("difficulty.script_easy.desc", "基础 SCRIPT，热身用刚刚好。"),
         Map.entry("difficulty.script_hard.desc", "更强势的 SCRIPT，会主动给压力。"),
         Map.entry("duel.active", "当前已有一场 PVPRobo 对战或 AI 对决在进行，请先结束后再开始。"),
+        Map.entry("duel.arena_busy", "所有 PVPRobo 擂台都在使用中，请等待一场对战结束。"),
         Map.entry("duel.loading", "正在准备擂台：{0} vs {1}，难度 {2}，先命中 {3} 次获胜。"),
         Map.entry("ai.loading", "正在安排 AI 对决：{0}（{1}）vs {2}（{3}），先命中 {4} 次获胜。"),
         Map.entry("ai.battle_draw", "AI 对决平局"),
@@ -176,20 +179,28 @@ public final class LocalizedText {
         if (player == null) {
             return configuredDefaultLanguage();
         }
-        Locale locale = player.locale();
-        String tag = locale == null ? configuredDefaultLanguage() : locale.toString().toLowerCase(Locale.ROOT);
-        if (catalogs.containsKey(tag)) {
+        return resolveLanguage(player.locale(), configuredDefaultLanguage(), catalogs.keySet());
+    }
+
+    static String resolveLanguage(Locale locale, String defaultLanguage, Set<String> supportedLanguages) {
+        String normalizedDefault = normalizeLanguage(defaultLanguage);
+        String fallback = supportedLanguages.contains(normalizedDefault) ? normalizedDefault : DEFAULT_LANGUAGE;
+        if (locale == null) {
+            return fallback;
+        }
+        String tag = normalizeLanguage(locale.toString());
+        if (supportedLanguages.contains(tag)) {
             return tag;
         }
-        String shortTag = tag.replace('-', '_');
-        if (catalogs.containsKey(shortTag)) {
-            return shortTag;
+        String languageTag = normalizeLanguage(locale.toLanguageTag());
+        if (supportedLanguages.contains(languageTag)) {
+            return languageTag;
         }
         String language = locale == null ? "" : locale.getLanguage().toLowerCase(Locale.ROOT);
         if (language.equals("zh")) {
             return CHINESE_SIMPLIFIED;
         }
-        return configuredDefaultLanguage();
+        return fallback;
     }
 
     public String text(Player player, String key, Object... args) {
@@ -225,8 +236,12 @@ public final class LocalizedText {
 
     private String configuredDefaultLanguage() {
         String configured = plugin.getConfig().getString("localization.default-language", DEFAULT_LANGUAGE);
-        String normalized = configured == null ? DEFAULT_LANGUAGE : configured.toLowerCase(Locale.ROOT).replace('-', '_');
+        String normalized = normalizeLanguage(configured);
         return catalogs.containsKey(normalized) ? normalized : DEFAULT_LANGUAGE;
+    }
+
+    private static String normalizeLanguage(String language) {
+        return language == null ? DEFAULT_LANGUAGE : language.toLowerCase(Locale.ROOT).replace('-', '_');
     }
 
     private String format(String template, Object... args) {

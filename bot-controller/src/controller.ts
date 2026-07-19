@@ -1,12 +1,14 @@
 import { decodeAction, neutralAction, randomAction } from "./action.js";
+import { decodeSwordPvpActionV1, RESTRICTED_ACTION_FORBIDDEN_FIELDS } from "./actionAbi.js";
+import type { BotBackend } from "./backend.js";
 import type { BotConfig } from "./config.js";
 import type { JsonObject } from "./jsonl.js";
-import { MineflayerAdapter } from "./mineflayerAdapter.js";
+import { createBotBackend } from "./backends/index.js";
 
 export class BotController {
   constructor(
     private readonly config: BotConfig,
-    private readonly adapter: MineflayerAdapter = new MineflayerAdapter(config)
+    private readonly adapter: BotBackend = createBotBackend(config)
   ) {}
 
   async handle(message: JsonObject): Promise<JsonObject> {
@@ -16,23 +18,25 @@ export class BotController {
         case "hello":
           return this.base(id, "hello_ack", { server: "pvprobo-bot-controller" });
         case "spawn":
-          return this.spawn(id, message);
+          return await this.spawn(id, message);
         case "status":
           return this.base(id, "status", { ok: true, bots: this.adapter.status() });
         case "ready_request":
           return this.base(id, "ready", { bots: this.adapter.status().map(bot => bot.agent_id) });
         case "act":
-          return this.act(id, message);
+          return await this.act(id, message);
         case "apply_action":
-          return this.applyAction(id, message);
+          return await this.applyAction(id, message);
+        case "apply_restricted_action":
+          return await this.applyRestrictedAction(id, message);
         case "clear_controls":
         case "stop_action":
-          this.adapter.clearControls(typeof message.agent_id === "string" ? message.agent_id : undefined);
+          await this.adapter.clearControls(typeof message.agent_id === "string" ? message.agent_id : undefined);
           return this.base(id, "clear_controls_ack", { ok: true });
         case "despawn":
-          return this.despawn(id, message);
+          return await this.despawn(id, message);
         case "disconnect":
-          this.adapter.disconnect();
+          await this.adapter.disconnect();
           return this.base(id, "disconnect_ack", { ok: true });
         default:
           return this.base(id, "error", { ok: false, error: `unsupported message type: ${String(message.type)}` });
@@ -44,13 +48,13 @@ export class BotController {
 
   private async spawn(id: string, message: JsonObject): Promise<JsonObject> {
     const specs = Array.isArray(message.bots)
-      ? message.bots as Array<{ agent_id?: string; username?: string; arena_id?: string; role?: string }>
+      ? message.bots as Array<{ agent_id?: string; username?: string; arena_id?: string; role?: string; x?: number; y?: number; z?: number; yaw?: number; pitch?: number }>
       : this.config.botNames.map(name => ({ agent_id: name, username: name }));
     const bots = await this.adapter.spawn(specs);
     return this.base(id, "spawn_ack", { ok: true, bots });
   }
 
-  private despawn(id: string, message: JsonObject): JsonObject {
+  private async despawn(id: string, message: JsonObject): Promise<JsonObject> {
     const rawAgents = Array.isArray(message.agent_ids)
       ? message.agent_ids
       : (typeof message.agent_id === "string" ? [message.agent_id] : []);
@@ -58,38 +62,57 @@ export class BotController {
     if (agentIds.length === 0) {
       throw new Error("despawn requires agent_id or agent_ids");
     }
-    const bots = this.adapter.disconnectAgents(agentIds);
+    const bots = await this.adapter.disconnectAgents(agentIds);
     return this.base(id, "despawn_ack", { ok: true, bots });
   }
 
-  private act(id: string, message: JsonObject): JsonObject {
+  private async act(id: string, message: JsonObject): Promise<JsonObject> {
     const repeatTicks = repeatTicksFrom(message, this.config.actionRepeatTicks);
     const actions = message.actions;
     if (!actions || typeof actions !== "object" || Array.isArray(actions)) {
       throw new Error("act requires actions object");
     }
     for (const [agentId, rawAction] of Object.entries(actions as Record<string, unknown>)) {
-      this.adapter.applyAction(agentId, decodeAction(rawAction), repeatTicks);
+      await this.adapter.applyAction(agentId, decodeAction(rawAction), repeatTicks);
     }
-    this.applyScriptedOpponent(repeatTicks);
+    await this.applyScriptedOpponent(repeatTicks);
     return this.base(id, "act_ack", { accepted: true });
   }
 
-  private applyAction(id: string, message: JsonObject): JsonObject {
+  private async applyAction(id: string, message: JsonObject): Promise<JsonObject> {
     if (typeof message.agent_id !== "string") {
       throw new Error("apply_action requires agent_id");
     }
-    this.adapter.applyAction(
+    await this.adapter.applyAction(
       message.agent_id,
       decodeAction(message.action),
       repeatTicksFrom(message, this.config.actionRepeatTicks),
       typeof message.target_username === "string" ? message.target_username : undefined
     );
-    this.applyScriptedOpponent(repeatTicksFrom(message, this.config.actionRepeatTicks));
+    await this.applyScriptedOpponent(repeatTicksFrom(message, this.config.actionRepeatTicks));
     return this.base(id, "apply_action_ack", { accepted: true });
   }
 
-  private applyScriptedOpponent(repeatTicks: number): void {
+  private async applyRestrictedAction(id: string, message: JsonObject): Promise<JsonObject> {
+    if (typeof message.agent_id !== "string") {
+      throw new Error("apply_restricted_action requires agent_id");
+    }
+    const forbidden = Object.keys(message).filter(key => (RESTRICTED_ACTION_FORBIDDEN_FIELDS as readonly string[]).includes(key));
+    if (forbidden.length > 0) {
+      throw new Error(`forbidden restricted action fields: ${forbidden.sort().join(",")}`);
+    }
+    const action = decodeSwordPvpActionV1(message.action);
+    const executed = await this.adapter.applyRestrictedAction(message.agent_id, action);
+    return this.base(id, "apply_restricted_action_ack", {
+      accepted: true,
+      action_requested: action,
+      action_executed: executed,
+      action_execution_status: executed.status,
+      action_execution_status_reasons: executed.status_reasons,
+    });
+  }
+
+  private async applyScriptedOpponent(repeatTicks: number): Promise<void> {
     if (this.config.scriptedOpponent === "none") {
       return;
     }
@@ -103,10 +126,10 @@ export class BotController {
     for (const group of byArena.values()) {
       const scripted = group.find(bot => bot.role === "scripted" || /^SCRIPT[-_]/.test(bot.agent_id)) ?? group[1];
       if (scripted) {
-        if (this.config.scriptedOpponent === "mineflayer_pvp") {
-          this.adapter.applyPvpOpponent(scripted.agent_id, repeatTicks);
+        if (this.config.scriptedOpponent === "controller_pvp") {
+          await this.adapter.applyPvpOpponent(scripted.agent_id, repeatTicks);
         } else {
-          this.adapter.applyAction(scripted.agent_id, decodeAction(randomAction()), repeatTicks);
+          await this.adapter.applyAction(scripted.agent_id, decodeAction(randomAction()), repeatTicks);
         }
       }
     }

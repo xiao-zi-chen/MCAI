@@ -12,6 +12,7 @@ import numpy as np
 
 from mc_pvp_env.actions import curriculum_action_to_vector
 from mc_pvp_env.config import EnvConfig
+from mc_pvp_env.duel_recording import DuelRecordEpisodeBuffer, DuelRecordWriter
 from mc_pvp_env.duel_policy_manifest import DuelPolicy, resolve_difficulty
 from mc_pvp_env.expert import CurriculumScriptedTargetPolicy, WeakScriptedTargetPolicy
 from mc_pvp_env.observations import flatten_snapshot
@@ -20,6 +21,8 @@ from mc_pvp_env.train_bc import load_bc_policy, predict_action
 
 
 TERMINAL_PHASES = {"self_win", "opponent_win", "draw"}
+_POLICY_CACHE_LOCK = threading.Lock()
+_MODEL_CACHE: dict[tuple[str, str, str], tuple[Any, threading.Lock]] = {}
 
 
 @dataclass(frozen=True)
@@ -54,6 +57,7 @@ def run_bc_duel(
     max_steps: int | None = None,
     wait_timeout_seconds: float = 120.0,
     predictor: Callable[[np.ndarray], int] | None = None,
+    record_dir: str | Path | None = None,
 ) -> DuelRunSummary:
     if predictor is None:
         predictor = make_policy_predictor(DuelPolicy("bc", "bc", Path(policy_path)))
@@ -65,6 +69,8 @@ def run_bc_duel(
         max_steps=max_steps,
         wait_timeout_seconds=wait_timeout_seconds,
         predictor=predictor,
+        difficulty="bc",
+        record_dir=record_dir,
     )
 
 
@@ -77,6 +83,8 @@ def run_policy_duel(
     max_steps: int | None = None,
     wait_timeout_seconds: float = 120.0,
     predictor: Callable[[np.ndarray], int],
+    difficulty: str = "",
+    record_dir: str | Path | None = None,
 ) -> DuelRunSummary:
 
     arena = arena_id or config.arena
@@ -85,6 +93,8 @@ def run_policy_duel(
     bot = JsonlClient(duel_config.host, duel_config.bot_port, duel_config.request_timeout_seconds, "bot-controller")
     steps = 0
     last_snapshot: dict[str, Any] = {}
+    record_writer = DuelRecordWriter(record_dir, config=duel_config) if record_dir is not None else None
+    record_buffer: DuelRecordEpisodeBuffer | None = None
 
     try:
         _request(plugin, "hello", role="duel-runner")
@@ -93,6 +103,15 @@ def run_policy_duel(
 
         deadline = time.monotonic() + wait_timeout_seconds
         snapshot = _wait_for_duel_snapshot(plugin, arena, robo_name, player_name, deadline)
+        if record_writer is not None:
+            record_buffer = _duel_record_buffer(
+                snapshot,
+                arena_id=arena,
+                actor_names=[robo_name, player_name],
+                actor_roles=["robo", "human"],
+                mode="player_duel",
+                difficulty=difficulty,
+            )
         limit = max_steps or duel_config.max_episode_ticks
         while steps < limit:
             last_snapshot = snapshot
@@ -111,19 +130,34 @@ def run_policy_duel(
                 repeat_ticks=duel_config.action_repeat_ticks,
                 action=action,
             )
-            snapshot = _request(
+            next_snapshot = _request(
                 plugin,
                 "wait_tick",
                 arena_id=arena,
                 after_tick=int(snapshot.get("tick", 0)),
             )
+            if record_buffer is not None:
+                record_buffer.append_step(
+                    pre_snapshot=snapshot,
+                    post_snapshot=next_snapshot,
+                    applied_actions={robo_name: action},
+                    action_ids={robo_name: action_id},
+                    action_sources={robo_name: "policy", player_name: "human_inferred"},
+                )
+            snapshot = next_snapshot
             steps += 1
         return _summary(last_snapshot or snapshot, steps, "step_limit" if steps >= limit else "terminal")
     finally:
+        _write_duel_record(record_writer, record_buffer)
         try:
             _request(bot, "clear_controls", agent_id=robo_name)
         except Exception:
             pass
+        if robo_name != "ROBO":
+            try:
+                _request(bot, "despawn", agent_ids=[robo_name])
+            except Exception:
+                pass
         plugin.close()
         bot.close()
 
@@ -135,6 +169,7 @@ def run_ai_battle(
     arena_id: str | None = None,
     max_steps: int | None = None,
     wait_timeout_seconds: float = 120.0,
+    record_dir: str | Path | None = None,
 ) -> DuelRunSummary:
     if len(participants) != 2:
         raise ValueError("AI battle requires exactly two participants")
@@ -144,6 +179,8 @@ def run_ai_battle(
     steps = 0
     last_snapshot: dict[str, Any] = {}
     left, right = participants
+    record_writer = DuelRecordWriter(record_dir, config=config) if record_dir is not None else None
+    record_buffer: DuelRecordEpisodeBuffer | None = None
 
     try:
         _request(plugin, "hello", role="ai-battle-runner")
@@ -153,16 +190,35 @@ def run_ai_battle(
 
         deadline = time.monotonic() + wait_timeout_seconds
         snapshot = _wait_for_duel_snapshot(plugin, arena, left.name, right.name, deadline)
+        if record_writer is not None:
+            record_buffer = _duel_record_buffer(
+                snapshot,
+                arena_id=arena,
+                actor_names=[left.name, right.name],
+                actor_roles=[_ai_actor_role(left.difficulty), _ai_actor_role(right.difficulty)],
+                mode="ai_battle",
+                difficulty=f"{left.difficulty}:{right.difficulty}",
+                participants=[
+                    {"name": left.name, "difficulty": left.difficulty},
+                    {"name": right.name, "difficulty": right.difficulty},
+                ],
+            )
         limit = max_steps or config.max_episode_ticks
         while steps < limit:
             last_snapshot = snapshot
             phase = str(snapshot.get("phase", ""))
             if phase in TERMINAL_PHASES:
                 break
+            applied_actions: dict[str, list[int]] = {}
+            action_ids: dict[str, int] = {}
+            action_sources: dict[str, str] = {}
             for self_participant, opponent in ((left, right), (right, left)):
                 obs = flatten_snapshot(snapshot, self_participant.name, opponent.name, config.max_episode_ticks)
                 action_id = int(self_participant.predictor(obs))
                 action = curriculum_action_to_vector(action_id).astype(int).tolist()
+                applied_actions[self_participant.name] = action
+                action_ids[self_participant.name] = action_id
+                action_sources[self_participant.name] = _ai_action_source(self_participant.difficulty)
                 _request(
                     bot,
                     "apply_action",
@@ -172,15 +228,25 @@ def run_ai_battle(
                     repeat_ticks=config.action_repeat_ticks,
                     action=action,
                 )
-            snapshot = _request(
+            next_snapshot = _request(
                 plugin,
                 "wait_tick",
                 arena_id=arena,
                 after_tick=int(snapshot.get("tick", 0)),
             )
+            if record_buffer is not None:
+                record_buffer.append_step(
+                    pre_snapshot=snapshot,
+                    post_snapshot=next_snapshot,
+                    applied_actions=applied_actions,
+                    action_ids=action_ids,
+                    action_sources=action_sources,
+                )
+            snapshot = next_snapshot
             steps += 1
         return _summary(last_snapshot or snapshot, steps, "step_limit" if steps >= limit else "terminal")
     finally:
+        _write_duel_record(record_writer, record_buffer)
         for participant in participants:
             try:
                 _request(bot, "clear_controls", agent_id=participant.name)
@@ -205,6 +271,7 @@ def run_auto_duel_daemon(
     max_steps: int | None = None,
     max_sessions: int | None = None,
     idle_timeout_seconds: float | None = None,
+    record_dir: str | Path | None = None,
 ) -> AutoDuelSummary:
     arena = arena_id or config.arena
     plugin = JsonlClient(config.host, config.plugin_port, config.request_timeout_seconds, "plugin")
@@ -292,6 +359,7 @@ def run_auto_duel_daemon(
                                 "arena_id": current_arena,
                                 "max_steps": max_steps,
                                 "wait_timeout_seconds": wait_timeout_seconds,
+                                "record_dir": record_dir,
                                 "episode_id": episode_id,
                             },
                             daemon=True,
@@ -346,6 +414,8 @@ def run_auto_duel_daemon(
                             "max_steps": max_steps,
                             "wait_timeout_seconds": wait_timeout_seconds,
                             "predictor": predictor,
+                            "difficulty": difficulty,
+                            "record_dir": record_dir,
                             "episode_id": episode_id,
                         },
                         daemon=True,
@@ -422,19 +492,21 @@ def make_policy_predictor(policy: DuelPolicy) -> Callable[[np.ndarray], int]:
     if policy.policy_type == "bc":
         if policy.checkpoint is None:
             raise ValueError(f"BC duel policy '{policy.difficulty}' is missing a checkpoint")
-        model, _policy_config = load_bc_policy(policy.checkpoint)
-        return lambda obs: predict_action(model, obs)
+        model, model_lock = _cached_model(policy)
+
+        def _predict_bc(obs: np.ndarray) -> int:
+            with model_lock:
+                return int(predict_action(model, obs))
+
+        return _predict_bc
     if policy.policy_type == "ppo":
         if policy.checkpoint is None:
             raise ValueError(f"PPO duel policy '{policy.difficulty}' is missing a checkpoint")
-        try:
-            from stable_baselines3 import PPO
-        except ImportError as exc:
-            raise RuntimeError("Missing stable-baselines3. Run through uv or install python[sb3] to use PPO duel policies.") from exc
-        model = PPO.load(str(policy.checkpoint), device="cpu")
+        model, model_lock = _cached_model(policy)
 
         def _predict(obs: np.ndarray) -> int:
-            action, _state = model.predict(obs, deterministic=True)
+            with model_lock:
+                action, _state = model.predict(obs, deterministic=True)
             return int(np.asarray(action).item())
 
         return _predict
@@ -459,6 +531,32 @@ def make_policy_predictor(policy: DuelPolicy) -> Callable[[np.ndarray], int]:
 
         return _predict
     raise ValueError(f"Unsupported duel policy type: {policy.policy_type}")
+
+
+def _cached_model(policy: DuelPolicy) -> tuple[Any, threading.Lock]:
+    checkpoint = "" if policy.checkpoint is None else str(policy.checkpoint.resolve())
+    key = (policy.policy_type, policy.difficulty, checkpoint)
+    with _POLICY_CACHE_LOCK:
+        cached = _MODEL_CACHE.get(key)
+        if cached is not None:
+            return cached
+        if policy.policy_type == "bc":
+            if policy.checkpoint is None:
+                raise ValueError(f"BC duel policy '{policy.difficulty}' is missing a checkpoint")
+            model, _policy_config = load_bc_policy(policy.checkpoint)
+        elif policy.policy_type == "ppo":
+            if policy.checkpoint is None:
+                raise ValueError(f"PPO duel policy '{policy.difficulty}' is missing a checkpoint")
+            try:
+                from stable_baselines3 import PPO
+            except ImportError as exc:
+                raise RuntimeError("Missing stable-baselines3. Run through uv or install python[sb3] to use PPO duel policies.") from exc
+            model = PPO.load(str(policy.checkpoint), device="cpu")
+        else:
+            raise ValueError(f"Unsupported cached duel policy type: {policy.policy_type}")
+        cached = (model, threading.Lock())
+        _MODEL_CACHE[key] = cached
+        return cached
 
 
 def _wait_for_duel_snapshot(
@@ -491,6 +589,47 @@ def _summary(snapshot: dict[str, Any], steps: int, fallback_reason: str) -> Duel
         hit_counts={str(key): int(value) for key, value in hit_counts.items()},
         reason=str(snapshot.get("done_reason", fallback_reason)),
     )
+
+
+def _duel_record_buffer(
+    snapshot: dict[str, Any],
+    *,
+    arena_id: str,
+    actor_names: list[str],
+    actor_roles: list[str],
+    mode: str,
+    difficulty: str,
+    participants: list[dict[str, Any]] | None = None,
+) -> DuelRecordEpisodeBuffer:
+    episode_id = str(snapshot.get("episode_id", "")) or f"{mode}-{int(time.time() * 1000)}"
+    return DuelRecordEpisodeBuffer(
+        episode_id,
+        arena_id,
+        actor_names=actor_names,
+        actor_roles=actor_roles,
+        mode=mode,
+        difficulty=difficulty or "unknown",
+        participants=participants,
+    )
+
+
+def _write_duel_record(writer: DuelRecordWriter | None, buffer: DuelRecordEpisodeBuffer | None) -> None:
+    if writer is None or buffer is None or len(buffer) == 0:
+        return
+    try:
+        path = writer.write_episode(buffer)
+        print(f"PVPRobo duel record written path={path}", flush=True)
+    except Exception as exc:
+        print(f"PVPRobo duel record write failed error={exc}", flush=True)
+        traceback.print_exc()
+
+
+def _ai_actor_role(difficulty: str) -> str:
+    return "script" if difficulty.startswith("script_") else "ai"
+
+
+def _ai_action_source(difficulty: str) -> str:
+    return "scripted" if difficulty.startswith("script_") else "policy"
 
 
 def _parse_ai_participants(raw: Any) -> list[tuple[str, str]]:
@@ -532,6 +671,7 @@ def main() -> int:
     parser.add_argument("--poll-seconds", type=float, default=0.5)
     parser.add_argument("--max-sessions", type=int, default=None)
     parser.add_argument("--idle-timeout-seconds", type=float, default=None)
+    parser.add_argument("--record-dir", default=None, help="Optional duel trajectory output directory.")
     args = parser.parse_args()
 
     config = EnvConfig.from_json(Path(args.config))
@@ -548,6 +688,7 @@ def main() -> int:
             max_steps=args.max_steps,
             max_sessions=args.max_sessions,
             idle_timeout_seconds=args.idle_timeout_seconds,
+            record_dir=args.record_dir,
         )
         print("PVPRobo auto duel daemon summary")
         print(f"sessions={summary.sessions}")
@@ -568,6 +709,8 @@ def main() -> int:
         max_steps=args.max_steps,
         wait_timeout_seconds=args.wait_timeout_seconds,
         predictor=predictor,
+        difficulty=policy.difficulty,
+        record_dir=args.record_dir,
     )
     print("PVPRobo duel summary")
     print(f"difficulty={policy.difficulty}")

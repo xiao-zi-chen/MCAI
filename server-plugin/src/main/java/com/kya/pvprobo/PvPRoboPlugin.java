@@ -3,11 +3,17 @@ package com.kya.pvprobo;
 import com.kya.pvprobo.command.PvPRoboCommand;
 import com.kya.pvprobo.control.ControlServer;
 import com.kya.pvprobo.control.PluginCommandHandler;
+import com.kya.pvprobo.game.AfkService;
 import com.kya.pvprobo.game.ArenaService;
 import com.kya.pvprobo.game.DuelService;
 import com.kya.pvprobo.game.EpisodeRegistry;
 import com.kya.pvprobo.game.PvPEventListener;
+import com.kya.pvprobo.game.ReplayService;
+import com.kya.pvprobo.game.SkinProfileService;
 import com.kya.pvprobo.game.SnapshotService;
+import com.kya.pvprobo.monitoring.MonitoringServer;
+import com.kya.pvprobo.monitoring.MonitoringStore;
+import com.kya.pvprobo.monitoring.RecordingCatalog;
 import com.kya.pvprobo.thread.MainThreadBridge;
 import java.util.List;
 import org.bukkit.command.PluginCommand;
@@ -15,6 +21,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public final class PvPRoboPlugin extends JavaPlugin {
     private ControlServer controlServer;
+    private MonitoringStore monitoringStore;
+    private MonitoringServer monitoringServer;
+    private AfkService afkService;
 
     @Override
     public void onEnable() {
@@ -30,11 +39,19 @@ public final class PvPRoboPlugin extends JavaPlugin {
         ArenaService arenaService = new ArenaService(this, episodeRegistry);
         SnapshotService snapshotService = new SnapshotService();
         DuelService duelService = new DuelService(this, episodeRegistry, arenaService);
+        ReplayService replayService = new ReplayService(this);
+        afkService = new AfkService(this, duelService);
+        afkService.start();
+        monitoringStore = new MonitoringStore(this, duelService);
+        monitoringStore.start();
+        monitoringServer = new MonitoringServer(this, monitoringStore, new RecordingCatalog(this));
+        monitoringServer.start();
 
-        getServer().getPluginManager().registerEvents(new PvPEventListener(this, episodeRegistry, duelService), this);
+        getServer().getPluginManager().registerEvents(new PvPEventListener(this, episodeRegistry, duelService, afkService), this);
+        getServer().getPluginManager().registerEvents(new SkinProfileService(this), this);
         PluginCommand command = getCommand("pvprobo");
         if (command != null) {
-            PvPRoboCommand executor = new PvPRoboCommand(duelService);
+            PvPRoboCommand executor = new PvPRoboCommand(duelService, replayService);
             command.setExecutor(executor);
             command.setTabCompleter(executor);
         }
@@ -58,6 +75,15 @@ public final class PvPRoboPlugin extends JavaPlugin {
     public void onDisable() {
         if (controlServer != null) {
             controlServer.close();
+        }
+        if (monitoringServer != null) {
+            monitoringServer.close();
+        }
+        if (monitoringStore != null) {
+            monitoringStore.close();
+        }
+        if (afkService != null) {
+            afkService.close();
         }
     }
 }

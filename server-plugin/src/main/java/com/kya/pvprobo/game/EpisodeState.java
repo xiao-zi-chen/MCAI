@@ -12,7 +12,7 @@ public final class EpisodeState {
     private final int maxTicks;
     private final int defaultTargetHits;
     private final Queue<String> events = new ConcurrentLinkedQueue<>();
-    private List<String> registeredPlayers = List.of("ROBO-A0", "SCRIPT-A0");
+    private List<String> registeredPlayers = List.of();
     private Map<String, Integer> hitCounts = new HashMap<>();
     private Map<String, Integer> pendingHitDeltas = new HashMap<>();
     private String episodeId = "";
@@ -117,6 +117,7 @@ public final class EpisodeState {
         lastHitter = "";
         winner = "";
         events.clear();
+        registeredPlayers = List.of();
         resetHitCounts();
     }
 
@@ -171,15 +172,20 @@ public final class EpisodeState {
     }
 
     public synchronized void playerDied(String name) {
-        if (!isRegisteredPlayer(name)) {
+        String canonicalName = canonicalPlayerName(name);
+        if (isTerminalPhase()) {
+            events.add("death_after_done:" + name);
+            return;
+        }
+        if (canonicalName == null) {
             events.add("death_ignored:" + name);
             return;
         }
         active = false;
-        if (name.equals(playerA())) {
+        if (canonicalName.equals(playerA())) {
             phase = "opponent_win";
             winner = playerB();
-        } else if (name.equals(playerB())) {
+        } else if (canonicalName.equals(playerB())) {
             phase = "self_win";
             winner = playerA();
         } else {
@@ -187,19 +193,20 @@ public final class EpisodeState {
             winner = "";
         }
         doneReason = "death";
-        events.add("death:" + name);
+        events.add("death:" + canonicalName);
     }
 
     public synchronized void playerKnockedOut(String name) {
-        if (!isRegisteredPlayer(name)) {
+        String canonicalName = canonicalPlayerName(name);
+        if (canonicalName == null) {
             events.add("knockout_ignored:" + name);
             return;
         }
         active = false;
-        if (name.equals(playerA())) {
+        if (canonicalName.equals(playerA())) {
             phase = "opponent_win";
             winner = playerB();
-        } else if (name.equals(playerB())) {
+        } else if (canonicalName.equals(playerB())) {
             phase = "self_win";
             winner = playerA();
         } else {
@@ -207,7 +214,7 @@ public final class EpisodeState {
             winner = "";
         }
         doneReason = "knockout";
-        events.add("knockout:" + name);
+        events.add("knockout:" + canonicalName);
     }
 
     public synchronized void draw(String reason) {
@@ -219,38 +226,46 @@ public final class EpisodeState {
     }
 
     public synchronized void playerQuit(String name) {
-        if (!isRegisteredPlayer(name)) {
+        String canonicalName = canonicalPlayerName(name);
+        if (canonicalName == null) {
             events.add("quit_ignored:" + name);
+            return;
+        }
+        if (isTerminalPhase()) {
+            events.add("quit_after_done:" + name);
             return;
         }
         active = false;
         phase = "draw";
-        doneReason = "quit:" + name;
-        events.add("quit:" + name);
+        doneReason = "quit:" + canonicalName;
+        winner = "";
+        events.add("quit:" + canonicalName);
     }
 
     public synchronized boolean isRegisteredPlayer(String name) {
-        return registeredPlayers.contains(name);
+        return canonicalPlayerName(name) != null;
     }
 
     public synchronized boolean recordHit(String attacker, String victim) {
         if (!active || !"hit_count".equals(combatMode)) {
             return false;
         }
-        if (!isRegisteredPlayer(attacker) || !isRegisteredPlayer(victim) || attacker.equals(victim)) {
+        String canonicalAttacker = canonicalPlayerName(attacker);
+        String canonicalVictim = canonicalPlayerName(victim);
+        if (canonicalAttacker == null || canonicalVictim == null || canonicalAttacker.equals(canonicalVictim)) {
             return false;
         }
-        int next = hitCounts.getOrDefault(attacker, 0) + 1;
-        hitCounts.put(attacker, next);
-        pendingHitDeltas.put(attacker, pendingHitDeltas.getOrDefault(attacker, 0) + 1);
-        lastHitter = attacker;
-        events.add("hit:" + attacker + ":" + victim + ":" + next);
+        int next = hitCounts.getOrDefault(canonicalAttacker, 0) + 1;
+        hitCounts.put(canonicalAttacker, next);
+        pendingHitDeltas.put(canonicalAttacker, pendingHitDeltas.getOrDefault(canonicalAttacker, 0) + 1);
+        lastHitter = canonicalAttacker;
+        events.add("hit:" + canonicalAttacker + ":" + canonicalVictim + ":" + next);
         if (next >= targetHits) {
             active = false;
-            winner = attacker;
-            if (attacker.equals(playerA())) {
+            winner = canonicalAttacker;
+            if (canonicalAttacker.equals(playerA())) {
                 phase = "self_win";
-            } else if (attacker.equals(playerB())) {
+            } else if (canonicalAttacker.equals(playerB())) {
                 phase = "opponent_win";
             } else {
                 phase = "draw";
@@ -290,6 +305,22 @@ public final class EpisodeState {
             hitCounts.put(player, 0);
             pendingHitDeltas.put(player, 0);
         }
+    }
+
+    private boolean isTerminalPhase() {
+        return phase.equals("self_win") || phase.equals("opponent_win") || phase.equals("draw");
+    }
+
+    private String canonicalPlayerName(String name) {
+        if (name == null) {
+            return null;
+        }
+        for (String player : registeredPlayers) {
+            if (player.equalsIgnoreCase(name)) {
+                return player;
+            }
+        }
+        return null;
     }
 
     private Map<String, Integer> orderedCounts(Map<String, Integer> source) {
