@@ -35,7 +35,6 @@ import org.bukkit.scoreboard.ScoreboardManager;
 public final class DuelService {
     public static final String MENU_TITLE = "PVPRobo Duel Menu";
     public static final String AI_BATTLE_MENU_TITLE = "PVPRobo AI Battle";
-    private static final String OWNER_USERNAME = "kyakaykya";
     private final Plugin plugin;
     private final EpisodeRegistry episodeRegistry;
     private final ArenaService arenaService;
@@ -94,13 +93,13 @@ public final class DuelService {
 
     public boolean canAdmitLogin(Player player) {
         int maxHumanPlayers = plugin.getConfig().getInt("admission.max-human-players", -1);
-        if (maxHumanPlayers < 0 || isOwnerOperator(player) || isRoboName(player.getName()) || episodeRegistry.isSpectator(player.getName())) {
+        if (maxHumanPlayers < 0 || player.isOp() || isRoboName(player.getName()) || episodeRegistry.isSpectator(player.getName())) {
             return true;
         }
         int humans = 0;
         for (Player online : plugin.getServer().getOnlinePlayers()) {
             if (!online.getName().equalsIgnoreCase(player.getName())
-                && !isOwnerOperator(online)
+                && !online.isOp()
                 && !isRoboName(online.getName())
                 && !episodeRegistry.isSpectator(online.getName())) {
                 humans++;
@@ -153,7 +152,7 @@ public final class DuelService {
             && state != null
             && state.isRegisteredPlayer(player.getName());
         return AfkEligibility.shouldTrack(
-            isOwnerOperator(player),
+            player.isOp(),
             isRoboName(player.getName()),
             episodeRegistry.isSpectator(player.getName()),
             activePlayerDuelParticipant
@@ -744,11 +743,8 @@ public final class DuelService {
         if (isRoboName(player.getName()) || episodeRegistry.isSpectator(player.getName())) {
             return;
         }
-        if (trustedOwnerNamePrivilegesEnabled() && isOwner(player.getName())) {
+        if (player.isOp() || player.hasPermission("pvprobo.admin")) {
             return;
-        }
-        if (player.isOp()) {
-            player.setOp(false);
         }
         if (player.getGameMode() != GameMode.ADVENTURE) {
             player.setGameMode(GameMode.ADVENTURE);
@@ -1438,19 +1434,7 @@ public final class DuelService {
     }
 
     public boolean hasAdminAccess(Player player) {
-        return trustedOwnerNamePrivilegesEnabled() && isOwner(player.getName()) && (player.isOp() || player.hasPermission("pvprobo.admin")) && !isPlaytestPlayerMode(player);
-    }
-
-    private boolean trustedOwnerNamePrivilegesEnabled() {
-        return !offlineReservedNameProtectionEnabled();
-    }
-
-    private boolean isOwner(String name) {
-        return name != null && name.equalsIgnoreCase(OWNER_USERNAME);
-    }
-
-    private boolean isOwnerOperator(Player player) {
-        return trustedOwnerNamePrivilegesEnabled() && isOwner(player.getName()) && player.isOp();
+        return (player.isOp() || player.hasPermission("pvprobo.admin")) && !isPlaytestPlayerMode(player);
     }
 
     private boolean insideDuelBounds(Location location) {

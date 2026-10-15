@@ -1,5 +1,19 @@
 # Open-Core Verification Log
 
+## 2026-10-15
+
+Checks for issue #1 (operator permissions removed on join):
+
+- Plugin regression: the 10 new privilege cases failed in six cases before the fix and passed after it.
+- Worker setup regression: two of four cases failed because an offline player received an online UUID. All four pass after selecting UUIDs according to the configured authentication mode.
+- Paper plugin: Gradle `--offline cleanTest build` succeeded; 70 tests passed.
+- Bot controller: `npm.cmd test` succeeded; 36 tests passed.
+- Python package: 83 tests passed with `PYTHONPATH` set to this checkout's `python/src`. The existing virtual environment's editable install points to an older release, so the explicit path is required for this verification.
+- Live smoke: started Paper 1.21 build 130 with the built plugin and real Mineflayer offline clients on an isolated localhost worker 9. The first pass found the offline UUID mismatch; after the setup fix, all 15 checks passed.
+- Live checks covered startup-granted OP for a normal username and the former owner username, vanilla and plugin admin commands, reconnects, playtest on/off, ordinary-player denial, self-OP denial, console OP/de-OP, and OP persistence after a full server restart.
+- Cleanup: all test Java processes exited and the test gameplay/control ports were released. Existing worker directories were not modified.
+- Local test artifacts are under ignored `runs/worker_009/`: `issue1-live-results.json`, `issue1-live-results-before-uuid-fix.json`, `issue1-live-smoke.cjs`, and `issue1-server.log`.
+
 ## 2026-07-18
 
 Checks run for the Simplified Chinese documentation update:

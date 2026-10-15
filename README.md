@@ -27,6 +27,7 @@ This repository is for private local/offline research servers only. Do not use i
 
 | Date | Highlights |
 | --- | --- |
+| 2026.10.15 | Fixed OP being revoked on join and admin access being tied to a fixed username, and corrected OP UUIDs for offline workers. Thanks to [xiao-feng-tan](https://github.com/xiao-feng-tan) for reporting [issue #1](https://github.com/KyaKayKya/Minecraft-PVP-ROBO/issues/1). |
 | 2026.07.19 | Fixed ROBO reach parity by clamping Mineflayer attack checks and synthetic validation to vanilla Minecraft entity interaction reach. Thanks to [刮泥Charlie](https://space.bilibili.com/171229828) for finding the reach issue. |
 | 2026.07.17 | Added through-wall hit rejection, real line-of-sight snapshots, vanilla-effective damage ticks, and native Paper hit registration for human attacks. Thanks to [励励lili](https://space.bilibili.com/383268814), [MistWhy](https://space.bilibili.com/2129888402), and [科琳Colleen](https://space.bilibili.com/355912988) for reporting combat-rule issues. |
 | 2026.07.15 | Released local AI Battle spectating docs and Champion ROBO preflight flow. |

@@ -83,6 +83,32 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\stop-workers.ps1 -
 
 Local duel commands are for private playtesting on a server you control. Authenticated public entry, Velocity launchers, cloud deployment, production leaderboards, maps, skins, and monitoring are private extensions and are not part of this open core.
 
+## OP Is Removed After Joining
+
+Older plugin versions revoke OP when players join, even when you pass
+`-OperatorUsernames`. Update the source, stop the affected worker, then
+rebuild and restart it. For worker 1, run from the repository root:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\stop-workers.ps1 -WorkerId 1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start-duel-worker.ps1 `
+  -WorkerId 1 `
+  -OperatorUsernames PLAYER_NAME `
+  -Rebuild
+```
+
+Replace `PLAYER_NAME` with your Minecraft username. Pass `-JavaHome`,
+`-GradleHome`, and `-NodeHome` as in your original startup command if
+those tools are not on `PATH`. Repeating `-OperatorUsernames` restores an
+OP entry that the older plugin removed. Worker setup also corrects stale
+online UUID entries for those names when the local worker uses offline
+identities. You can also grant OP from the running server console with
+`op PLAYER_NAME`.
+
+Reconnect, then run `/pvprobo arena status` in game to confirm that admin
+commands remain available. If playtest mode is active, run
+`/pvprobo playtest off` first.
+
 ## Client Joined But Cannot Find The AI Battle
 
 Use the end-to-end guide in [local-ai-battle.md](local-ai-battle.md) first.

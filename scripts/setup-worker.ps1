@@ -144,7 +144,11 @@ function Write-Operators($WorkerDir, [string[]]$Names) {
         if ([string]::IsNullOrWhiteSpace($name)) {
             continue
         }
-        $uuid = Get-KnownOnlineUuid $name
+        $uuid = if ($playerAuthMode -eq "online") {
+            Get-KnownOnlineUuid $name
+        } else {
+            ""
+        }
         if ([string]::IsNullOrWhiteSpace($uuid)) {
             $uuid = Get-OfflineUuid $name
         }

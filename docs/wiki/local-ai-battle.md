@@ -87,7 +87,15 @@ When you join, the plugin should teleport you to the local lobby at roughly `x=0
 - Slot 0 Nether Star: PVPRobo menu.
 - Slot 3 Ender Eye: Watch AI Battle.
 
-OP users see admin tools by default. To test the normal player experience as an OP, run:
+To grant operator (OP) access on the local offline worker, add
+`-OperatorUsernames PLAYER_NAME` to the startup command in step 3. Replace
+`PLAYER_NAME` with your Minecraft username. When upgrading the plugin, keep
+`-Rebuild` in that command so the worker loads the updated jar. If an older
+plugin removed your OP entry, pass `-OperatorUsernames` again to restore it.
+
+The plugin preserves server-granted OP access. Players with OP or the
+`pvprobo.admin` permission see admin tools by default. To test the normal
+player experience as an admin, run:
 
 ```text
 /pvprobo playtest on
