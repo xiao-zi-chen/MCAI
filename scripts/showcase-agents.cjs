@@ -7,12 +7,17 @@ const mineflayer=require('./minecraft-client.cjs');
 const {Vec3}=require('../bot-controller/node_modules/vec3');
 const rules=require('../competition/rules.json');
 const root=path.resolve(__dirname,'..');
+const roster=JSON.parse(process.env.SKYDUEL_ROSTER||'[{"name":"EmberAI","model":"EmberAI","style":"rush","seed":101},{"name":"BastionAI","model":"BastionAI","style":"fortify","seed":202}]');
+const arenaName=process.env.SKYDUEL_ARENA_NAME||'SkyDuel';
+const expectedMatch=process.env.SKYDUEL_MATCH_ID||'';
+const managed=Boolean(expectedMatch);
+const modelFor=name=>roster.find(p=>p.name===name)?.model||name;
 const output=path.resolve(root,process.env.SKYDUEL_MODEL_DIR||'models/showcase');
 let match={phase:'waiting',players:[],teams:[]};
 const {baseX,bedX,footX,feetY,nearBase,home,approach}=require('./arena-geometry.cjs').forMap(rules.map);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 function connectReferee(){
- const socket=net.createConnection({host:'127.0.0.1',port:25600});let buffer='';
+ const socket=net.createConnection({host:'127.0.0.1',port:Number(process.env.SKYDUEL_OBSERVER_PORT||25600)});let buffer='';
  socket.on('data',data=>{buffer+=data;let i;while((i=buffer.indexOf('\n'))>=0){const line=buffer.slice(0,i);buffer=buffer.slice(i+1);try{match=JSON.parse(line)}catch{}}});
  socket.on('error',()=>{});socket.on('close',()=>setTimeout(connectReferee,1000));
 }
@@ -29,10 +34,10 @@ function logits(model,features){
 }
 class Agent{
  constructor(name,style){
-  this.name=name;this.style=style;this.model=JSON.parse(fs.readFileSync(path.join(output,name+'.json'),'utf8'));
-  this.bot=mineflayer.createBot({host:'127.0.0.1',port:25567,username:name,auth:'offline',version:'1.21'});
+  this.name=name;this.style=style;this.model=JSON.parse(fs.readFileSync(path.join(output,modelFor(name)+'.json'),'utf8'));
+  this.bot=mineflayer.createBot({host:'127.0.0.1',port:Number(process.env.BEDWARS_PORT||25567),username:name,auth:'offline',version:'1.21'});
   this.token=0;this.busy=false;this.currentMatch='';this.label='等待开局';this.side=0;this.steps=0;this.lastAttack=-100;this.lastHurt=-100;this.lastEnemyHurt=-100;this.lastEnemySwing=-100;this.hits=0;this.taken=0;this.actions=Array(11).fill(0);this.lastQueue=0;this.defended=false;this.lastError='';this.errors=0;
-  this.randomSeed=style==='rush'?101:202;
+  this.randomSeed=roster.find(p=>p.name===name)?.seed||(style==='rush'?101:202);
   this.bot.on('forcedMove',()=>{this.cancel();if(this.bot.entity?.velocity)this.bot.entity.velocity.set(0,0,0)});
   this.bot.on('game',()=>{this.bot.physicsEnabled=this.bot.game.gameMode==='survival';if(this.bot.game.gameMode!=='survival')this.cancel()});
   this.bot.on('entityHurt',e=>{if(e===this.bot.entity){this.lastHurt=this.steps;this.taken++}else if(e.type==='player'){this.lastEnemyHurt=this.steps;this.hits++}});
@@ -44,7 +49,8 @@ class Agent{
   this.timer=setInterval(()=>this.update().catch(e=>this.failure(e)),100);
  }
  cancel(){this.token++;this.bot.clearControlStates();if(this.bot.targetDigBlock)this.bot.stopDigging();}
- active(){return !this.ended&&this.bot.entity&&match.phase==='running'&&this.bot.game.gameMode==='survival'&&this.bot.entity.position.y>60&&this.bot.health>0;}
+ joinArena(){if(!managed||!this.currentMatch)this.bot.chat('/bw join '+arenaName);}
+ active(){return (!managed||match.match_id===expectedMatch)&&!this.ended&&this.bot.entity&&match.phase==='running'&&this.bot.game.gameMode==='survival'&&this.bot.entity.position.y>60&&this.bot.health>0;}
  check(token){if(token!==this.token||!this.active())throw new Error('interrupted');}
  count(id){return this.bot.inventory.items().filter(i=>id==='wool'?i.name.endsWith('_wool'):i.name===id).reduce((n,i)=>n+i.count,0)}
  item(id){return this.bot.inventory.items().find(i=>id==='wool'?i.name.endsWith('_wool'):i.name===id)}
@@ -53,7 +59,7 @@ class Agent{
  visibleEnemy(){
   if(!this.bot.entity)return null;
   return this.bot.nearestEntity(e=>{
-   if(e.type!=='player'||e.username===this.name||!['EmberAI','BastionAI'].includes(e.username))return false;
+   if(e.type!=='player'||e.username===this.name||!roster.some(p=>p.name===e.username))return false;
    if(e.position.distanceTo(this.bot.entity.position)>6)return false;
    const own=match.players.find(p=>p.name===this.name),opp=match.players.find(p=>p.name===e.username);
    if(!own||!opp||own.team===opp.team||opp.mode!=='SURVIVAL')return false;
@@ -191,7 +197,7 @@ class Agent{
   this.steps++;
   if(!this.active()){
    if(this.busy)this.cancel();
-   if(this.bot.game.gameMode==='survival'&&this.bot.entity.position.y>=100&&!this.bot.inventory.items().some(i=>i.name==='compass')&&Date.now()-this.lastQueue>10000){this.lastQueue=Date.now();this.bot.chat('/bw join SkyDuel')}
+   if(this.bot.game.gameMode==='survival'&&this.bot.entity.position.y>=100&&!this.bot.inventory.items().some(i=>i.name==='compass')&&Date.now()-this.lastQueue>10000){this.lastQueue=Date.now();this.joinArena()}
    return;
   }
   if(this.currentMatch!==match.match_id){this.cancel();this.currentMatch=match.match_id;this.side=Math.sign(this.bot.entity.position.x);this.defended=false;this.hits=this.taken=0;this.actions.fill(0);}
@@ -206,16 +212,20 @@ class Agent{
  status(){return {name:this.name,style:this.style,label:this.label,health:this.bot.health,position:this.bot.entity?.position,inventory:this.bot.inventory.items().map(i=>({name:i.name,count:i.count})),actions:this.actions,last_error:this.lastError,errors:this.errors,match_id:this.currentMatch}}
 }
 function run(AgentType=Agent, reportDir=output) {
-const agents=[new AgentType('EmberAI','rush'),new AgentType('BastionAI','fortify')];
+const agents=roster.map(p=>new AgentType(p.name,p.style));
 for(const agent of agents)clearInterval(agent.timer);
 let sequence=0;
 const decisions=setInterval(()=>{const offset=sequence++%agents.length;for(let i=0;i<agents.length;i++){const agent=agents[(offset+i)%agents.length];if(agent.updating)continue;agent.updating=true;agent.update().catch(e=>agent.failure(e)).finally(()=>agent.updating=false);}},100);
 const reports=setInterval(()=>{
  const data={updated_at:new Date().toISOString(),method:'trained_melee_with_public_macro_plans',agents:agents.map(a=>a.status())};
- for(const file of [path.join(reportDir,'live.json'),path.join(root,'runs/showcase-live.json')]){const temp=file+'.tmp';fs.writeFileSync(temp,JSON.stringify(data));fs.renameSync(temp,file);}
+ for(const file of managed?[path.join(reportDir,'live.json')]:[path.join(reportDir,'live.json'),path.join(root,'runs/showcase-live.json')]){const temp=file+'.tmp';fs.writeFileSync(temp,JSON.stringify(data));fs.renameSync(temp,file);}
 },2000);
+function stop(){clearInterval(decisions);clearInterval(reports);for(const a of agents){a.cancel();a.bot.quit()}setTimeout(()=>process.exit(),500)}
+if(managed){let started=false;const life=setInterval(()=>{if(match.match_id===expectedMatch&&match.phase==='running')started=true;if(started&&!['running','game_end_celebrating'].includes(match.phase)){clearInterval(life);stop()}},500);setTimeout(stop,Number(process.env.SKYDUEL_MAX_RUNTIME_MS||2400000)).unref();}
+process.on('message',message=>{if(message==='stop')stop()});
+process.on('SIGTERM',stop);
 process.on('SIGINT',()=>{clearInterval(decisions);clearInterval(reports);for(const a of agents)a.bot.quit();setTimeout(()=>process.exit(),500)});
 return agents;
 }
-module.exports={Agent,run,getMatch:()=>match,rules,root,logits};
+module.exports={Agent,run,getMatch:()=>match,rules,root,logits,roster,modelFor};
 if(require.main===module)run();

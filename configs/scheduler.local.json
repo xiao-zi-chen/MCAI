@@ -1,0 +1,38 @@
+{
+  "namespace": "skyduel-local",
+  "redis_port": 26379,
+  "game_port": 25567,
+  "control_port": 25610,
+  "web_port": 3009,
+  "server_root": "runs/bedwars-local",
+  "max_active": 2,
+  "min_free_mb": 512,
+  "max_mspt": 35,
+  "join_timeout_ms": 90000,
+  "match_timeout_ms": 2200000,
+  "reset_timeout_ms": 120000,
+  "poll_ms": 1000,
+  "arenas": [
+    {
+      "id": "arena-1",
+      "name": "SkyDuel",
+      "world": "bedwars-v6",
+      "observer_port": 25600,
+      "viewer_port": 3007
+    },
+    {
+      "id": "arena-2",
+      "name": "SkyDuel2",
+      "world": "bedwars-v6_a2",
+      "observer_port": 25601,
+      "viewer_port": 3010
+    },
+    {
+      "id": "arena-3",
+      "name": "SkyDuel3",
+      "world": "bedwars-v6_a3",
+      "observer_port": 25602,
+      "viewer_port": 3011
+    }
+  ]
+}

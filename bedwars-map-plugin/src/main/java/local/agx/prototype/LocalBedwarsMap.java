@@ -28,14 +28,40 @@ public final class LocalBedwarsMap extends JavaPlugin implements Listener {
             rules = YamlConfiguration.loadConfiguration(new InputStreamReader(input, StandardCharsets.UTF_8));
         } catch (IOException e) { throw new IllegalStateException("Cannot load competition rules", e); }
         surfaceY = rules.getInt("map.surface_y");
-        world = Bukkit.getWorld(rules.getString("map.world"));
+        var worldNames=getConfig().getStringList("arena-worlds");
+        if(worldNames.isEmpty())worldNames=java.util.List.of(rules.getString("map.world"));
+        for(String worldName:worldNames){
+            if(!worldName.matches("[a-zA-Z0-9_-]{1,64}"))throw new IllegalArgumentException("Invalid arena world name");
+            prepareWorld(worldName);
+        }
+        world=Bukkit.getWorld(rules.getString("map.world"));
+        Bukkit.getPluginManager().registerEvents(this, this);
+        getCommand("localbw").setExecutor((sender, command, label, args) -> {
+            if (args.length > 0 && args[0].equalsIgnoreCase("rules")) {
+                if(sender instanceof Player p)openRuleBook(p);
+                else sender.sendMessage("规则页面：http://127.0.0.1:3007/rules");
+            } else if (sender instanceof Player player) player.performCommand("bw join " + rules.getString("match.arena_name"));
+            else sender.sendMessage("Join in-game with /localbw");
+            return true;
+        });
+        getLogger().info("SkyDuel map ready, rules=" + rules.getString("version") + ". Join with /localbw.");
+    }
+
+    private void prepareWorld(String worldName){
+        world = Bukkit.getWorld(worldName);
         if (world == null) {
-            getLogger().severe("Expected level-name=bedwars. Map generation refused.");
-            Bukkit.getPluginManager().disablePlugin(this);
-            return;
+            if(worldName.equals(rules.getString("map.world")))throw new IllegalStateException("Configured base world missing");
+            world = new WorldCreator(worldName).generateStructures(false).generator(new org.bukkit.generator.ChunkGenerator(){
+                @Override public boolean shouldGenerateNoise(){return false;}
+                @Override public boolean shouldGenerateSurface(){return false;}
+                @Override public boolean shouldGenerateCaves(){return false;}
+                @Override public boolean shouldGenerateDecorations(){return false;}
+                @Override public boolean shouldGenerateMobs(){return false;}
+                @Override public boolean shouldGenerateStructures(){return false;}
+            }).createWorld();
         }
         String mapId = rules.getString("map.id", "map").replaceAll("[^a-zA-Z0-9_-]", "_");
-        Path marker = getDataFolder().toPath().resolve("map-" + mapId + ".ready");
+        Path marker = getDataFolder().toPath().resolve("map-" + mapId + (worldName.equals(rules.getString("map.world"))?"":"-"+worldName) + ".ready");
         if (!Files.exists(marker)) {
             // Never clear an existing map. The launch script creates an air-only world.
             if (!world.getBlockAt(0, surfaceY, 0).getType().isAir()) {
@@ -60,16 +86,6 @@ public final class LocalBedwarsMap extends JavaPlugin implements Listener {
         world.setGameRule(GameRule.SPAWN_RADIUS, 0);
         world.setTime(6000);
         world.setStorm(false);
-        Bukkit.getPluginManager().registerEvents(this, this);
-        getCommand("localbw").setExecutor((sender, command, label, args) -> {
-            if (args.length > 0 && args[0].equalsIgnoreCase("rules")) {
-                if(sender instanceof Player p)openRuleBook(p);
-                else sender.sendMessage("规则页面：http://127.0.0.1:3007/rules");
-            } else if (sender instanceof Player player) player.performCommand("bw join " + rules.getString("match.arena_name"));
-            else sender.sendMessage("Join in-game with /localbw");
-            return true;
-        });
-        getLogger().info("SkyDuel map ready, rules=" + rules.getString("version") + ". Join with /localbw.");
     }
 
     private void generateMap() {

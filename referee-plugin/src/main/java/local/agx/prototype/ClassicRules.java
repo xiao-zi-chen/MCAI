@@ -25,6 +25,7 @@ import org.screamingsandals.bedwars.api.game.GameStatus;
 /** The classic economy extension; all prices and stage times come from rules.json. */
 final class ClassicRules implements Listener {
     private final SkyDuelReferee plugin;
+    private final ArenaReferee arena;
     private final YamlConfiguration rules;
     private final NamespacedKey permanent, token, upgradeKey;
     private final Map<String,Map<String,Integer>> levels=new LinkedHashMap<>();
@@ -36,28 +37,13 @@ final class ClassicRules implements Listener {
     private int elapsed;
     private String stage="regular";
 
-    ClassicRules(SkyDuelReferee plugin,YamlConfiguration rules) {
-        this.plugin=plugin;this.rules=rules;
+    ClassicRules(SkyDuelReferee plugin,ArenaReferee arena,YamlConfiguration rules) {
+        this.plugin=plugin;this.arena=arena;this.rules=rules;
         permanent=new NamespacedKey(plugin,"permanent");token=new NamespacedKey(plugin,"purchase_token");upgradeKey=new NamespacedKey(plugin,"upgrade_id");
         Bukkit.getPluginManager().registerEvents(this,plugin);
-        plugin.getCommand("teamshop").setExecutor((sender,cmd,label,args)->{
-            if(sender instanceof Player p&&inGame(p)&&nearShop(p))open(p);return true;
-        });
-        plugin.getCommand("skyduel").setExecutor((sender,cmd,label,args)->{
-            if(sender instanceof Player)return true;
-            if(args.length>0&&args[0].equals("abort")){plugin.abortMatch();sender.sendMessage("Local match stopped; replay marked aborted");return true;}
-            if(args.length>0&&args[0].equals("test")){plugin.getConfig().set("debug-controls",true);plugin.markTest();sender.sendMessage("Current match marked as test; console test controls enabled until locked");return true;}
-            if(args.length>0&&args[0].equals("lock")){plugin.getConfig().set("debug-controls",false);plugin.saveConfig();sender.sendMessage("Debug controls locked");return true;}
-            if(!plugin.getConfig().getBoolean("debug-controls",false)){sender.sendMessage("Debug controls disabled");return true;}
-            if(args.length==4&&args[0].equals("grant")){
-                Player p=Bukkit.getPlayerExact(args[1]);var resource=Main.getSpawnerType(args[2]);int amount=Integer.parseInt(args[3]);
-                if(p!=null&&resource!=null&&amount>0&&amount<=256){plugin.markTest();p.getInventory().addItem(resource.getStack(amount));sender.sendMessage("Granted test resources");}
-            }else if(args.length==2&&args[0].equals("phase")&&game!=null&&game.getStatus()==GameStatus.RUNNING){
-                rules.getMapList("phases").stream().filter(p->args[1].equals(p.get("type"))).findFirst().ifPresent(p->{plugin.markTest();phase(p);sender.sendMessage("Applied test phase");});
-            }
-            return true;
-        });
     }
+    void openFor(Player p){if(inGame(p)&&nearShop(p))open(p);}
+    void testPhase(String type){if(game!=null&&game.getStatus()==GameStatus.RUNNING)rules.getMapList("phases").stream().filter(p->type.equals(p.get("type"))).findFirst().ifPresent(p->{arena.markTest();phase(p);});}
     Map<String,Object> snapshot(){Map<String,Object> copy=new LinkedHashMap<>();levels.forEach((k,v)->copy.put(k,new LinkedHashMap<>(v)));return Map.of("stage",stage,"elapsed_seconds",elapsed,"upgrades",copy);}
     private boolean inGame(Player p){return game!=null&&game.getStatus()==GameStatus.RUNNING&&game.getConnectedPlayers().contains(p)&&p.getGameMode()==GameMode.SURVIVAL;}
     private RunningTeam team(Player p){return game.getTeamOfPlayer(p);}
@@ -69,7 +55,7 @@ final class ClassicRules implements Listener {
         return coords!=null&&p.getLocation().distance(new Location(p.getWorld(),((Number)coords.get(0)).doubleValue(),((Number)coords.get(1)).doubleValue(),((Number)coords.get(2)).doubleValue()))<=4.5;
     }
     @EventHandler public void start(BedwarsGameStartedEvent e){
-        if(!e.getGame().getName().equals("SkyDuel"))return;
+        if(!e.getGame().getName().equals(arena.arenaName))return;
         game=e.getGame();levels.clear();armor.clear();tools.clear();trapCooldown.clear();stages.clear();elapsed=0;stage="regular";
         game.getGameWorld().getWorldBorder().setCenter(0.5,0.5);game.getGameWorld().getWorldBorder().setSize(256);
         for(RunningTeam t:game.getRunningTeams())levelMap(t.getName());
@@ -105,7 +91,7 @@ final class ClassicRules implements Listener {
         String name=team(p).getName();int old=level(name,id);List<?> costs=(List<?>)spec.get("costs");if(old>=costs.size())return;
         int cost=((Number)costs.get(old)).intValue();if(count(p,Material.DIAMOND)<cost){p.sendMessage(ChatColor.RED+"钻石不足");return;}
         remove(p,Material.DIAMOND,cost);levelMap(name).put(id,old+1);applyUpgrades();
-        plugin.record("upgrade",Map.of("player",p.getName(),"team",name,"upgrade",id,"level",old+1,"diamonds",cost));
+        arena.record("upgrade",Map.of("player",p.getName(),"team",name,"upgrade",id,"level",old+1,"diamonds",cost));
         p.sendMessage(ChatColor.GREEN+"团队升级完成："+spec.get("label"));Bukkit.getScheduler().runTask(plugin,()->open(p));
     }
     @EventHandler public void drag(InventoryDragEvent e){if(e.getView().getTopInventory().getHolder() instanceof Menu)e.setCancelled(true);}
@@ -134,7 +120,7 @@ final class ClassicRules implements Listener {
                 String tool=e.getStringProperty("tool");int next=Integer.parseInt(tier);Map<String,Integer> state=tools.computeIfAbsent(p.getUniqueId(),k->new HashMap<>());
                 if(next<=state.getOrDefault(tool,0)){refund(p,e);return;}state.put(tool,next);
             }
-            kit(p);plugin.record("permanent_item",Map.of("player",p.getName(),"kind",kind,"tier",tier));
+            kit(p);arena.record("permanent_item",Map.of("player",p.getName(),"kind",kind,"tier",tier));
         });
     }
     private void refund(Player p,BedwarsApplyPropertyToBoughtItem e){
@@ -210,7 +196,7 @@ final class ClassicRules implements Listener {
                 levelMap(name).put("trap",level(name,"trap")-1);trapCooldown.put(name,elapsed+15);
                 p.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,100,0));p.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS,100,0));p.removePotionEffect(PotionEffectType.INVISIBILITY);
                 team.getConnectedPlayers().forEach(ally->{ally.sendMessage(ChatColor.RED+"警报：敌人触发了基地陷阱！");ally.playSound(ally.getLocation(),Sound.BLOCK_BELL_USE,1,1);});
-                plugin.record("trap_triggered",Map.of("team",name,"player",p.getName()));break;
+                arena.record("trap_triggered",Map.of("team",name,"player",p.getName()));break;
             }
         }
     }
@@ -229,9 +215,9 @@ final class ClassicRules implements Listener {
         } else if(type.equals("sudden_death")){
             var border=game.getGameWorld().getWorldBorder();border.setCenter(.5,.5);border.setSize(Math.max(rules.getIntegerList("map.build_max").get(0)-rules.getIntegerList("map.build_min").get(0),rules.getIntegerList("map.build_max").get(2)-rules.getIntegerList("map.build_min").get(2))+8);border.setDamageBuffer(1);border.setDamageAmount(1);border.setWarningDistance(5);border.setSize(16,180L);
         }
-        game.getConnectedPlayers().forEach(p->p.sendMessage(ChatColor.GOLD+"比赛阶段更新："+type));plugin.record("phase",Map.of("phase",type,"elapsed_seconds",elapsed));
+        game.getConnectedPlayers().forEach(p->p.sendMessage(ChatColor.GOLD+"比赛阶段更新："+type));arena.record("phase",Map.of("phase",type,"elapsed_seconds",elapsed));
     }
-    @EventHandler public void border(EntityDamageEvent e){if(e.getCause()==EntityDamageEvent.DamageCause.WORLD_BORDER&&e.getEntity() instanceof Player p&&!inGame(p))e.setCancelled(true);}
+    @EventHandler public void border(EntityDamageEvent e){if(e.getCause()==EntityDamageEvent.DamageCause.WORLD_BORDER&&e.getEntity() instanceof Player p&&p.getWorld().getName().equals(arena.worldName)&&!inGame(p))e.setCancelled(true);}
     @EventHandler(priority=EventPriority.HIGHEST)
     public void nativePearlDamage(EntityDamageByEntityEvent e){
         // SBW 0.2.44's generic projectile friendly-fire filter also cancels a

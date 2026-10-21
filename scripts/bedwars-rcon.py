@@ -1,5 +1,6 @@
 """Send one administrative command to the dedicated localhost playtest server."""
 import socket
+import os
 import struct
 import sys
 from pathlib import Path
@@ -27,7 +28,7 @@ def send_packet(conn, request_id, kind, text):
 
 def command(text):
     props = {}
-    for line in (Path(__file__).resolve().parents[1] / 'runs/bedwars-local/server.properties').read_text().splitlines():
+    for line in ((Path(__file__).resolve().parents[1] / os.environ.get('SKYDUEL_SERVER_ROOT','runs/bedwars-local')) / 'server.properties').read_text().splitlines():
         if '=' in line and not line.startswith('#'):
             key, value = line.split('=', 1)
             props[key] = value

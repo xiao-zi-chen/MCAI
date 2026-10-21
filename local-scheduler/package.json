@@ -1,0 +1,18 @@
+{
+  "name": "skyduel-local-scheduler",
+  "version": "0.7.0",
+  "private": true,
+  "description": "Local continuous BedWars arena queue",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.cjs",
+    "test": "node --test test/*.test.cjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "bullmq": "5.81.5",
+    "ioredis": "5.11.1"
+  }
+}

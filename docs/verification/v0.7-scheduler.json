@@ -1,0 +1,587 @@
+{
+  "version": "0.7.0",
+  "checked_date": "2026-10-21",
+  "platform": {
+    "cpu": "Intel Core i5-13500HX",
+    "ram_gib": 15.7,
+    "java_heap_max_gib": 2,
+    "minecraft_processes": 1,
+    "redis_version": "5.0.14.1",
+    "bullmq": "5.81.5",
+    "ioredis": "5.11.1"
+  },
+  "scope": "Local organizer-controlled demonstration; existing model replicas, no new training or arbitrary submissions.",
+  "batch": {
+    "entrants": 16,
+    "distinct_weight_files": 2,
+    "parameters_each": 22027,
+    "arenas": 3,
+    "max_simultaneous_ai": 6,
+    "natural_completed_matches": 8,
+    "results_scored_once": true,
+    "all_arenas_ready_at_end": true,
+    "matches": [
+      {
+        "match_id": "bde39845-eccd-4555-a94d-db2c1fc71138",
+        "arena_id": "arena-2",
+        "status": "complete",
+        "reason": "last_team_alive",
+        "winner": "Red",
+        "winner_id": "AI_00004",
+        "duration_seconds": 73,
+        "event_counts": {
+          "match_start": 1,
+          "purchase": 12,
+          "swing": 37,
+          "block_place": 27,
+          "permanent_item": 2,
+          "damage": 7,
+          "dig_start": 2,
+          "block_break": 2,
+          "bed_destroyed": 1,
+          "item_consume": 1,
+          "death": 1,
+          "result": 1
+        },
+        "players": [
+          "AI_00003",
+          "AI_00004"
+        ],
+        "saved_at": 1792595356680,
+        "rules_version": "skyduel-0.6.0",
+        "replay_sha256": "58e138c82661aaaeb61b9d705fc3f222e31b292c2c783ec57dd9074a38f00ef5",
+        "frames": 730,
+        "roster_isolated": true,
+        "launches": 1
+      },
+      {
+        "match_id": "76cf758b-77db-485f-89e5-f8ada7cd0b81",
+        "arena_id": "arena-3",
+        "status": "complete",
+        "reason": "last_team_alive",
+        "winner": "Blue",
+        "winner_id": "AI_00012",
+        "duration_seconds": 532.95,
+        "event_counts": {
+          "match_start": 1,
+          "purchase": 88,
+          "swing": 202,
+          "block_place": 65,
+          "permanent_item": 4,
+          "damage": 101,
+          "dig_start": 5,
+          "death": 12,
+          "respawn": 11,
+          "upgrade": 3,
+          "item_consume": 12,
+          "block_break": 3,
+          "bed_destroyed": 1,
+          "explosion": 1,
+          "trap_triggered": 1,
+          "phase": 1,
+          "result": 1
+        },
+        "players": [
+          "AI_00011",
+          "AI_00012"
+        ],
+        "saved_at": 1792596213078,
+        "rules_version": "skyduel-0.6.0",
+        "replay_sha256": "493e691be78b96e7ec3c1102fd11aa270632aeeeea6f06f80d78791fdc0b71f4",
+        "frames": 5330,
+        "roster_isolated": true,
+        "launches": 1
+      },
+      {
+        "match_id": "1260d4f5-ef35-4d8e-915b-c44d00f4bc5f",
+        "arena_id": "arena-2",
+        "status": "complete",
+        "reason": "last_team_alive",
+        "winner": "Red",
+        "winner_id": "AI_00009",
+        "duration_seconds": 172.95,
+        "event_counts": {
+          "match_start": 1,
+          "purchase": 33,
+          "swing": 87,
+          "block_place": 43,
+          "permanent_item": 4,
+          "damage": 27,
+          "dig_start": 7,
+          "death": 4,
+          "respawn": 3,
+          "block_break": 5,
+          "bed_destroyed": 1,
+          "upgrade": 4,
+          "result": 1
+        },
+        "players": [
+          "AI_00009",
+          "AI_00010"
+        ],
+        "saved_at": 1792595791846,
+        "rules_version": "skyduel-0.6.0",
+        "replay_sha256": "fe8abb1247a99e3fa84501547e1aff39e732bde72127a8db8999674999c33dc4",
+        "frames": 1730,
+        "roster_isolated": true,
+        "launches": 1
+      },
+      {
+        "match_id": "56e1e831-c83c-4e6f-bc22-599e048bf66a",
+        "arena_id": "arena-3",
+        "status": "complete",
+        "reason": "last_team_alive",
+        "winner": "Red",
+        "winner_id": "AI_00007",
+        "duration_seconds": 210,
+        "event_counts": {
+          "match_start": 1,
+          "purchase": 32,
+          "swing": 90,
+          "block_place": 56,
+          "permanent_item": 3,
+          "damage": 28,
+          "death": 4,
+          "respawn": 3,
+          "item_consume": 4,
+          "explosion": 1,
+          "dig_start": 2,
+          "bed_destroyed": 1,
+          "block_break": 1,
+          "result": 1
+        },
+        "players": [
+          "AI_00007",
+          "AI_00008"
+        ],
+        "saved_at": 1792595653223,
+        "rules_version": "skyduel-0.6.0",
+        "replay_sha256": "f713b9032b99c9655ef1bf26a8670df87ae6cec2dc76f36a275848240ce9c295",
+        "frames": 2100,
+        "roster_isolated": true,
+        "launches": 1
+      },
+      {
+        "match_id": "2bba7c51-2e23-4d92-9fc7-bb78964e21c1",
+        "arena_id": "arena-2",
+        "status": "complete",
+        "reason": "last_team_alive",
+        "winner": "Red",
+        "winner_id": "AI_00006",
+        "duration_seconds": 206.95,
+        "event_counts": {
+          "match_start": 1,
+          "purchase": 34,
+          "swing": 89,
+          "block_place": 35,
+          "permanent_item": 2,
+          "damage": 20,
+          "death": 3,
+          "dig_start": 13,
+          "block_break": 11,
+          "bed_destroyed": 2,
+          "respawn": 2,
+          "item_consume": 3,
+          "result": 1
+        },
+        "players": [
+          "AI_00005",
+          "AI_00006"
+        ],
+        "saved_at": 1792595591061,
+        "rules_version": "skyduel-0.6.0",
+        "replay_sha256": "7618cacdb5a8d833080f52080ffe0a47bc2f3b4a748694fb94268e6694dfc915",
+        "frames": 2070,
+        "roster_isolated": true,
+        "launches": 1
+      },
+      {
+        "match_id": "1f6a069a-d2c0-4bd0-a6b5-94037fa78bbe",
+        "arena_id": "arena-1",
+        "status": "complete",
+        "reason": "last_team_alive",
+        "winner": "Red",
+        "winner_id": "AI_00013",
+        "duration_seconds": 656,
+        "event_counts": {
+          "match_start": 1,
+          "purchase": 98,
+          "swing": 245,
+          "block_place": 84,
+          "permanent_item": 7,
+          "damage": 115,
+          "dig_start": 7,
+          "block_break": 6,
+          "death": 14,
+          "respawn": 13,
+          "item_consume": 17,
+          "upgrade": 7,
+          "trap_triggered": 2,
+          "explosion": 5,
+          "phase": 1,
+          "bed_destroyed": 1,
+          "result": 1
+        },
+        "players": [
+          "AI_00013",
+          "AI_00014"
+        ],
+        "saved_at": 1792596513652,
+        "rules_version": "skyduel-0.6.0",
+        "replay_sha256": "57aa40f9444727c4624707b6bd6fb933e5697b705a68f5177edf46274c3b1269",
+        "frames": 6560,
+        "roster_isolated": true,
+        "launches": 1
+      },
+      {
+        "match_id": "c1b4b1a0-b34c-4e38-b343-d40edca6a2ce",
+        "arena_id": "arena-1",
+        "status": "complete",
+        "reason": "last_team_alive",
+        "winner": "Blue",
+        "winner_id": "AI_00001",
+        "duration_seconds": 460,
+        "event_counts": {
+          "match_start": 1,
+          "purchase": 72,
+          "swing": 197,
+          "block_place": 77,
+          "permanent_item": 5,
+          "damage": 81,
+          "death": 9,
+          "respawn": 8,
+          "item_consume": 13,
+          "upgrade": 7,
+          "trap_triggered": 2,
+          "explosion": 2,
+          "dig_start": 7,
+          "block_break": 6,
+          "bed_destroyed": 1,
+          "phase": 1,
+          "result": 1
+        },
+        "players": [
+          "AI_00001",
+          "AI_00002"
+        ],
+        "saved_at": 1792595743369,
+        "rules_version": "skyduel-0.6.0",
+        "replay_sha256": "b533fc950027c2f308bdcf31b6a2443138fe016b8d1a870927f8790264f6860c",
+        "frames": 4600,
+        "roster_isolated": true,
+        "launches": 1
+      },
+      {
+        "match_id": "26ad4556-1e5f-4219-a747-45ff9bfcdb2e",
+        "arena_id": "arena-2",
+        "status": "complete",
+        "reason": "last_team_alive",
+        "winner": "Blue",
+        "winner_id": "AI_00015",
+        "duration_seconds": 434.95,
+        "event_counts": {
+          "match_start": 1,
+          "purchase": 88,
+          "swing": 170,
+          "block_place": 64,
+          "permanent_item": 5,
+          "damage": 78,
+          "item_consume": 17,
+          "death": 10,
+          "respawn": 9,
+          "phase": 1,
+          "dig_start": 8,
+          "block_break": 6,
+          "bed_destroyed": 2,
+          "explosion": 1,
+          "result": 1
+        },
+        "players": [
+          "AI_00015",
+          "AI_00016"
+        ],
+        "saved_at": 1792596292542,
+        "rules_version": "skyduel-0.6.0",
+        "replay_sha256": "4ebb6add40a5b22f7c54204a4194d332cffd9e91c2e3f74cd0c69cf61f32ac27",
+        "frames": 4350,
+        "roster_isolated": true,
+        "launches": 1
+      }
+    ]
+  },
+  "behavior": {
+    "independent_backfill": {
+      "continuing_match": "c1b4b1a0-b34c-4e38-b343-d40edca6a2ce",
+      "new_match_in_other_arena": "2bba7c51-2e23-4d92-9fc7-bb78964e21c1",
+      "new_launch_at": 1792595357130,
+      "continuing_match_result_at": 1792595743371
+    },
+    "scheduler_restart": {
+      "reconciled_match_ids": [
+        "2bba7c51-2e23-4d92-9fc7-bb78964e21c1",
+        "56e1e831-c83c-4e6f-bc22-599e048bf66a",
+        "c1b4b1a0-b34c-4e38-b343-d40edca6a2ce"
+      ],
+      "original_ai_processes_adopted": true
+    },
+    "redis_orderly_restart": {
+      "entrants_retained": 16,
+      "waiting_retained": true,
+      "pause_retained": true
+    },
+    "pause": {
+      "waiting_entrants": 4,
+      "available_arenas_not_filled": 2
+    },
+    "expired_coordinator_lease": {
+      "passed": true,
+      "gate": "open",
+      "coordinator_reacquired_same_owner": true,
+      "checked_at": "2026-10-21T15:48:49.165Z"
+    }
+  },
+  "sampling": {
+    "note": "Sampled server average MSPT, not individual tick latency percentiles; short local measurement, not a capacity guarantee.",
+    "samples_with_three_active_arenas": 582,
+    "tps_min": 19.999403084482605,
+    "tps_median": 20.00000500000128,
+    "average_mspt_median": 1.648387,
+    "average_mspt_max": 2.7257409999999997,
+    "five_second_process_sample": {
+      "duration_seconds": 5.0100345,
+      "processes": [
+        {
+          "pid": 72380,
+          "name": "java",
+          "role": "Minecraft",
+          "working_set_mb": 1558.8,
+          "private_mb": 1628.4,
+          "cpu_core_equivalent": 0.193
+        },
+        {
+          "pid": 47048,
+          "name": "node",
+          "role": "Scheduler",
+          "working_set_mb": 72.2,
+          "private_mb": 76.5,
+          "cpu_core_equivalent": 0.006
+        },
+        {
+          "pid": 41304,
+          "name": "node",
+          "role": "AI pair",
+          "working_set_mb": 251.3,
+          "private_mb": 230,
+          "cpu_core_equivalent": 0.034
+        },
+        {
+          "pid": 72484,
+          "name": "redis-server",
+          "role": "Redis",
+          "working_set_mb": 72.1,
+          "private_mb": 16.1,
+          "cpu_core_equivalent": 0.003
+        },
+        {
+          "pid": 74576,
+          "name": "node",
+          "role": "AI pair",
+          "working_set_mb": 227.4,
+          "private_mb": 222.7,
+          "cpu_core_equivalent": 0.012
+        },
+        {
+          "pid": 68916,
+          "name": "node",
+          "role": "AI pair",
+          "working_set_mb": 239.2,
+          "private_mb": 222.5,
+          "cpu_core_equivalent": 0.019
+        },
+        {
+          "pid": 66248,
+          "name": "node",
+          "role": "Spectator",
+          "working_set_mb": 110.7,
+          "private_mb": 117.8,
+          "cpu_core_equivalent": 0.003
+        },
+        {
+          "pid": 57376,
+          "name": "node",
+          "role": "Spectator",
+          "working_set_mb": 115.5,
+          "private_mb": 124.1,
+          "cpu_core_equivalent": 0.003
+        }
+      ],
+      "working_set_sum_mb": 2647.1999999999994
+    }
+  },
+  "automated_tests": {
+    "scheduler_redis_tests": 10,
+    "existing_strategy_and_viewer_tests": 49,
+    "new_empty_arena_viewer_test": 1,
+    "rules_python_tests": 16,
+    "total": 76,
+    "redis_queue_load": 1000,
+    "queue_load_is_not_minecraft_concurrency": true,
+    "reset_failure_test": "simulated adapter with real Redis; not a forced live map corruption"
+  },
+  "native_control_checks": {
+    "checked_at": "2026-10-21T15:34:17.921Z",
+    "match_id": "59bb4f5e-b4a8-40de-b56c-8209d52a4da2",
+    "arena_id": "arena-1",
+    "checks": [
+      {
+        "name": "reject_stale_release",
+        "passed": true
+      },
+      {
+        "name": "reject_stale_reserve",
+        "passed": true
+      },
+      {
+        "name": "duplicate_launch_denied",
+        "passed": true
+      },
+      {
+        "name": "active_match_unchanged",
+        "passed": true
+      }
+    ],
+    "arenas": [
+      {
+        "arena_id": "arena-1",
+        "arena_name": "SkyDuel",
+        "world": "bedwars-v6",
+        "managed": true,
+        "state": "running",
+        "game_state": "running",
+        "task_id": "59bb4f5e-b4a8-40de-b56c-8209d52a4da2",
+        "started_id": "59bb4f5e-b4a8-40de-b56c-8209d52a4da2",
+        "launched": true,
+        "players": [
+          "AI_00018",
+          "AI_00017"
+        ],
+        "assigned": [
+          "AI_00017",
+          "AI_00018"
+        ],
+        "saved": false,
+        "restored": false,
+        "error": ""
+      },
+      {
+        "arena_id": "arena-2",
+        "arena_name": "SkyDuel2",
+        "world": "bedwars-v6_a2",
+        "managed": true,
+        "state": "running",
+        "game_state": "running",
+        "task_id": "b938ca09-f69c-4b36-ac21-f1a31f576362",
+        "started_id": "b938ca09-f69c-4b36-ac21-f1a31f576362",
+        "launched": true,
+        "players": [
+          "AI_00020",
+          "AI_00019"
+        ],
+        "assigned": [
+          "AI_00019",
+          "AI_00020"
+        ],
+        "saved": false,
+        "restored": false,
+        "error": ""
+      },
+      {
+        "arena_id": "arena-3",
+        "arena_name": "SkyDuel3",
+        "world": "bedwars-v6_a3",
+        "managed": true,
+        "state": "running",
+        "game_state": "running",
+        "task_id": "0c27ae55-7727-49b3-a03b-86a3e01633ab",
+        "started_id": "0c27ae55-7727-49b3-a03b-86a3e01633ab",
+        "launched": true,
+        "players": [
+          "AI_00022",
+          "AI_00021"
+        ],
+        "assigned": [
+          "AI_00021",
+          "AI_00022"
+        ],
+        "saved": false,
+        "restored": false,
+        "error": ""
+      }
+    ],
+    "deployed_plugin_sha256": "081e6cfc2e72347e5d10d65094038e946597792c32dd79f3e991c8e76c835520"
+  },
+  "web": {
+    "render": {
+      "errors": [],
+      "live": {
+        "chunks": 121,
+        "merchants": 4,
+        "cameraY": 67.39999969508536
+      },
+      "replay": {
+        "match_id": "1260d4f5-ef35-4d8e-915b-c44d00f4bc5f",
+        "chunks": 60,
+        "merchants": 4,
+        "error": ""
+      }
+    },
+    "mobile": {
+      "errors": [],
+      "actorState": {
+        "merchants": 4,
+        "cameraY": 67.29186178590052
+      },
+      "arena_id": "arena-3",
+      "players": [
+        "AI_00007",
+        "AI_00008"
+      ],
+      "mobileOverflow": false,
+      "checked_at": "2026-10-21T15:13:36.146Z"
+    }
+  },
+  "deployment_note": "The eight-game batch preceded the final persisted release receipt and cached four-bed-block readiness improvement. The final JAR was then deployed and three real arenas/fenced controls verified again. A further natural 281-second match completed with the final JAR; its result, reset and on-disk release receipt were checked.",
+  "post_deployment_completed_match": {
+    "match_id": "b938ca09-f69c-4b36-ac21-f1a31f576362",
+    "arena_id": "arena-2",
+    "status": "complete",
+    "reason": "last_team_alive",
+    "winner": "Blue",
+    "winner_id": "AI_00019",
+    "duration_seconds": 281,
+    "event_counts": {
+      "match_start": 1,
+      "purchase": 53,
+      "swing": 116,
+      "block_place": 60,
+      "permanent_item": 4,
+      "damage": 43,
+      "dig_start": 2,
+      "death": 6,
+      "respawn": 5,
+      "item_consume": 7,
+      "explosion": 1,
+      "bed_destroyed": 1,
+      "block_break": 1,
+      "result": 1
+    },
+    "players": [
+      "AI_00019",
+      "AI_00020"
+    ],
+    "saved_at": 1792597027886,
+    "rules_version": "skyduel-0.6.0",
+    "release_receipt_persisted": true,
+    "replay_sha256": "5b810c9f11a31cd21b92064577b5f5c4ecbc034809e690dce92cd89656d1aecc"
+  }
+}

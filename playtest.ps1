@@ -6,6 +6,7 @@
     [string]$RuntimeRoot = '',
     [string]$ModelDir = 'models\showcase',
     [switch]$NoDemo,
+    [switch]$NoViewer,
     [switch]$NoBrowser
 )
 $ErrorActionPreference = 'Stop'
@@ -52,7 +53,7 @@ if($Mode -eq 'Stop'){
 }
 $eula=Join-Path $runPath 'eula.txt'
 if(-not (Test-Path -LiteralPath $eula) -or (Get-Content -LiteralPath $eula -Raw) -notmatch '(?m)^\s*eula\s*=\s*true\s*$'){throw 'Accept the Minecraft EULA through bedwars.ps1 -Mode Start -AcceptEula first.'}
-if(-not (Test-Path -LiteralPath (Join-Path $ViewerModules 'prismarine-viewer\package.json'))){throw "Viewer modules missing: $ViewerModules"}
+if(-not $NoViewer -and -not (Test-Path -LiteralPath (Join-Path $ViewerModules 'prismarine-viewer\package.json'))){throw "Viewer modules missing: $ViewerModules"}
 if(-not $NoDemo){
     if(-not (Test-Path -LiteralPath (Join-Path $RuntimeRoot 'node_modules\mineflayer-pathfinder\package.json'))){throw "Pathfinder missing: $RuntimeRoot"}
     foreach($name in @('EmberAI','BastionAI')){if(-not (Test-Path -LiteralPath (Join-Path $repoRoot "$ModelDir\$name.json"))){throw "Trained actor missing: $ModelDir\$name.json"}}
@@ -63,12 +64,11 @@ if(-not (Test-Port 25567)){
 }
 Wait-Port 25600
 & $pythonExe $rconScript skyduel lock | Out-Null
-if(-not (Test-Path -LiteralPath (Join-Path $repoRoot 'runs/native-assets-1.21/items.json'))){ & $pythonExe (Join-Path $repoRoot 'scripts/prepare-native-items.py'); if($LASTEXITCODE -ne 0){throw 'Official item resources could not be prepared'} }
+if(-not $NoViewer -and -not (Test-Path -LiteralPath (Join-Path $repoRoot 'runs/native-assets-1.21/items.json'))){ & $pythonExe (Join-Path $repoRoot 'scripts/prepare-native-items.py'); if($LASTEXITCODE -ne 0){throw 'Official item resources could not be prepared'} }
 $env:BEDWARS_VIEWER_MODULES=$ViewerModules
 $env:SKYDUEL_RUNTIME_ROOT=$RuntimeRoot
 $env:SKYDUEL_MODEL_DIR=$ModelDir
-Start-Node 'viewer' 'local-viewer\server.cjs' 'server.cjs'
-Wait-Port 3007
+if(-not $NoViewer){Start-Node 'viewer' 'local-viewer\server.cjs' 'server.cjs';Wait-Port 3007}
 if(-not $NoDemo){Start-Node 'showcase' 'scripts\showcase-v2.cjs' 'showcase-v2.cjs'}
-Write-Output 'Live: http://127.0.0.1:3007/  Replays: http://127.0.0.1:3007/replays'
-if(-not $NoBrowser){Start-Process 'http://127.0.0.1:3007/'}
+if($NoViewer){Write-Output 'Minecraft and referee streams ready.'}else{Write-Output 'Live: http://127.0.0.1:3007/  Replays: http://127.0.0.1:3007/replays'}
+if(-not $NoBrowser -and -not $NoViewer){Start-Process 'http://127.0.0.1:3007/'}

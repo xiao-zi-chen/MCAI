@@ -5,7 +5,7 @@ const runtimeRequire=createRequire(path.join(process.env.SKYDUEL_RUNTIME_ROOT||(
 const {pathfinder,Movements,goals}=runtimeRequire('mineflayer-pathfinder');
 const {Vec3}=require('../bot-controller/node_modules/vec3');
 const {defenseBoxes,navigationPenalty}=require('./bedwars-navigation.cjs');
-const {Agent,run,getMatch,rules,root,logits}=require('./showcase-agents.cjs');
+const {Agent,run,getMatch,rules,root,logits,roster,modelFor}=require('./showcase-agents.cjs');
 const modelDir=path.resolve(root,process.env.SKYDUEL_MODEL_DIR||'models/showcase');
 const {baseX,bedX,footX,feetY,nearBase,home,approach}=require('./arena-geometry.cjs').forMap(rules.map);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -16,8 +16,8 @@ const itemNames=i=>JSON.stringify({name:i.customName,nbt:i.nbt,components:i.comp
 
 class ClassicAgent extends Agent {
  constructor(name,style){
-  super(name,style);this.model=JSON.parse(fs.readFileSync(path.join(modelDir,name+'.json'),'utf8'));
-  this.modelHash=sha(path.join(modelDir,name+'.json'));this.bot.loadPlugin(pathfinder);
+  super(name,style);this.model=JSON.parse(fs.readFileSync(path.join(modelDir,modelFor(name)+'.json'),'utf8'));
+  this.modelHash=sha(path.join(modelDir,modelFor(name)+'.json'));this.bot.loadPlugin(pathfinder);
   this.bridgeWidth=style==='rush'?2:3;this.usingItem=false;this.lastHeal=-1000;this.lastShot=-1000;this.lastSpecial=-1000;this.diamondTrip=false;this.diamondTripDone=false;this.needDiamondPick=false;this.engaging=false;this.failUntil=0;
   this.bot.once('spawn',()=>{const m=new Movements(this.bot);m.canDig=false;m.allow1by1towers=false;m.allowParkour=true;m.maxDropDown=1;m.scafoldingBlocks=[];this.bot.pathfinder.setMovements(m);this.bot.pathfinder.thinkTimeout=1200;this.bot.pathfinder.tickTimeout=8;this.bot.pathfinder.searchRadius=128;});
  }
@@ -40,7 +40,7 @@ class ClassicAgent extends Agent {
  ownUpgrades(){return getMatch().classic?.upgrades?.[this.ownTeam()]||{};}
  visibleEnemy(range=16){
   return this.bot.nearestEntity(e=>{
-   if(e.type!=='player'||e.username===this.name||!['EmberAI','BastionAI'].includes(e.username))return false;
+   if(e.type!=='player'||e.username===this.name||!roster.some(p=>p.name===e.username))return false;
    const p=getMatch().players?.find(p=>p.name===e.username);if(!p||p.mode!=='SURVIVAL'||p.team===this.ownTeam())return false;
    const distance=e.position.distanceTo(this.bot.entity.position);if(distance>range)return false;
    // Invisible skin does not hide worn armor or a held item in this Java mode.
@@ -215,7 +215,7 @@ class ClassicAgent extends Agent {
   const match=getMatch();
   if(!this.active()){
    if(this.busy||this.engaging)this.cancel();
-   if(this.bot.game.gameMode==='survival'&&this.bot.entity.position.y>=100&&!this.bot.inventory.items().some(i=>i.name==='compass')&&Date.now()-this.lastQueue>10000){this.lastQueue=Date.now();this.bot.chat('/bw join SkyDuel')}
+   if(this.bot.game.gameMode==='survival'&&this.bot.entity.position.y>=100&&!this.bot.inventory.items().some(i=>i.name==='compass')&&Date.now()-this.lastQueue>10000){this.lastQueue=Date.now();this.joinArena()}
    return;
   }
   if(this.currentMatch!==match.match_id){this.cancel();this.currentMatch=match.match_id;this.side=match.players?.find(p=>p.name===this.name)?.team==='Red'?-1:1;this.defended=false;this.diamondTripDone=false;this.needDiamondPick=false;this.combatStart=0;this.hits=this.taken=0;this.actions.fill(0);this.onMatch?.();}
@@ -249,7 +249,7 @@ const SkilledAgent=require('./bedwars-skills.cjs').extend(ClassicAgent,{rules,ge
 function runDemo(){
 const RuntimeBase=process.env.SKYDUEL_SKILLS==='classic'?ClassicAgent:SkilledAgent;
 const AgentType=process.env.SKYDUEL_TACTICS==='classic'?ClassicAgent:require('./advanced-tactics.cjs').extend(RuntimeBase,{rules,getMatch});
-const reportDir=path.join(root,'runs/showcase-selected');fs.mkdirSync(reportDir,{recursive:true});
+const reportDir=path.resolve(root,process.env.SKYDUEL_REPORT_DIR||'runs/showcase-selected');fs.mkdirSync(reportDir,{recursive:true});
 const archived=path.join(reportDir,'controllers',controllerHash);fs.mkdirSync(archived,{recursive:true});
 for(const source of Object.keys(controllerSources)){const dest=path.join(archived,source);fs.mkdirSync(path.dirname(dest),{recursive:true});fs.copyFileSync(path.join(root,source),dest);}
 const agents=run(AgentType,reportDir);

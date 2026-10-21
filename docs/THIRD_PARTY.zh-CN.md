@@ -13,3 +13,5 @@
 调研记录另见 `STRATEGY_RESEARCH.zh-CN.md` 与 `NATIVE_ALIGNMENT.zh-CN.md`。参考项目不等于采用其代码，也不代表完整复刻其功能。`xiao-zi-chen/MCAI` 为本版本发布目标。
 
 Agones 调度配置示例依据官方 Counters and Lists 文档改写，使用 Apache-2.0，许可文本位于 `deploy/agones/LICENSE`。它是设计模板，当前运行系统未引入 Agones 依赖。
+
+本地调度锁定 BullMQ 5.81.5（MIT，taskforcesh/bullmq）与 ioredis 5.11.1（MIT，redis/ioredis），版本和完整依赖见 `local-scheduler/package-lock.json`。Redis 由运行者提供，服务器程序不随仓库分发；本机复用了已有 Windows Redis 5.0.14.1，BullMQ 推荐的 Redis 版本为 6.2 以上。

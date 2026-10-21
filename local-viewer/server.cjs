@@ -14,14 +14,18 @@ const { Vec3 } = require('../bot-controller/node_modules/vec3');
 const { ReplayWorld } = require('./replay-world.cjs');
 
 const webPort = Number(process.env.BEDWARS_VIEW_PORT || 3007);
+const cameraName=process.env.SKYDUEL_CAMERA_NAME||'MapCamera';
+const worldName=process.env.SKYDUEL_WORLD||'bedwars-v6';
+const arenaId=process.env.SKYDUEL_ARENA_ID||'';
 const gamePort = Number(process.env.BEDWARS_PORT || 25567);
 const projectRoot = path.resolve(__dirname,'..');
-const replayDir = path.join(projectRoot,'runs/bedwars-local/plugins/SkyDuelReferee/replays');
+const serverRoot=path.resolve(projectRoot,process.env.SKYDUEL_SERVER_ROOT||'runs/bedwars-local');
+const replayDir = path.join(serverRoot,'plugins/SkyDuelReferee/replays');
 const localRules = JSON.parse(fs.readFileSync(path.join(projectRoot,'competition/rules.json'),'utf8'));
-const replayWorld = new ReplayWorld({viewerRequire, directory:path.join(projectRoot,'runs/bedwars-local/replay-maps'), rules:localRules});
+const replayWorld = new ReplayWorld({viewerRequire, directory:path.join(serverRoot,'replay-maps'), rules:localRules});
 let refereeState = {phase:'waiting'};
 function connectReferee() {
-  const socket=net.createConnection({host:'127.0.0.1',port:25600});let buffer='';
+  const socket=net.createConnection({host:'127.0.0.1',port:Number(process.env.SKYDUEL_OBSERVER_PORT||25600)});let buffer='';
   socket.on('data',data=>{buffer+=data;let end;while((end=buffer.indexOf('\n'))>=0){const line=buffer.slice(0,end);buffer=buffer.slice(end+1);try{refereeState=JSON.parse(line);io.to('live').emit('refereeFrame',refereeState)}catch{}}});
   socket.on('error',()=>{});socket.on('close',()=>setTimeout(connectReferee,1000));
 }
@@ -74,32 +78,33 @@ app.get('/api/replays/:id', (req,res)=>{
 app.get('/scene/index.js', (_req, res) => res.type('js').send(bundle));
 app.use('/scene', express.static(assets));
 
-const bot = mineflayer.createBot({host:'127.0.0.1',port:gamePort,username:'MapCamera',auth:'offline',version:'1.21',viewDistance:'far'});
+const bot = mineflayer.createBot({host:'127.0.0.1',port:gamePort,username:cameraName,auth:'offline',version:'1.21',viewDistance:'far'});
 bot.physicsEnabled = false;
 let ready = false;
 const messages = [];
 bot.on('messagestr', text => { messages.push(text); if (messages.length > 12) messages.shift(); });
-bot.on('spawn', () => {
+bot.once('spawn', () => {
   bot.physicsEnabled = false;
-  ready = true;
-  console.log('Spectator connected: MapCamera');
+  ready = false;
+  console.log('Spectator connected:',cameraName,worldName);
   const python = path.join(__dirname, '../.venv/Scripts/python.exe');
   const admin = path.join(__dirname, '../scripts/bedwars-rcon.py');
-  execFile(python, [admin, 'gamemode', 'spectator', 'MapCamera'], error => {
+  execFile(python, [admin, 'gamemode', 'spectator', cameraName], error => {
     if (error) { console.error('Could not configure spectator:', error.message); return; }
-    execFile(python, [admin, 'tp', 'MapCamera', '0', '90', '0', '0', '45'], error => {
+    execFile(python, [admin, 'execute', 'in', 'minecraft:'+worldName, 'run', 'tp', cameraName, '0', '90', '0', '0', '45'], error => {
       if (error) console.error('Could not position spectator:', error.message);
+      else setTimeout(()=>ready=true,500);
     });
   });
 });
-bot.on('end', reason => { ready = false; console.log('Spectator disconnected:', reason); });
+bot.on('end', reason => { ready = false; console.log('Spectator disconnected:', reason);if(arenaId){io.close();server.close(()=>process.exit(0));} });
 bot.on('error', error => { console.error(error.message); });
 
 app.get('/status', (_req, res) => {
   const bed = team => { if(!ready||!bot.world)return null;const b = bot.blockAt(new Vec3(...localRules.map.teams[team].bed)); return b ? b.name.endsWith('_bed') : null; };
   const players = Object.values(bot.entities || {}).filter(e => e.type === 'player' && e.username && e.username !== bot.username).map(e => ({name:e.username,x:e.position.x,y:e.position.y,z:e.position.z}));
-  let demo=null;try{demo=JSON.parse(fs.readFileSync(path.join(projectRoot,'runs/showcase-live.json'),'utf8'));if(Date.now()-Date.parse(demo.updated_at)>10000)demo=null}catch{}
-  res.json({connected:ready,players,beds:{red:bed('Red'),blue:bed('Blue')},messages,referee:refereeState,demo,gameAddress:`127.0.0.1:${gamePort}`});
+  let demo=null;try{const liveFile=arenaId&&refereeState.match_id?path.join(projectRoot,'runs/scheduler/matches',refereeState.match_id,'live.json'):path.join(projectRoot,'runs/showcase-live.json');demo=JSON.parse(fs.readFileSync(liveFile,'utf8'));if(Date.now()-Date.parse(demo.updated_at)>10000)demo=null}catch{}
+  res.json({connected:ready,arena_id:arenaId,managed:Boolean(arenaId),players,beds:{red:bed('Red'),blue:bed('Blue')},messages,referee:refereeState,demo,gameAddress:`127.0.0.1:${gamePort}`});
 });
 io.on('connection', socket => {
   if (socket.handshake.query.replay) {
@@ -154,3 +159,5 @@ io.on('connection', socket => {
 setInterval(()=>{if(ready&&bot.world)replayWorld.capture(bot,refereeState);},1000).unref();
 server.listen(webPort, '127.0.0.1', () => console.log(`Local spectator: http://127.0.0.1:${webPort}`));
 process.on('SIGINT', () => { bot.quit(); io.close(); server.close(() => process.exit(0)); });
+
+if(process.env.SKYDUEL_VIEWER_IDLE_MS){let lastView=Date.now();setInterval(()=>{if(io.engine.clientsCount)lastView=Date.now();else if(Date.now()-lastView>Number(process.env.SKYDUEL_VIEWER_IDLE_MS)){bot.quit();io.close();server.close(()=>process.exit(0));}},10000).unref();}

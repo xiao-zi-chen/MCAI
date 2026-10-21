@@ -152,7 +152,7 @@ class SpectatorActors {
  setLive(state){
   if(!state)return;
   const prior=this.buffer.at(-1);
-  if(prior?.state.match_id===state.match_id&&prior.state.tick===state.tick&&prior.state.phase===state.phase)return;
+  if(prior&&prior.state.match_id===state.match_id&&prior.state.tick===state.tick&&prior.state.phase===state.phase)return;
   if(prior?.state.match_id!==state.match_id){this.buffer=[];this.travel.clear();}
   for(const p of state.players||[]){const old=prior?.state.players?.find(q=>q.name===p.name),d=old&&p.mode==='SURVIVAL'&&old.mode==='SURVIVAL'?Math.hypot(...p.pos.map((v,i)=>v-old.pos[i])):0;const amount=(this.travel.get(p.name)||0)+(d<6?d:0);p.walk_distance=amount;this.travel.set(p.name,amount);}
   this.buffer.push({state,at:performance.now()});if(this.buffer.length>3)this.buffer.shift();
