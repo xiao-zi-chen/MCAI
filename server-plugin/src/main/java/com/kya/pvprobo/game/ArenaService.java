@@ -260,6 +260,8 @@ public final class ArenaService {
             episodeState.addEvent("missing_player:" + name);
             return;
         }
+        if (player.isDead()) player.spigot().respawn();
+        player.setGameMode(org.bukkit.GameMode.SURVIVAL);
         player.teleport(location);
         player.setVelocity(new Vector(0, 0, 0));
         player.getInventory().clear();
@@ -271,6 +273,12 @@ public final class ArenaService {
         player.setFireTicks(0);
         player.setFallDistance(0.0f);
         player.getInventory().setHeldItemSlot(0);
+        List<String> trainingWeapons = plugin.getConfig().getStringList("arena.training-weapons");
+        if (!trainingWeapons.isEmpty()) {
+            int kit = Math.floorMod(episodeState.episodeId().hashCode(), trainingWeapons.size());
+            Material weapon = Material.matchMaterial(trainingWeapons.get(kit));
+            if (weapon != null) player.getInventory().setItem(0, new org.bukkit.inventory.ItemStack(weapon));
+        }
     }
 
     private void setGameRules(World world) {
@@ -281,6 +289,7 @@ public final class ArenaService {
         world.setGameRule(GameRule.DO_PATROL_SPAWNING, false);
         world.setGameRule(GameRule.DO_TRADER_SPAWNING, false);
         world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true);
+        world.setGameRule(GameRule.NATURAL_REGENERATION, false);
         world.setGameRule(GameRule.KEEP_INVENTORY, true);
         world.setGameRule(GameRule.MOB_GRIEFING, false);
         world.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false);

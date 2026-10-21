@@ -1,0 +1,23 @@
+[
+  {
+    "id": "paper",
+    "path": "downloads/paper-1.21.jar",
+    "algorithm": "sha256",
+    "hash": "ab9bb1afc3cea6978a0c03ce8448aa654fe8a9c4dddf341e7cbda1b0edaa73f5",
+    "url": "https://fill-data.papermc.io/v1/objects/ab9bb1afc3cea6978a0c03ce8448aa654fe8a9c4dddf341e7cbda1b0edaa73f5/paper-1.21-130.jar"
+  },
+  {
+    "id": "bedwars",
+    "path": "runs/bedwars-local/plugins/BedWars-0.2.44.jar",
+    "algorithm": "sha1",
+    "hash": "27fdc659f76c6b47a7c64337ef6d3339b1deb4bd",
+    "url": "https://cdn.modrinth.com/data/8sg1aj4I/versions/nUPEYDAm/BedWars-0.2.44.jar"
+  },
+  {
+    "id": "gradle",
+    "path": "downloads/gradle-8.7-bin.zip",
+    "algorithm": "sha256",
+    "hash": "544c35d6bd849ae8a5ed0bcea39ba677dc40f49df7d1835561582da2009b961d",
+    "url": "https://services.gradle.org/distributions/gradle-8.7-bin.zip"
+  }
+]

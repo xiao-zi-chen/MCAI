@@ -1,0 +1,431 @@
+{
+  "data": [
+    {
+      "price": "4 of iron",
+      "properties": "applycolorbyteam",
+      "stack": {
+        "type": "white_wool",
+        "amount": 16
+      }
+    },
+    {
+      "price": "24 of iron",
+      "properties": "",
+      "stack": {
+        "type": "end_stone",
+        "amount": 12
+      }
+    },
+    {
+      "price": "4 of gold",
+      "properties": "",
+      "stack": {
+        "type": "oak_planks",
+        "amount": 16
+      }
+    },
+    {
+      "price": "10 of iron",
+      "properties": "",
+      "stack": {
+        "type": "stone_sword",
+        "amount": 1
+      }
+    },
+    {
+      "price": "7 of gold",
+      "properties": "",
+      "stack": {
+        "type": "iron_sword",
+        "amount": 1
+      }
+    },
+    {
+      "price": "10 of iron",
+      "properties": [
+        {
+          "name": "SkyDuelTool",
+          "tool": "pickaxe",
+          "tier": "1",
+          "price": 10,
+          "currency": "iron"
+        }
+      ],
+      "stack": {
+        "type": "wooden_pickaxe",
+        "amount": 1
+      }
+    },
+    {
+      "price": "3 of emerald",
+      "properties": [
+        {
+          "name": "SkyDuelTool",
+          "tool": "pickaxe",
+          "tier": "4",
+          "price": 3,
+          "currency": "emerald"
+        }
+      ],
+      "stack": {
+        "type": "diamond_pickaxe",
+        "amount": 1
+      }
+    },
+    {
+      "price": "20 of iron",
+      "properties": [
+        {
+          "name": "SkyDuelTool",
+          "tool": "shears",
+          "tier": "1",
+          "price": 20,
+          "currency": "iron"
+        }
+      ],
+      "stack": {
+        "type": "shears",
+        "amount": 1
+      }
+    },
+    {
+      "price": "3 of gold",
+      "properties": "",
+      "stack": {
+        "type": "golden_apple",
+        "amount": 1
+      }
+    },
+    {
+      "price": "4 of emerald",
+      "properties": "",
+      "stack": {
+        "type": "diamond_sword",
+        "amount": 1
+      }
+    },
+    {
+      "price": "4 of emerald",
+      "properties": "",
+      "stack": {
+        "type": "obsidian",
+        "amount": 4
+      }
+    },
+    {
+      "price": "12 of iron",
+      "properties": "",
+      "stack": {
+        "type": "white_stained_glass",
+        "amount": 4
+      }
+    },
+    {
+      "price": "4 of iron",
+      "properties": "",
+      "stack": {
+        "type": "ladder",
+        "amount": 16
+      }
+    },
+    {
+      "price": "6 of gold",
+      "properties": [
+        {
+          "name": "SkyDuelTool",
+          "tool": "pickaxe",
+          "tier": "3",
+          "price": 6,
+          "currency": "gold"
+        }
+      ],
+      "stack": {
+        "type": "iron_pickaxe",
+        "amount": 1
+      }
+    },
+    {
+      "price": "10 of iron",
+      "properties": [
+        {
+          "name": "SkyDuelTool",
+          "tool": "axe",
+          "tier": "1",
+          "price": 10,
+          "currency": "iron"
+        }
+      ],
+      "stack": {
+        "type": "wooden_axe",
+        "amount": 1
+      }
+    },
+    {
+      "price": "6 of gold",
+      "properties": [
+        {
+          "name": "SkyDuelTool",
+          "tool": "axe",
+          "tier": "3",
+          "price": 6,
+          "currency": "gold"
+        }
+      ],
+      "stack": {
+        "type": "iron_axe",
+        "amount": 1
+      }
+    },
+    {
+      "price": "12 of gold",
+      "properties": "",
+      "stack": {
+        "type": "bow",
+        "amount": 1
+      }
+    },
+    {
+      "price": "2 of gold",
+      "properties": "",
+      "stack": {
+        "type": "arrow",
+        "amount": 8
+      }
+    },
+    {
+      "price": "40 of iron",
+      "properties": [
+        {
+          "name": "SkyDuelArmor",
+          "tier": "chainmail",
+          "price": 40,
+          "currency": "iron"
+        }
+      ],
+      "stack": {
+        "type": "chainmail_boots",
+        "amount": 1
+      }
+    },
+    {
+      "price": "12 of gold",
+      "properties": [
+        {
+          "name": "SkyDuelArmor",
+          "tier": "iron",
+          "price": 12,
+          "currency": "gold"
+        }
+      ],
+      "stack": {
+        "type": "iron_boots",
+        "amount": 1
+      }
+    },
+    {
+      "price": "6 of emerald",
+      "properties": [
+        {
+          "name": "SkyDuelArmor",
+          "tier": "diamond",
+          "price": 6,
+          "currency": "emerald"
+        }
+      ],
+      "stack": {
+        "type": "diamond_boots",
+        "amount": 1
+      }
+    },
+    {
+      "price": "4 of gold",
+      "properties": [
+        {
+          "name": "AutoIgniteableTnt",
+          "explosion-time": 4,
+          "damage-placer": true,
+          "damage": 4.0
+        }
+      ],
+      "stack": {
+        "type": "tnt",
+        "amount": 1
+      }
+    },
+    {
+      "price": "40 of iron",
+      "properties": [
+        {
+          "name": "ThrowableFireball",
+          "damage": 3.0,
+          "incendiary": true,
+          "damage-thrower": true
+        }
+      ],
+      "stack": {
+        "type": "fire_charge",
+        "amount": 1
+      }
+    },
+    {
+      "price": "4 of emerald",
+      "properties": "",
+      "stack": {
+        "type": "ender_pearl",
+        "amount": 1
+      }
+    },
+    {
+      "price": "3 of gold",
+      "properties": "",
+      "stack": {
+        "type": "water_bucket",
+        "amount": 1
+      }
+    },
+    {
+      "price": "1 of emerald",
+      "properties": [
+        {
+          "name": "SkyDuelPotion",
+          "effect": "SPEED",
+          "duration": 45,
+          "amplifier": 1
+        }
+      ],
+      "stack": {
+        "type": "potion",
+        "amount": 1,
+        "potion-type": "swiftness",
+        "display-name": "迅捷药水"
+      }
+    },
+    {
+      "price": "1 of emerald",
+      "properties": [
+        {
+          "name": "SkyDuelPotion",
+          "effect": "JUMP_BOOST",
+          "duration": 45,
+          "amplifier": 4
+        }
+      ],
+      "stack": {
+        "type": "potion",
+        "amount": 1,
+        "potion-type": "leaping",
+        "display-name": "跳跃药水"
+      }
+    },
+    {
+      "price": "2 of emerald",
+      "properties": [
+        {
+          "name": "SkyDuelPotion",
+          "effect": "INVISIBILITY",
+          "duration": 30,
+          "amplifier": 0
+        }
+      ],
+      "stack": {
+        "type": "potion",
+        "amount": 1,
+        "potion-type": "invisibility",
+        "display-name": "隐身药水"
+      }
+    },
+    {
+      "price": "5 of gold",
+      "properties": "",
+      "stack": {
+        "type": "stick",
+        "amount": 1,
+        "display-name": "击退棒 I",
+        "enchants": {
+          "knockback": 1
+        }
+      }
+    },
+    {
+      "price": "24 of gold",
+      "properties": "",
+      "stack": {
+        "type": "bow",
+        "amount": 1,
+        "display-name": "力量弓 I",
+        "enchants": {
+          "power": 1
+        }
+      }
+    },
+    {
+      "price": "6 of emerald",
+      "properties": "",
+      "stack": {
+        "type": "bow",
+        "amount": 1,
+        "display-name": "冲击弓 I",
+        "enchants": {
+          "power": 1,
+          "punch": 1
+        }
+      }
+    },
+    {
+      "price": "3 of gold",
+      "properties": "",
+      "stack": {
+        "type": "sponge",
+        "amount": 4
+      }
+    },
+    {
+      "price": "20 of iron",
+      "properties": [
+        {
+          "name": "SkyDuelTool",
+          "tool": "pickaxe",
+          "tier": "2",
+          "price": 20,
+          "currency": "iron"
+        }
+      ],
+      "stack": {
+        "type": "stone_pickaxe",
+        "amount": 1
+      }
+    },
+    {
+      "price": "20 of iron",
+      "properties": [
+        {
+          "name": "SkyDuelTool",
+          "tool": "axe",
+          "tier": "2",
+          "price": 20,
+          "currency": "iron"
+        }
+      ],
+      "stack": {
+        "type": "stone_axe",
+        "amount": 1
+      }
+    },
+    {
+      "price": "3 of emerald",
+      "properties": [
+        {
+          "name": "SkyDuelTool",
+          "tool": "axe",
+          "tier": "4",
+          "price": 3,
+          "currency": "emerald"
+        }
+      ],
+      "stack": {
+        "type": "diamond_axe",
+        "amount": 1
+      }
+    }
+  ]
+}

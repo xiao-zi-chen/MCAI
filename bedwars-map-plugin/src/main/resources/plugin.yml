@@ -1,0 +1,10 @@
+name: LocalBedwarsMap
+version: 0.2.0
+main: local.agx.prototype.LocalBedwarsMap
+api-version: '1.21'
+load: POSTWORLD
+loadbefore: [BedWars]
+commands:
+  localbw:
+    description: Join the local SkyDuel BedWars arena
+    usage: /localbw

@@ -1,0 +1,7 @@
+{
+  "name": "bedwars-submission-prototype",
+  "private": true,
+  "type": "module",
+  "scripts": {"check:model": "node benchmark.mjs"},
+  "dependencies": {"quickjs-emscripten": "0.32.0"}
+}

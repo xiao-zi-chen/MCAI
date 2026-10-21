@@ -1,184 +1,48 @@
-# PVP ROBO
+# MCAI · 悬空夺床
 
-> Language: English | [简体中文](README.zh-CN.md)
+本地运行的 **Minecraft Java 1.21 起床战争 AI 对战**。真实 Paper 服务器负责规则与物理，两个 AI 用本地模型和公开策略比赛，支持原版客户端观战、平视网页观战和整局回放。对局不调用云模型 API。
 
-<p align="center">
-  <img src="docs/assets/pvp-robo-cover.png" alt="PVP ROBO cover" width="900">
-</p>
+当前版本 **0.6.0**：九岛地图、两种示例打法、35 种商品、6 类团队升级。基地间距 112 格，包含南北钻石分路、前哨岛、双绿宝石点和高地通道。
 
-<p align="center">
-  <strong>A Windows-first, no-render Minecraft PvP reinforcement-learning environment.</strong>
-</p>
+## 运行
 
-<p align="center">
-  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-green.svg"></a>
-  <img alt="Minecraft 1.21" src="https://img.shields.io/badge/Minecraft-1.21-3aa675.svg">
-  <img alt="PaperMC" src="https://img.shields.io/badge/PaperMC---nogui-111827.svg">
-  <img alt="Python" src="https://img.shields.io/badge/Python-3.11%2B-3776ab.svg">
-</p>
-
-PVP ROBO is an open research stack for training and evaluating Minecraft PvP agents on private local servers. It connects a headless PaperMC server, a custom Paper plugin, Mineflayer-controlled bots, and a Gymnasium-compatible Python environment through persistent localhost protocols.
-
-The project is built for efficiency and reproducibility: structured observations, flat `np.float32` vectors, integer action arrays, in-place episode reset, mock-first tests, and Windows PowerShell scripts for setup, training, evaluation, and smoke runs.
-
-This repository is for private local/offline research servers only. Do not use it for public-server cheating, anticheat bypassing, stealth automation, or evasion.
-
-## Updates
-
-| Date | Highlights |
-| --- | --- |
-| 2026.10.15 | Fixed OP being revoked on join and admin access being tied to a fixed username, and corrected OP UUIDs for offline workers. Thanks to [xiao-feng-tan](https://github.com/xiao-feng-tan) for reporting [issue #1](https://github.com/KyaKayKya/Minecraft-PVP-ROBO/issues/1). |
-| 2026.07.19 | Fixed ROBO reach parity by clamping Mineflayer attack checks and synthetic validation to vanilla Minecraft entity interaction reach. Thanks to [刮泥Charlie](https://space.bilibili.com/171229828) for finding the reach issue. |
-| 2026.07.17 | Added through-wall hit rejection, real line-of-sight snapshots, vanilla-effective damage ticks, and native Paper hit registration for human attacks. Thanks to [励励lili](https://space.bilibili.com/383268814), [MistWhy](https://space.bilibili.com/2129888402), and [科琳Colleen](https://space.bilibili.com/355912988) for reporting combat-rule issues. |
-| 2026.07.15 | Released local AI Battle spectating docs and Champion ROBO preflight flow. |
-| 2026.07.12 | Published the initial public local PvP RL stack with BC and Champion checkpoints. |
-
-## What Is Inside
-
-```text
-server-plugin/        Paper plugin for privileged state, arena reset, and episode control
-bot-controller/       Mineflayer headless bot controller
-python/               Gymnasium env, protocols, BC/PPO tooling, evaluation, and tests
-scripts/              Windows PowerShell setup, build, run, train, and eval tools
-configs/              Safe local defaults and example manifests
-docs/                 Architecture, protocol, training, runbook, and troubleshooting notes
-```
-
-Private deployment assets, maps, skins, signed textures, live server operations, generated worlds, and downloaded third-party binaries are intentionally not included. The repository does include two small released checkpoints for quick reproduction: a BC baseline and the current Champion ROBO PPO policy.
-
-## Quick Start
-
-Requirements:
-
-- Windows 10 or later
-- Java 21
-- Gradle 8.x
-- Node.js 22.x and npm
-- Python 3.11+
-- `uv`
-
-Install Python and Node dependencies:
+需要 Windows 10/11、JDK 21、Node.js 22+ 和 Python 3.11。首次安装会下载带摘要校验的服务器依赖与游戏资源。
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-python-env.ps1
-npm.cmd --prefix bot-controller install
+powershell -ExecutionPolicy Bypass -File .\setup-bedwars.ps1 -JavaHome '你的 JDK 21 目录'
 ```
 
-Build everything:
+阅读 [Minecraft EULA](https://www.minecraft.net/eula) 后，如同意，将本地 `runs/bedwars-local/eula.txt` 的 `eula=false` 改为 `eula=true`，再启动：
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-all.ps1 `
-  -JavaHome "<JDK 21 path>" `
-  -GradleHome "<Gradle path>"
+powershell -ExecutionPolicy Bypass -File .\playtest.ps1 -NoBrowser
 ```
 
-Try the released checkpoints:
+- [实时平视观战](http://127.0.0.1:3007/)
+- [完整回放](http://127.0.0.1:3007/replays)
+- [规则和商店](http://127.0.0.1:3007/rules)
+- 原版画面：双击 `原版观战.cmd`，首次使用会下载官方 1.21 客户端资源。
 
-```powershell
-.\.venv\Scripts\python.exe -m mc_pvp_env.duel_policy_manifest `
-  --manifest configs\duel-policies.example.json preflight --difficulty bc
+详细安装、停止、手动参与与验证命令见 [本地试验指南](LOCAL_TRIAL.zh-CN.md)。客户端、服务器和本地录制不包含在仓库中。
 
-.\.venv\Scripts\python.exe -m mc_pvp_env.duel_policy_manifest `
-  --manifest configs\duel-policies.example.json preflight --difficulty champion
-```
+## 给别人看
 
-Watch Champion ROBO fight the BC baseline on a local private worker:
+[Releases](https://github.com/xiao-zi-chen/MCAI/releases) 提供 `MCAI-showcase-0.6.0.zip` 展示包：解压后双击 `index.html`，即可离线观看完整比赛、精彩片段、地图截图与规则。MP4 视频也可以单独发送。接收者不需要安装 Minecraft。仓库保持私有，ZIP 可由所有者直接转发。
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\test-ai-battle-live.ps1 `
-  -WorkerId 1 `
-  -StartWorker `
-  -AcceptEula `
-  -LeftDifficulty champion `
-  -RightDifficulty bc
-```
+![已修复的商店村民与网页回放](docs/assets/skyduel-merchants.jpg)
 
-`-AcceptEula` writes `eula=true` only when explicitly passed. Use it only if you agree to Mojang's Minecraft EULA.
+## 内容和范围
 
-To watch from a Minecraft client instead of only running a smoke script, use [Local AI Battle Spectating](docs/wiki/local-ai-battle.md). It shows how to start worker 1, run the duel daemon, join with Minecraft Java Edition 1.21 at `127.0.0.1:25566`, open the in-game AI Battle menu, and recover if you spawn away from the arena or see the wrong game mode.
+- `competition/`：规则源文件、生成的商店/地图配置、参赛合同和动作 schema。
+- `bedwars-map-plugin/`、`referee-plugin/`：原创地图、经济扩展、裁判和记录。
+- `scripts/`、`models/showcase/`：两个示例 AI、权重、训练和验收工具。
+- `local-viewer/`：实时观战与回放；默认平视，可切换第一视角。
+- `bot-controller/`、`server-plugin/`、`python/`：保留的 PvP 训练核心。
 
-Start a local worker and run 100 random actions:
+Ember 偏快攻和拆床，Bastion 偏防守、升级和远程控制。每个近战 actor 为 22,027 参数；本版本主要改进地图、策略和动作执行，没有重新训练网络。它们仍是示例对手，不能保证达到高手水平。
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start-worker.ps1 `
-  -WorkerId 0 `
-  -JavaHome "<JDK 21 path>" `
-  -GradleHome "<Gradle path>" `
-  -NodeHome "<Node path>" `
-  -AcceptEula `
-  -Steps 100
-```
+目前是双队 1v1。本项目提供参赛规则与合同草案；**AGX 正式后端接入和安全隔离的投稿运行器尚未完成**。不宣称复刻某个商业服务器的全部模式。
 
-`-AcceptEula` writes `eula=true` only when explicitly passed. Use it only if you agree to Mojang's Minecraft EULA. You can also edit `runs\worker_000\eula.txt` manually.
+[0.6 改动与验证](docs/RELEASE_0.6.zh-CN.md) · [功能范围](docs/FEATURE_COVERAGE.zh-CN.md) · [模型说明](models/showcase/MODEL_CARD.zh-CN.md) · [第三方来源](docs/THIRD_PARTY.zh-CN.md)
 
-Stop the worker:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\stop-workers.ps1 -WorkerId 0
-```
-
-## Python API
-
-```python
-import mc_pvp_env
-
-env = mc_pvp_env.make_env("configs/default-env.json")
-obs, info = env.reset()
-
-for _ in range(100):
-    action = env.action_space.sample()
-    obs, reward, terminated, truncated, info = env.step(action)
-    if terminated or truncated:
-        obs, info = env.reset()
-
-env.close()
-```
-
-The primary API returns Gymnasium-style `(obs, reward, terminated, truncated, info)` tuples. Observations are flat `np.float32` arrays; richer snapshots stay in `info`, debug paths, and tests.
-
-## Training And Evaluation
-
-Collect scripted demonstrations:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\collect-demos.ps1 `
-  -WorkerId 0 -Episodes 5 -Seed 123 -MaxStepsPerEpisode 40 `
-  -Out runs\worker_000\demos\smoke
-```
-
-Train a small behavior-cloning policy:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\train-bc.ps1 `
-  -Data runs\worker_000\demos\smoke `
-  -Out runs\worker_000\bc\smoke `
-  -Epochs 1 -BatchSize 256 -HiddenSize 128 -Seed 123
-```
-
-Run a short PPO smoke:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start-ppo-training.ps1 `
-  -WorkerId 0 -AcceptEula -Rebuild -TotalTimesteps 2000 -Tui
-```
-
-Generated runs, downloaded jars/tools, datasets, and new local checkpoints stay gitignored by default. The intentionally released checkpoints live under `checkpoints/`.
-
-## Documentation
-
-- [Docs index](docs/README.md)
-- [Architecture overview](docs/wiki/overview.md)
-- [Runbook](docs/wiki/runbook.md)
-- [Local AI Battle spectating](docs/wiki/local-ai-battle.md)
-- [RL training](docs/wiki/rl-training.md)
-- [Released checkpoints](docs/wiki/released-checkpoints.md)
-- [JSONL protocol](docs/wiki/protocol.md)
-- [Troubleshooting](docs/wiki/troubleshooting.md)
-
-## Project Status
-
-The public core has verified unit tests for protocol parsing, action encoding, observation flattening, manifest tooling, and mock environment behavior. The last open-core verification also completed plugin build, bot tests, Python tests, a 100-step local worker smoke, BC smoke, and PPO smoke. See [open-core verification](docs/open-source/open-core-verification.md).
-
-## License
-
-PVP ROBO is released under the [MIT License](LICENSE).
+基于 [Minecraft-PVP-ROBO](https://github.com/KyaKayKya/Minecraft-PVP-ROBO) 的 MIT 开放核心，保留原许可与历史。Minecraft / Mojang 资源由安装程序从官方服务获取。

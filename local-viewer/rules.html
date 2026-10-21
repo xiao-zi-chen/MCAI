@@ -1,0 +1,16 @@
+﻿<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>悬空夺床 · 比赛规则</title><style>body{margin:0;background:#101719;color:#e7f0e8;font:15px/1.85 "Segoe UI","Microsoft YaHei",sans-serif}main{max-width:980px;margin:auto;padding:30px 24px 80px}nav{margin-bottom:24px}a{color:#b2dfc4}h1{font-size:28px}h2{font-size:21px;margin-top:36px;color:#c4e2ce}h3{font-size:18px}table{width:100%;border-collapse:collapse;margin:18px 0;font-size:14px}td,th{padding:10px;text-align:left;vertical-align:top;border-bottom:1px solid #334044}th{color:#afd2c0;background:#1b2b2d}code{font-size:13px;color:#c6e7b5;background:#203033;padding:2px 5px;border-radius:3px}.tip{padding:14px 18px;background:#1c2f31;border-left:3px solid #9ed4b1}li{margin:8px 0}.table-wrap{overflow:auto}@media(max-width:600px){main{padding:20px 14px}table{font-size:12px}td,th{padding:7px}h1{font-size:23px}}</style></head><body><main><nav><a href="/">实时观战</a> · <a href="/replays">比赛回放</a></nav><p class="tip">游戏内输入 <code>/localbw rules</code> 可打开 Minecraft 规则书。网页与游戏使用同一份规则数据；本地基准版本为 Java 1.21。</p><article id="rules">正在读取规则…</article></main><script>
+const article=document.querySelector('#rules');
+function inline(parent,value){for(const [i,text]of value.split('`').entries()){if(i%2){const code=document.createElement('code');code.textContent=text;parent.append(code)}else parent.append(document.createTextNode(text));}}
+fetch('/rules-source').then(r=>{if(!r.ok)throw Error('规则读取失败');return r.text()}).then(markdown=>{
+ article.replaceChildren();let list=null,table=null;
+ for(const line of markdown.split(/\r?\n/)){
+  if(!line.trim()){list=null;table=null;continue;}
+  const heading=/^(#{1,3})\s+(.+)/.exec(line);
+  if(heading){const h=document.createElement('h'+heading[1].length);inline(h,heading[2]);article.append(h);list=null;table=null;continue;}
+  if(line.startsWith('|')){if(/^\|\s*[-:]+/.test(line))continue;if(!table){const wrap=document.createElement('div');wrap.className='table-wrap';table=document.createElement('table');wrap.append(table);article.append(wrap);}const row=document.createElement('tr'),header=!table.rows.length;for(const value of line.split('|').slice(1,-1)){const cell=document.createElement(header?'th':'td');inline(cell,value.trim());row.append(cell);}table.append(row);continue;}
+  table=null;
+  if(line.startsWith('- ')){if(!list){list=document.createElement('ul');article.append(list);}const li=document.createElement('li');inline(li,line.slice(2));list.append(li);continue;}
+  list=null;const p=document.createElement('p');inline(p,line);article.append(p);
+ }
+}).catch(e=>article.textContent=e.message);
+</script></body></html>

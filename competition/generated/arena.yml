@@ -1,0 +1,151 @@
+{
+  "name": "SkyDuel",
+  "pauseCountdown": 15,
+  "gameTime": 1800,
+  "world": "bedwars-v6",
+  "pos1": "-72;0;-42",
+  "pos2": "72;96;42",
+  "specSpawn": "0.5;92;12.5;180;35",
+  "lobbySpawn": "0.5;101;80.5;180;20",
+  "lobbySpawnWorld": "bedwars-v6",
+  "lobbyPos1": "-6;99;74",
+  "lobbyPos2": "6;105;86",
+  "minPlayers": 2,
+  "postGameWaiting": 8,
+  "arenaTime": "NOON",
+  "arenaWeather": "CLEAR",
+  "teams": {
+    "Red": {
+      "isNewColor": true,
+      "color": "RED",
+      "maxPlayers": 1,
+      "bed": "-54;65;0",
+      "spawn": "-60.5;65;0.5;-90;0"
+    },
+    "Blue": {
+      "isNewColor": true,
+      "color": "BLUE",
+      "maxPlayers": 1,
+      "bed": "54;65;0",
+      "spawn": "61.5;65;0.5;90;0"
+    }
+  },
+  "spawners": [
+    {
+      "location": "-60.5;65.2;3.5",
+      "type": "iron",
+      "team": "Red",
+      "maxSpawnedResources": 48,
+      "startLevel": 1,
+      "hologramEnabled": true
+    },
+    {
+      "location": "-60.5;65.2;4.5",
+      "type": "gold",
+      "team": "Red",
+      "maxSpawnedResources": 16,
+      "startLevel": 1,
+      "hologramEnabled": true
+    },
+    {
+      "location": "61.5;65.2;3.5",
+      "type": "iron",
+      "team": "Blue",
+      "maxSpawnedResources": 48,
+      "startLevel": 1,
+      "hologramEnabled": true
+    },
+    {
+      "location": "61.5;65.2;4.5",
+      "type": "gold",
+      "team": "Blue",
+      "maxSpawnedResources": 16,
+      "startLevel": 1,
+      "hologramEnabled": true
+    },
+    {
+      "location": "-27.5;65.2;-26.5",
+      "type": "diamond",
+      "team": null,
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": true
+    },
+    {
+      "location": "28.5;65.2;-26.5",
+      "type": "diamond",
+      "team": null,
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": true
+    },
+    {
+      "location": "-4.5;65.2;0.5",
+      "type": "emerald",
+      "team": null,
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": true
+    },
+    {
+      "location": "-60.5;65.2;5.5",
+      "type": "emerald",
+      "team": "Red",
+      "maxSpawnedResources": 4,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "61.5;65.2;5.5",
+      "type": "emerald",
+      "team": "Blue",
+      "maxSpawnedResources": 4,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "-27.5;65.2;27.5",
+      "type": "diamond",
+      "team": null,
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": true
+    },
+    {
+      "location": "28.5;65.2;27.5",
+      "type": "diamond",
+      "team": null,
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": true
+    },
+    {
+      "location": "5.5;65.2;0.5",
+      "type": "emerald",
+      "team": null,
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": true
+    }
+  ],
+  "stores": [
+    "-55.5;65;-4.5;0;0",
+    "56.5;65;-4.5;0;0",
+    {
+      "loc": "-59.5;65;-4.5;0;0",
+      "shop": "team-upgrades.yml",
+      "parent": "false",
+      "name": "团队升级",
+      "type": "VILLAGER",
+      "team": "Red"
+    },
+    {
+      "loc": "60.5;65;-4.5;0;0",
+      "shop": "team-upgrades.yml",
+      "parent": "false",
+      "name": "团队升级",
+      "type": "VILLAGER",
+      "team": "Blue"
+    }
+  ]
+}

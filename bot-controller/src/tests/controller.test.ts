@@ -88,6 +88,24 @@ class FakeAdapter implements BotBackend {
   }
 }
 
+test("joint actions rotate the first sender between seats", async () => {
+  const adapter = new FakeAdapter();
+  const controller = new BotController(defaultConfig(), adapter);
+  const action = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 2, 0];
+  for (let round = 0; round < 2; round++) {
+    await controller.handle({v: 1, id: `joint-${round}`, type: "act", arena_id: "arena_0", actions: {"ROBO-A0": action, "SCRIPT-A0": action}});
+  }
+  assert.deepEqual(adapter.applied.map(item => item.agentId), ["ROBO-A0", "SCRIPT-A0", "SCRIPT-A0", "ROBO-A0"]);
+});
+
+test("invalid joint actions do not partially execute", async () => {
+  const adapter = new FakeAdapter();
+  const controller = new BotController(defaultConfig(), adapter);
+  const response = await controller.handle({v: 1, id: "invalid-joint", type: "act", actions: {"ROBO-A0": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 2, 0], "SCRIPT-A0": [99]}});
+  assert.equal(response.type, "error");
+  assert.equal(adapter.applied.length, 0);
+});
+
 test("controller applies actions through adapter", async () => {
   const adapter = new FakeAdapter();
   const controller = new BotController(defaultConfig(), adapter as never);

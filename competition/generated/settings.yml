@@ -1,0 +1,88 @@
+{
+  "locale": "zh-CN",
+  "join-randomly-on-lobby-join": true,
+  "join-randomly-after-lobby-timeout": true,
+  "disable-hunger": true,
+  "keep-inventory-on-death": false,
+  "game-start-items": true,
+  "player-respawn-items": true,
+  "gived-game-start-items": [
+    "wooden_sword;1"
+  ],
+  "gived-player-respawn-items": [
+    "wooden_sword;1"
+  ],
+  "respawn-cooldown": {
+    "enabled": true,
+    "time": 5
+  },
+  "respawn": {
+    "protection-enabled": true,
+    "protection-time": 3
+  },
+  "mainlobby": {
+    "enabled": true,
+    "world": "bedwars-v6",
+    "location": "0.5;101;80.5;180;20"
+  },
+  "update-checker": {
+    "zero": {
+      "console": false,
+      "admins": false
+    }
+  },
+  "allow-crafting": false,
+  "friendlyfire": false,
+  "player-drops": true,
+  "allowed-commands": [
+    "teamshop",
+    "localbw"
+  ],
+  "spawn-resources-on-game-start": false,
+  "disable-opening-stores-of-other-teams": false,
+  "destroy-placed-blocks-by-explosion-except": [
+    "WHITE_STAINED_GLASS"
+  ],
+  "specials": {
+    "auto-igniteable-tnt": {
+      "explosion-time": 4,
+      "damage": 4,
+      "damage-placer": true
+    },
+    "throwable-fireball": {
+      "damage": 3,
+      "incendiary": true,
+      "damage-thrower": true
+    }
+  },
+  "resources": {
+    "iron": {
+      "material": "IRON_INGOT",
+      "name": "Iron",
+      "color": "WHITE",
+      "interval": 1,
+      "spread": 0.0
+    },
+    "gold": {
+      "material": "GOLD_INGOT",
+      "name": "Gold",
+      "color": "GOLD",
+      "interval": 5,
+      "spread": 0.0
+    },
+    "diamond": {
+      "material": "DIAMOND",
+      "name": "Diamond",
+      "color": "AQUA",
+      "interval": 15,
+      "spread": 0.0
+    },
+    "emerald": {
+      "material": "EMERALD",
+      "name": "Emerald",
+      "color": "GREEN",
+      "interval": 20,
+      "spread": 0.0
+    }
+  }
+}

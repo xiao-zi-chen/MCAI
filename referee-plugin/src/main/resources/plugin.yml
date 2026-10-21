@@ -1,0 +1,12 @@
+name: SkyDuelReferee
+version: 0.1.0
+main: local.agx.prototype.SkyDuelReferee
+api-version: '1.21'
+depend: [BedWars, LocalBedwarsMap]
+commands:
+  teamshop:
+    description: Open the team upgrade shop when standing near your team's merchant
+    usage: /teamshop
+  skyduel:
+    description: Console-only local verification controls
+    permission: skyduel.admin

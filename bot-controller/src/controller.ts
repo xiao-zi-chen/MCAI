@@ -6,6 +6,7 @@ import type { JsonObject } from "./jsonl.js";
 import { createBotBackend } from "./backends/index.js";
 
 export class BotController {
+  private readonly actionOrder = new Map<string, number>();
   constructor(
     private readonly config: BotConfig,
     private readonly adapter: BotBackend = createBotBackend(config)
@@ -72,8 +73,15 @@ export class BotController {
     if (!actions || typeof actions !== "object" || Array.isArray(actions)) {
       throw new Error("act requires actions object");
     }
-    for (const [agentId, rawAction] of Object.entries(actions as Record<string, unknown>)) {
-      await this.adapter.applyAction(agentId, decodeAction(rawAction), repeatTicks);
+    const entries = Object.entries(actions as Record<string, unknown>)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([agentId, rawAction]) => ({agentId, action: decodeAction(rawAction)}));
+    const arena = typeof message.arena_id === "string" ? message.arena_id : "default";
+    const sequence = this.actionOrder.get(arena) ?? 0;
+    this.actionOrder.set(arena, sequence + 1);
+    for (let index = 0; index < entries.length; index++) {
+      const entry = entries[(sequence + index) % entries.length];
+      await this.adapter.applyAction(entry.agentId, entry.action, repeatTicks);
     }
     await this.applyScriptedOpponent(repeatTicks);
     return this.base(id, "act_ack", { accepted: true });

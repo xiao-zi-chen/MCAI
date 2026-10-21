@@ -1,0 +1,10 @@
+{
+  "rules_version": "skyduel-0.6.0",
+  "files": {
+    "rules.json": "0576e65ba0ed42cc8697f74c261e89f9ee843265639b2f423b769426f9c85f41",
+    "action.schema.json": "1b5dbb8de0739d79d9c6867296aa6e198788a420c5b22cff76c8a1c4f8b862d9",
+    "generated\\arena.yml": "737abb839139c6227c865fa7f084f7a36f15a5e15195bc3db7a49d595f5e5776",
+    "generated\\shop.yml": "642ea935708b72def29baadffe3d144e419475eff62193ec5c8fc19cd1da432a",
+    "generated\\settings.yml": "883921d1c5459a0e867f7441ebb11f4854cdbe8d06d1a5bf2c96ad29e214c1a4"
+  }
+}

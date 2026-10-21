@@ -1,0 +1,10 @@
+{
+  "format": "dense-js-actor",
+  "parameters_each": 22027,
+  "runtime": "local JavaScript",
+  "new_training_in_v0_6": false,
+  "files": {
+    "EmberAI.json": "4dcf15b9e8bea45135035f1e06d24393a012e1dfaa2cf77552fff037d8f09dfe",
+    "BastionAI.json": "5995add110b66418d669287c9ef577f54c8db750187721896e630005a8910750"
+  }
+}

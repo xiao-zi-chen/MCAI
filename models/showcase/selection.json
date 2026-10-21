@@ -1,0 +1,25 @@
+{
+  "selection": {
+    "EmberAI": {
+      "source": "runs\\showcase-v2",
+      "sha256": "4dcf15b9e8bea45135035f1e06d24393a012e1dfaa2cf77552fff037d8f09dfe"
+    },
+    "BastionAI": {
+      "source": "runs\\showcase-v3",
+      "sha256": "5995add110b66418d669287c9ef577f54c8db750187721896e630005a8910750"
+    }
+  },
+  "candidate_v3_vs_v2": {
+    "EmberAI": {
+      "win": 6,
+      "loss": 10,
+      "draw": 0
+    },
+    "BastionAI": {
+      "win": 10,
+      "loss": 6,
+      "draw": 0
+    }
+  },
+  "rationale": "Keep v2 rush actor; trial the v3 defender after a small side-swapped comparison. This is not proof of general superiority."
+}
