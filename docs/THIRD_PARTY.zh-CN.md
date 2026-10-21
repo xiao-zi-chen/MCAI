@@ -11,3 +11,5 @@
 | 原创地图 | `bedwars-map-plugin` | 本项目程序生成，未导入授权不明的网上地图 |
 
 调研记录另见 `STRATEGY_RESEARCH.zh-CN.md` 与 `NATIVE_ALIGNMENT.zh-CN.md`。参考项目不等于采用其代码，也不代表完整复刻其功能。`xiao-zi-chen/MCAI` 为本版本发布目标。
+
+Agones 调度配置示例依据官方 Counters and Lists 文档改写，使用 Apache-2.0，许可文本位于 `deploy/agones/LICENSE`。它是设计模板，当前运行系统未引入 Agones 依赖。

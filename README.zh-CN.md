@@ -31,6 +31,10 @@ powershell -ExecutionPolicy Bypass -File .\playtest.ps1 -NoBrowser
 
 ![已修复的商店村民与网页回放](docs/assets/skyduel-merchants.jpg)
 
+## 多竞技场与持续补位
+
+成熟调度组件的对比、推荐架构和现有代码需要的改造见 [调度选型](docs/SCHEDULING_OPTIONS.zh-CN.md)。当前演示仍是单场；该文档与 Agones 配置示例不代表已经部署多场调度。
+
 ## 内容和范围
 
 - `competition/`：规则源文件、生成的商店/地图配置、参赛合同和动作 schema。

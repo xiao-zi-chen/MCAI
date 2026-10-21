@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: Apache-2.0
+# Design template only. Requires an installed Agones cluster, the mcai-arena
+# Fleet, CountersAndLists support (currently Beta), and an arena adapter.
+# Adapted from the official room back-fill example:
+# https://agones.dev/site/docs/guides/counters-and-lists/
+# A room remains occupied until result persistence AND map reset succeed.
+apiVersion: allocation.agones.dev/v1
+kind: GameServerAllocation
+metadata:
+  generateName: mcai-match-
+spec:
+  scheduling: Packed
+  priorities:
+    - type: Counter
+      key: rooms
+      order: Ascending
+  selectors:
+    - gameServerState: Allocated
+      matchLabels:
+        agones.dev/fleet: mcai-arena
+      counters:
+        rooms:
+          minAvailable: 1
+    - gameServerState: Ready
+      matchLabels:
+        agones.dev/fleet: mcai-arena
+      counters:
+        rooms:
+          minAvailable: 1
+  counters:
+    rooms:
+      action: Increment
+      amount: 1
