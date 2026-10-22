@@ -40,18 +40,24 @@ final class ArenaReferee implements Listener {
     private final int observerPort;
     private final ArenaLease lease;
     private final Gson gson = new Gson();
-    private final List<Map<String,Object>> frames = new ArrayList<>();
+    private ReplayRecorder recorder;
+    private int frameCount;
+    private Map<String,Object> firstFrame,lastFrame;
+    private final Set<String> framePlayers=new LinkedHashSet<>();
+    private CompletableFuture<Void> recordingDone=CompletableFuture.completedFuture(null);
     private final List<Map<String,Object>> events = new ArrayList<>();
-    private final ExecutorService writer = Executors.newSingleThreadExecutor();
     private final AtomicInteger clients = new AtomicInteger();
     private final Set<Socket> sockets = ConcurrentHashMap.newKeySet();
-    private volatile String current = "{\"phase\":\"waiting\"}";
+    private volatile String current = "{\"phase\":\"waiting\"}",controllerCurrent=current;
     private volatile boolean stopping;
     private ServerSocket listener;
     private Game game;
     private String matchId = "", winner = "", reason = "", rulesVersion, rulesHash;
     private long tick;
     private int frameSequence;
+    private long snapshotSequence;
+    private Map<String,Object> worldObjects=Map.of();
+    private final List<int[]> bedPositions=new ArrayList<>();
     private boolean recorded;
     private ClassicRules classic;
     private Map<?,?> ruleDocument;
@@ -77,20 +83,33 @@ final class ArenaReferee implements Listener {
             var lo=settings.getIntegerList("map.build_min");var hi=settings.getIntegerList("map.build_max");
             projectileRadiusX=Math.max(Math.abs(lo.get(0)),Math.abs(hi.get(0)))+16;
             projectileRadiusZ=Math.max(Math.abs(lo.get(2)),Math.abs(hi.get(2)))+16;
+            for(String team:settings.getConfigurationSection("map.teams").getKeys(false)){
+                var b=settings.getIntegerList("map.teams."+team+".bed");int sign=Integer.signum(settings.getInt("map.teams."+team+".base_block_x"));
+                bedPositions.add(new int[]{b.get(0),b.get(1),b.get(2)});bedPositions.add(new int[]{b.get(0)-sign,b.get(1),b.get(2)});
+            }
             classic=new ClassicRules(plugin,this,settings);
             listener = new ServerSocket(); listener.bind(new InetSocketAddress("127.0.0.1", observerPort));
         } catch (Exception e) { throw new IllegalStateException(e); }
         Thread accept = new Thread(this::acceptClients, "skyduel-observers"); accept.setDaemon(true); accept.start();
         Bukkit.getPluginManager().registerEvents(this, plugin);
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            if (game == null || matchId.isEmpty()) return;
+            if(game==null)game=resolveGame();
+            if(game==null||game.getGameWorld()==null)return;
             if (game.getStatus() == GameStatus.RUNNING) tick++;
             if(game.getStatus()==GameStatus.RUNNING){for(var block:changedBlocks.values())event("block_state",Map.of("pos",List.of(block.getX(),block.getY(),block.getZ()),"block",block.getBlockData().getAsString()));}
             changedBlocks.clear();
             if(++frameSequence%2!=0)return;
+            if(frameSequence%4==0||worldObjects.isEmpty())worldObjects=worldObjects();
             Map<String,Object> state = state();
             current = gson.toJson(state);
-            if (game.getStatus() == GameStatus.RUNNING) { if(frames.size()<maxFrames)frames.add(state);else recordingTruncated=true; }
+            var lean=new LinkedHashMap<>(state);lean.remove("world_objects");controllerCurrent=gson.toJson(lean);
+            if (game.getStatus() == GameStatus.RUNNING&&!recorded) {
+                if(frameCount<maxFrames&&recorder!=null&&recorder.append(current)) {
+                    var small=Map.<String,Object>of("tick",tick,"players",state.get("players"));
+                    if(firstFrame==null)firstFrame=small;lastFrame=small;frameCount++;
+                    for(Player player:game.getConnectedPlayers())framePlayers.add(player.getName());
+                }else recordingTruncated=true;
+            }
         }, 1, 1);
         plugin.getLogger().info("Local observer stream on 127.0.0.1:" + observerPort);
     }
@@ -101,7 +120,9 @@ final class ArenaReferee implements Listener {
             sockets.add(socket);
             Thread stream = new Thread(() -> {
                 try (socket; var out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8))) {
-                    while (!stopping && !socket.isClosed()) { out.write(current); out.newLine(); out.flush(); Thread.sleep(100); }
+                    boolean lean=false;socket.setSoTimeout(200);
+                    try{lean="controller".equals(new BufferedReader(new InputStreamReader(socket.getInputStream(),StandardCharsets.UTF_8)).readLine());}catch(SocketTimeoutException ignored){}
+                    while (!stopping && !socket.isClosed()) { out.write(lean?controllerCurrent:current); out.newLine(); out.flush(); Thread.sleep(100); }
                 } catch (Exception ignored) {} finally { sockets.remove(socket); clients.decrementAndGet(); }
             }, "skyduel-observer-client"); stream.setDaemon(true); stream.start();
         } catch (IOException e) { if (!stopping) plugin.getLogger().warning(e.getMessage()); }
@@ -115,7 +136,7 @@ final class ArenaReferee implements Listener {
         }
     }
     @EventHandler public void rebuilt(BedwarsPostRebuildingEvent e){if(e.getGame().getName().equals(arenaName))lease.resetObserved=true;}
-    void reserved(){matchId="";recorded=false;frames.clear();events.clear();current="{\"phase\":\"waiting\"}";}
+    void reserved(){matchId="";recorded=false;recorder=null;frameCount=0;firstFrame=null;lastFrame=null;framePlayers.clear();events.clear();current="{\"phase\":\"waiting\"}";}
     private Map<String,Object> state() {
         List<Map<String,Object>> players = new ArrayList<>();
         List<Map<String,Object>> teams = new ArrayList<>();
@@ -154,13 +175,34 @@ final class ArenaReferee implements Listener {
         s.put("arena_id",arenaId);s.put("arena_name",arenaName);s.put("match_id",matchId);s.put("rules_version",rulesVersion);s.put("rules_sha256",rulesHash);s.put("sample_hz",10);
         s.put("phase", game.getStatus().name().toLowerCase());s.put("tick",tick);s.put("players",players);s.put("teams",teams);
         s.put("winner",winner);s.put("reason",reason);s.put("events",new ArrayList<>(events.subList(Math.max(0,events.size()-12),events.size())));
-        s.put("test_run",testRun);
+        s.put("test_run",testRun);s.put("snapshot_seq",++snapshotSequence);s.put("world_objects",worldObjects);
         s.put("classic",classic.snapshot());
         s.put("projectiles",game.getGameWorld().getNearbyEntities(new Location(game.getGameWorld(),.5,65,.5),projectileRadiusX,64,projectileRadiusZ).stream().filter(e->e instanceof org.bukkit.entity.Projectile||e instanceof org.bukkit.entity.TNTPrimed).limit(64).map(e->{
             Map<String,Object> projectile=new LinkedHashMap<>();projectile.put("id",e.getEntityId());projectile.put("kind",e.getType().name());projectile.put("pos",List.of(e.getLocation().getX(),e.getLocation().getY(),e.getLocation().getZ()));
             var v=e.getVelocity();projectile.put("velocity",List.of(v.getX(),v.getY(),v.getZ()));if(e instanceof org.bukkit.entity.TNTPrimed tnt)projectile.put("fuse_ticks",tnt.getFuseTicks());return projectile;
         }).toList());
         return s;
+    }
+    private Map<String,Object> worldObjects(){
+        var world=game.getGameWorld();var beds=new ArrayList<Map<String,Object>>();
+        for(var xyz:bedPositions){
+            var block=world.getBlockAt(xyz[0],xyz[1],xyz[2]);
+            if(block.getBlockData() instanceof org.bukkit.block.data.type.Bed bed)beds.add(Map.of(
+                "pos",List.of(xyz[0],xyz[1],xyz[2]),"color",block.getType().getKey().getKey().replace("_bed",""),
+                "part",bed.getPart().name().toLowerCase(),"facing",bed.getFacing().name().toLowerCase()));
+        }
+        // World-scoped snapshots bypass the spectator bot's short entity tracking range.
+        // Reuse one immutable snapshot for two frames; no disk or HTTP in the tick loop.
+        var drops=new ArrayList<Map<String,Object>>();int total=0;
+        int cap=Math.max(1,Math.min(1024,plugin.getConfig().getInt("observer-max-drops",256)));
+        for(var item:world.getEntitiesByClass(org.bukkit.entity.Item.class)){
+            if(!item.isValid()||item.getItemStack().getType().isAir())continue;
+            var loc=item.getLocation();if(Math.abs(loc.getX())>projectileRadiusX||Math.abs(loc.getZ())>projectileRadiusZ)continue;
+            total++;if(drops.size()>=cap)continue;
+            drops.add(Map.of("id",item.getUniqueId().toString(),"entity_id",item.getEntityId(),
+                "pos",List.of(loc.getX(),loc.getY(),loc.getZ()),"age",item.getTicksLived(),"item",itemState(item.getItemStack())));
+        }
+        return Map.of("beds",beds,"drops",drops,"drops_total",total,"drops_truncated",total>cap);
     }
     private Map<String,Object> itemState(ItemStack item){
         if(item==null||item.getType().isAir()||item.getAmount()<1)return Map.of("id","air","count",0);
@@ -209,8 +251,9 @@ final class ArenaReferee implements Listener {
     }
     @EventHandler public void started(BedwarsGameStartedEvent e) {
         if (!e.getGame().getName().equals(arenaName)) return;
-        game=e.getGame();matchId=lease.taskId.isEmpty()?UUID.randomUUID().toString():lease.taskId;tick=0;winner="";reason="";recorded=false;recordingTruncated=false;testRun=false;frames.clear();events.clear();respawnUntil.clear();
+        game=e.getGame();matchId=lease.taskId.isEmpty()?UUID.randomUUID().toString():lease.taskId;tick=0;winner="";reason="";recorded=false;recordingTruncated=false;testRun=false;frameCount=0;firstFrame=null;lastFrame=null;framePlayers.clear();events.clear();respawnUntil.clear();
         swingTicks.clear();damageTicks.clear();useStarted.clear();digging.clear();
+        recorder=new ReplayRecorder(plugin.getDataFolder().toPath().resolve("replays").resolve(matchId+".json"),50,4);
         lease.started(matchId);
         event("match_start", Map.of("players",game.getConnectedPlayers().stream().map(Player::getName).toList()));
     }
@@ -300,20 +343,22 @@ final class ArenaReferee implements Listener {
         digging.remove(e.getPlayer().getName());
     }
     private void saveMatch(String status) {
-        if(recorded)return;recorded=true;
-        lease.saving=true;
+        if(recorded)return;recorded=true;lease.saving=true;
         Map<String,Object> match=new LinkedHashMap<>();match.put("arena_id",arenaId);match.put("arena_name",arenaName);match.put("status",testRun?"test":recordingTruncated?"recording_incomplete":status);match.put("match_id",matchId);match.put("rules_version",rulesVersion);match.put("rules_sha256",rulesHash);match.put("rules",ruleDocument);
-        match.put("winner",winner);match.put("reason",reason);match.put("frames",new ArrayList<>(frames));match.put("events",new ArrayList<>(events));
-        String json=gson.toJson(match);String id=matchId;
-        writer.submit(()->{try{
-            Path target=plugin.getDataFolder().toPath().resolve("replays").resolve(id+".json");
-            ArenaLease.durableWrite(target,json);lease.savedId=id;lease.saving=false;
-        }catch(IOException ex){lease.error="Replay write failed: "+ex.getMessage();plugin.getLogger().severe(lease.error);}});
+        match.put("winner",winner);match.put("reason",reason);match.put("events",new ArrayList<>(events));
+        match.put("frame_count",frameCount);match.put("frame_players",new ArrayList<>(framePlayers));match.put("recording_format","batched-json-v1");
+        var summary=new LinkedHashMap<>(match);summary.put("frames",firstFrame==null?List.of():List.of(firstFrame,lastFrame));
+        String id=matchId;
+        if(recorder==null)recorder=new ReplayRecorder(plugin.getDataFolder().toPath().resolve("replays").resolve(id+".json"),50,4);
+        recordingDone=recorder.finish(gson.toJson(match),gson.toJson(summary)).whenComplete((unused,error)->{
+            if(error==null){lease.savedId=id;lease.saving=false;}
+            else{lease.error="Replay write failed: "+error;lease.saving=false;plugin.getLogger().severe(lease.error);}
+        });
     }
     public void close() {
         if(game!=null&&!recorded&&!matchId.isEmpty()){reason="server_stopped";saveMatch("aborted");}
         stopping=true;try{listener.close();}catch(Exception ignored){}
         for(Socket socket:sockets)try{socket.close();}catch(IOException ignored){}
-        writer.shutdown();try{writer.awaitTermination(5,TimeUnit.SECONDS);}catch(InterruptedException e){Thread.currentThread().interrupt();}
+        try{recordingDone.get(20,TimeUnit.SECONDS);}catch(InterruptedException e){Thread.currentThread().interrupt();}catch(Exception e){plugin.getLogger().warning("Replay shutdown: "+e);}
     }
 }

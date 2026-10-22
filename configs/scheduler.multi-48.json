@@ -1,0 +1,238 @@
+{
+  "namespace": "skyduel-multi-48",
+  "redis_port": 26379,
+  "web_port": 3009,
+  "max_active": 24,
+  "min_free_mb": 4096,
+  "max_mspt": 35,
+  "join_timeout_ms": 90000,
+  "match_timeout_ms": 2200000,
+  "reset_timeout_ms": 120000,
+  "poll_ms": 1000,
+  "arenas": [
+    {
+      "id": "arena-1",
+      "name": "SkyDuel1",
+      "server_id": "shard-1",
+      "world": "bedwars-v6",
+      "observer_port": 25700,
+      "viewer_port": 3007
+    },
+    {
+      "id": "arena-2",
+      "name": "SkyDuel2",
+      "server_id": "shard-2",
+      "world": "bedwars-v6",
+      "observer_port": 25701,
+      "viewer_port": 3010
+    },
+    {
+      "id": "arena-3",
+      "name": "SkyDuel3",
+      "server_id": "shard-3",
+      "world": "bedwars-v6",
+      "observer_port": 25702,
+      "viewer_port": 3011
+    },
+    {
+      "id": "arena-4",
+      "name": "SkyDuel4",
+      "server_id": "shard-1",
+      "world": "bedwars-v6_a2",
+      "observer_port": 25703,
+      "viewer_port": 3012
+    },
+    {
+      "id": "arena-5",
+      "name": "SkyDuel5",
+      "server_id": "shard-2",
+      "world": "bedwars-v6_a2",
+      "observer_port": 25704,
+      "viewer_port": 3013
+    },
+    {
+      "id": "arena-6",
+      "name": "SkyDuel6",
+      "server_id": "shard-3",
+      "world": "bedwars-v6_a2",
+      "observer_port": 25705,
+      "viewer_port": 3014
+    },
+    {
+      "id": "arena-7",
+      "name": "SkyDuel7",
+      "server_id": "shard-1",
+      "world": "bedwars-v6_a3",
+      "observer_port": 25706,
+      "viewer_port": 3015
+    },
+    {
+      "id": "arena-8",
+      "name": "SkyDuel8",
+      "server_id": "shard-2",
+      "world": "bedwars-v6_a3",
+      "observer_port": 25707,
+      "viewer_port": 3016
+    },
+    {
+      "id": "arena-9",
+      "name": "SkyDuel9",
+      "server_id": "shard-3",
+      "world": "bedwars-v6_a3",
+      "observer_port": 25708,
+      "viewer_port": 3017
+    },
+    {
+      "id": "arena-10",
+      "name": "SkyDuel10",
+      "server_id": "shard-1",
+      "world": "bedwars-v6_a4",
+      "observer_port": 25709,
+      "viewer_port": 3018
+    },
+    {
+      "id": "arena-11",
+      "name": "SkyDuel11",
+      "server_id": "shard-2",
+      "world": "bedwars-v6_a4",
+      "observer_port": 25710,
+      "viewer_port": 3019
+    },
+    {
+      "id": "arena-12",
+      "name": "SkyDuel12",
+      "server_id": "shard-3",
+      "world": "bedwars-v6_a4",
+      "observer_port": 25711,
+      "viewer_port": 3020
+    },
+    {
+      "id": "arena-13",
+      "name": "SkyDuel13",
+      "server_id": "shard-1",
+      "world": "bedwars-v6_a5",
+      "observer_port": 25712,
+      "viewer_port": 3021
+    },
+    {
+      "id": "arena-14",
+      "name": "SkyDuel14",
+      "server_id": "shard-2",
+      "world": "bedwars-v6_a5",
+      "observer_port": 25713,
+      "viewer_port": 3022
+    },
+    {
+      "id": "arena-15",
+      "name": "SkyDuel15",
+      "server_id": "shard-3",
+      "world": "bedwars-v6_a5",
+      "observer_port": 25714,
+      "viewer_port": 3023
+    },
+    {
+      "id": "arena-16",
+      "name": "SkyDuel16",
+      "server_id": "shard-1",
+      "world": "bedwars-v6_a6",
+      "observer_port": 25715,
+      "viewer_port": 3024
+    },
+    {
+      "id": "arena-17",
+      "name": "SkyDuel17",
+      "server_id": "shard-2",
+      "world": "bedwars-v6_a6",
+      "observer_port": 25716,
+      "viewer_port": 3025
+    },
+    {
+      "id": "arena-18",
+      "name": "SkyDuel18",
+      "server_id": "shard-3",
+      "world": "bedwars-v6_a6",
+      "observer_port": 25717,
+      "viewer_port": 3026
+    },
+    {
+      "id": "arena-19",
+      "name": "SkyDuel19",
+      "server_id": "shard-1",
+      "world": "bedwars-v6_a7",
+      "observer_port": 25718,
+      "viewer_port": 3027
+    },
+    {
+      "id": "arena-20",
+      "name": "SkyDuel20",
+      "server_id": "shard-2",
+      "world": "bedwars-v6_a7",
+      "observer_port": 25719,
+      "viewer_port": 3028
+    },
+    {
+      "id": "arena-21",
+      "name": "SkyDuel21",
+      "server_id": "shard-3",
+      "world": "bedwars-v6_a7",
+      "observer_port": 25720,
+      "viewer_port": 3029
+    },
+    {
+      "id": "arena-22",
+      "name": "SkyDuel22",
+      "server_id": "shard-1",
+      "world": "bedwars-v6_a8",
+      "observer_port": 25721,
+      "viewer_port": 3030
+    },
+    {
+      "id": "arena-23",
+      "name": "SkyDuel23",
+      "server_id": "shard-2",
+      "world": "bedwars-v6_a8",
+      "observer_port": 25722,
+      "viewer_port": 3031
+    },
+    {
+      "id": "arena-24",
+      "name": "SkyDuel24",
+      "server_id": "shard-3",
+      "world": "bedwars-v6_a8",
+      "observer_port": 25723,
+      "viewer_port": 3032
+    }
+  ],
+  "admission_interval_ms": 5000,
+  "admission_reserve_mb": 256,
+  "min_cgroup_free_mb": 768,
+  "servers": [
+    {
+      "id": "shard-1",
+      "server_root": "runs/bedwars-shard-1",
+      "game_port": 25567,
+      "control_port": 25810,
+      "rcon_port": 25578,
+      "heap_mb": 1536,
+      "java_cpus": 2
+    },
+    {
+      "id": "shard-2",
+      "server_root": "runs/bedwars-shard-2",
+      "game_port": 25568,
+      "control_port": 25811,
+      "rcon_port": 25579,
+      "heap_mb": 1536,
+      "java_cpus": 2
+    },
+    {
+      "id": "shard-3",
+      "server_root": "runs/bedwars-shard-3",
+      "game_port": 25569,
+      "control_port": 25812,
+      "rcon_port": 25580,
+      "heap_mb": 1536,
+      "java_cpus": 2
+    }
+  ]
+}

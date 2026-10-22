@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SERVER = ROOT / "runs/bedwars-local"
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--apply-rules", action="store_true", help="Back up and replace controlled settings while server is stopped")
-parser.add_argument("--arenas", type=int, default=1, choices=range(1,9), help="Number of isolated arena worlds")
+parser.add_argument("--arenas", type=int, default=1, choices=range(1,33), help="Number of isolated arena worlds")
 parser.add_argument("--managed", action="store_true", help="Only admit entrants assigned by the local scheduler")
 parser.add_argument("--scheduler-config", type=Path, help="Use arena names, worlds and ports from a scheduler configuration")
 args = parser.parse_args()
@@ -116,7 +116,7 @@ for i in range(1,args.arenas+1):
     world=rules['map']['world']+('' if i==1 else f'_a{i}')
     if scheduler:
         configured=scheduler['arenas'][i-1];name=configured['name'];world=configured['world']
-    spec={'id':configured['id'] if scheduler else f'arena-{i}','name':name,'world':world,'observer-port':configured['observer_port'] if scheduler else 25599+i,'managed':args.managed}
+    spec={'id':configured['id'] if scheduler else f'arena-{i}','name':name,'world':world,'observer-port':configured['observer_port'] if scheduler else (25699+i if args.arenas>8 else 25599+i),'managed':args.managed}
     specs.append(spec)
     if i>1 or scheduler:
         extra=copy.deepcopy(arena);extra.update(name=name,world=world,lobbySpawnWorld=world)

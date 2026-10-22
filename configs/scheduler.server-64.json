@@ -1,0 +1,244 @@
+{
+  "namespace": "skyduel-server-test-64",
+  "redis_port": 26379,
+  "game_port": 25567,
+  "control_port": 25610,
+  "web_port": 3009,
+  "server_root": "runs/bedwars-local",
+  "max_active": 8,
+  "min_free_mb": 4096,
+  "max_mspt": 35,
+  "join_timeout_ms": 90000,
+  "match_timeout_ms": 2200000,
+  "reset_timeout_ms": 120000,
+  "poll_ms": 1000,
+  "arenas": [
+    {
+      "id": "arena-1",
+      "name": "SkyDuel",
+      "world": "bedwars-v6",
+      "observer_port": 25700,
+      "viewer_port": 3007
+    },
+    {
+      "id": "arena-2",
+      "name": "SkyDuel2",
+      "world": "bedwars-v6_a2",
+      "observer_port": 25701,
+      "viewer_port": 3010
+    },
+    {
+      "id": "arena-3",
+      "name": "SkyDuel3",
+      "world": "bedwars-v6_a3",
+      "observer_port": 25702,
+      "viewer_port": 3011
+    },
+    {
+      "id": "arena-4",
+      "name": "SkyDuel4",
+      "world": "bedwars-v6_a4",
+      "observer_port": 25703,
+      "viewer_port": 3012
+    },
+    {
+      "id": "arena-5",
+      "name": "SkyDuel5",
+      "world": "bedwars-v6_a5",
+      "observer_port": 25704,
+      "viewer_port": 3013
+    },
+    {
+      "id": "arena-6",
+      "name": "SkyDuel6",
+      "world": "bedwars-v6_a6",
+      "observer_port": 25705,
+      "viewer_port": 3014
+    },
+    {
+      "id": "arena-7",
+      "name": "SkyDuel7",
+      "world": "bedwars-v6_a7",
+      "observer_port": 25706,
+      "viewer_port": 3015
+    },
+    {
+      "id": "arena-8",
+      "name": "SkyDuel8",
+      "world": "bedwars-v6_a8",
+      "observer_port": 25707,
+      "viewer_port": 3016
+    },
+    {
+      "id": "arena-9",
+      "name": "SkyDuel9",
+      "world": "bedwars-v6_a9",
+      "observer_port": 25708,
+      "viewer_port": 3017
+    },
+    {
+      "id": "arena-10",
+      "name": "SkyDuel10",
+      "world": "bedwars-v6_a10",
+      "observer_port": 25709,
+      "viewer_port": 3018
+    },
+    {
+      "id": "arena-11",
+      "name": "SkyDuel11",
+      "world": "bedwars-v6_a11",
+      "observer_port": 25710,
+      "viewer_port": 3019
+    },
+    {
+      "id": "arena-12",
+      "name": "SkyDuel12",
+      "world": "bedwars-v6_a12",
+      "observer_port": 25711,
+      "viewer_port": 3020
+    },
+    {
+      "id": "arena-13",
+      "name": "SkyDuel13",
+      "world": "bedwars-v6_a13",
+      "observer_port": 25712,
+      "viewer_port": 3021
+    },
+    {
+      "id": "arena-14",
+      "name": "SkyDuel14",
+      "world": "bedwars-v6_a14",
+      "observer_port": 25713,
+      "viewer_port": 3022
+    },
+    {
+      "id": "arena-15",
+      "name": "SkyDuel15",
+      "world": "bedwars-v6_a15",
+      "observer_port": 25714,
+      "viewer_port": 3023
+    },
+    {
+      "id": "arena-16",
+      "name": "SkyDuel16",
+      "world": "bedwars-v6_a16",
+      "observer_port": 25715,
+      "viewer_port": 3024
+    },
+    {
+      "id": "arena-17",
+      "name": "SkyDuel17",
+      "world": "bedwars-v6_a17",
+      "observer_port": 25716,
+      "viewer_port": 3025
+    },
+    {
+      "id": "arena-18",
+      "name": "SkyDuel18",
+      "world": "bedwars-v6_a18",
+      "observer_port": 25717,
+      "viewer_port": 3026
+    },
+    {
+      "id": "arena-19",
+      "name": "SkyDuel19",
+      "world": "bedwars-v6_a19",
+      "observer_port": 25718,
+      "viewer_port": 3027
+    },
+    {
+      "id": "arena-20",
+      "name": "SkyDuel20",
+      "world": "bedwars-v6_a20",
+      "observer_port": 25719,
+      "viewer_port": 3028
+    },
+    {
+      "id": "arena-21",
+      "name": "SkyDuel21",
+      "world": "bedwars-v6_a21",
+      "observer_port": 25720,
+      "viewer_port": 3029
+    },
+    {
+      "id": "arena-22",
+      "name": "SkyDuel22",
+      "world": "bedwars-v6_a22",
+      "observer_port": 25721,
+      "viewer_port": 3030
+    },
+    {
+      "id": "arena-23",
+      "name": "SkyDuel23",
+      "world": "bedwars-v6_a23",
+      "observer_port": 25722,
+      "viewer_port": 3031
+    },
+    {
+      "id": "arena-24",
+      "name": "SkyDuel24",
+      "world": "bedwars-v6_a24",
+      "observer_port": 25723,
+      "viewer_port": 3032
+    },
+    {
+      "id": "arena-25",
+      "name": "SkyDuel25",
+      "world": "bedwars-v6_a25",
+      "observer_port": 25724,
+      "viewer_port": 3033
+    },
+    {
+      "id": "arena-26",
+      "name": "SkyDuel26",
+      "world": "bedwars-v6_a26",
+      "observer_port": 25725,
+      "viewer_port": 3034
+    },
+    {
+      "id": "arena-27",
+      "name": "SkyDuel27",
+      "world": "bedwars-v6_a27",
+      "observer_port": 25726,
+      "viewer_port": 3035
+    },
+    {
+      "id": "arena-28",
+      "name": "SkyDuel28",
+      "world": "bedwars-v6_a28",
+      "observer_port": 25727,
+      "viewer_port": 3036
+    },
+    {
+      "id": "arena-29",
+      "name": "SkyDuel29",
+      "world": "bedwars-v6_a29",
+      "observer_port": 25728,
+      "viewer_port": 3037
+    },
+    {
+      "id": "arena-30",
+      "name": "SkyDuel30",
+      "world": "bedwars-v6_a30",
+      "observer_port": 25729,
+      "viewer_port": 3038
+    },
+    {
+      "id": "arena-31",
+      "name": "SkyDuel31",
+      "world": "bedwars-v6_a31",
+      "observer_port": 25730,
+      "viewer_port": 3039
+    },
+    {
+      "id": "arena-32",
+      "name": "SkyDuel32",
+      "world": "bedwars-v6_a32",
+      "observer_port": 25731,
+      "viewer_port": 3040
+    }
+  ],
+  "admission_interval_ms": 5000,
+  "admission_reserve_mb": 256,
+  "min_cgroup_free_mb": 768
+}

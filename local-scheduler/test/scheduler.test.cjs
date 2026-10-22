@@ -51,7 +51,7 @@ test('reset failure quarantines only its own arena; retry after reconciliation d
  await fsp.writeFile(path.join(dir,m.id+'.json'),JSON.stringify({match_id:m.id,arena_id:'a',status:'aborted',reason:'test',frames:[],events:[]}));
  const arena={arena_id:'a',task_id:m.id,launched:true,started_id:m.id,state:'resetting',saved:true};let quarantines=0,releases=0;
  const control={request:async()=>({arenas:[arena]}),command:async(op)=>{if(op==='quarantine'){quarantines++;arena.state='quarantined'}if(op==='release'){releases++;arena.state='available';arena.task_id='';arena.last_released=m.id+'/'+m.token}return arena}};
- const driver=new Driver({root,store,control,config:{server_root:'server',reset_timeout_ms:20,poll_ms:5}});
+ const driver=new Driver({root,store,control,config:{server_root:'server',game_port:25567,arenas:[{id:'a'},{id:'b'}],reset_timeout_ms:20,poll_ms:5}});
  await assert.rejects(driver.run(m),/reset did not complete/);assert.equal(quarantines,1);assert.equal(releases,0);assert.equal((await store.active('b')).id,other.id);assert.equal((await store.active('a')).id,m.id);
  arena.state='ready_to_release';await driver.run(m);assert.equal(releases,1);assert.equal((await store.snapshot()).scores[m.players[0].id+':played'],'1');assert.equal(await store.active('a'),null);
 });

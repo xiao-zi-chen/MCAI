@@ -1,0 +1,75 @@
+{
+  "namespace": "skyduel-server-test-v2",
+  "redis_port": 26379,
+  "game_port": 25567,
+  "control_port": 25610,
+  "web_port": 3009,
+  "server_root": "runs/bedwars-local",
+  "max_active": 2,
+  "min_free_mb": 4096,
+  "max_mspt": 35,
+  "join_timeout_ms": 90000,
+  "match_timeout_ms": 2200000,
+  "reset_timeout_ms": 120000,
+  "poll_ms": 1000,
+  "arenas": [
+    {
+      "id": "arena-1",
+      "name": "SkyDuel",
+      "world": "bedwars-v6",
+      "observer_port": 25600,
+      "viewer_port": 3007
+    },
+    {
+      "id": "arena-2",
+      "name": "SkyDuel2",
+      "world": "bedwars-v6_a2",
+      "observer_port": 25601,
+      "viewer_port": 3010
+    },
+    {
+      "id": "arena-3",
+      "name": "SkyDuel3",
+      "world": "bedwars-v6_a3",
+      "observer_port": 25602,
+      "viewer_port": 3011
+    },
+    {
+      "id": "arena-4",
+      "name": "SkyDuel4",
+      "world": "bedwars-v6_a4",
+      "observer_port": 25603,
+      "viewer_port": 3012
+    },
+    {
+      "id": "arena-5",
+      "name": "SkyDuel5",
+      "world": "bedwars-v6_a5",
+      "observer_port": 25604,
+      "viewer_port": 3013
+    },
+    {
+      "id": "arena-6",
+      "name": "SkyDuel6",
+      "world": "bedwars-v6_a6",
+      "observer_port": 25605,
+      "viewer_port": 3014
+    },
+    {
+      "id": "arena-7",
+      "name": "SkyDuel7",
+      "world": "bedwars-v6_a7",
+      "observer_port": 25606,
+      "viewer_port": 3015
+    },
+    {
+      "id": "arena-8",
+      "name": "SkyDuel8",
+      "world": "bedwars-v6_a8",
+      "observer_port": 25607,
+      "viewer_port": 3016
+    }
+  ],
+  "admission_interval_ms": 5000,
+  "admission_reserve_mb": 256
+}

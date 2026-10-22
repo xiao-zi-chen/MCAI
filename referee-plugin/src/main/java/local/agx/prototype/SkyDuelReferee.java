@@ -17,6 +17,8 @@ public final class SkyDuelReferee extends JavaPlugin {
     private final Set<Socket> sockets=ConcurrentHashMap.newKeySet();
     private final Gson gson=new Gson();
     private ServerSocket control;
+    private Map<String,Object> performance=Map.of();
+    private long measuredAt;
     private volatile boolean stopping;
     final String bootId=UUID.randomUUID().toString();
     @Override public void onEnable(){
@@ -52,7 +54,16 @@ public final class SkyDuelReferee extends JavaPlugin {
             Thread client=new Thread(()->serve(socket),"skyduel-control-client");client.setDaemon(true);client.start();
         }catch(IOException e){if(!stopping)getLogger().warning(e.getMessage());}},"skyduel-control");accept.setDaemon(true);accept.start();
     }
-    private Map<String,Object> status(){return Map.of("boot_id",bootId,"tps",Bukkit.getTPS()[0],"mspt",Bukkit.getAverageTickTime(),"arenas",arenas.values().stream().map(a->a.lease().status()).toList());}
+    private Map<String,Object> performance(){
+        long now=System.nanoTime();if(now-measuredAt<500_000_000L&&!performance.isEmpty())return performance;
+        double[] ticks=Arrays.stream(Bukkit.getServer().getTickTimes()).filter(n->n>0).mapToDouble(n->n/1_000_000.0).sorted().toArray();
+        Map<String,Object> window=new LinkedHashMap<>();window.put("count",ticks.length);
+        if(ticks.length>0){window.put("mean_ms",Arrays.stream(ticks).average().orElse(0));window.put("p95_ms",ticks[(int)Math.ceil(ticks.length*.95)-1]);window.put("p99_ms",ticks[(int)Math.ceil(ticks.length*.99)-1]);window.put("max_ms",ticks[ticks.length-1]);window.put("over_50ms",Arrays.stream(ticks).filter(n->n>50).count());}
+        var memory=java.lang.management.ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
+        long gcCount=0,gcTime=0;for(var gc:java.lang.management.ManagementFactory.getGarbageCollectorMXBeans()){gcCount+=Math.max(0,gc.getCollectionCount());gcTime+=Math.max(0,gc.getCollectionTime());}
+        performance=Map.of("tick_window",window,"heap",Map.of("used_mb",memory.getUsed()/1048576,"committed_mb",memory.getCommitted()/1048576,"max_mb",memory.getMax()/1048576),"gc",Map.of("count",gcCount,"time_ms",gcTime));measuredAt=now;return performance;
+    }
+    private Map<String,Object> status(){return Map.of("boot_id",bootId,"tps",Bukkit.getTPS()[0],"mspt",Bukkit.getAverageTickTime(),"performance",performance(),"arenas",arenas.values().stream().map(a->a.lease().status()).toList());}
     private Object dispatch(JsonObject req)throws IOException{
         String op=req.get("op").getAsString();if(op.equals("status"))return status();
         ArenaReferee arena=arenas.get(req.get("arena_id").getAsString());if(arena==null)throw new IllegalArgumentException("Unknown arena");

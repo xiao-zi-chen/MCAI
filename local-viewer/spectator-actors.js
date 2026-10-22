@@ -62,10 +62,10 @@ class SpectatorActors {
 
  ensure(){
   const v=this.iframe.contentWindow?.localView,T=this.iframe.contentWindow?.THREE;if(!v||!T||!v.viewer.version)return false;
-  if(this.view!==v){this.view=v;this.T=T;this.models=new Map();this.textures=new Map();this.markers=[];this.npcs=[];this.pov=null;this.native=new NativeItems(T);v.nativeItems=this.native;v.actorMeshes=this.models;v.merchantMeshes=this.npcs;this.addMarkers();}
+  if(this.view!==v){this.view=v;this.T=T;this.models=new Map();this.textures=new Map();this.markers=[];this.npcs=[];this.pov=null;this.native=new NativeItems(T);v.nativeItems=this.native;this.objects=new SpectatorWorldObjects(v,T,this.native);v.actorMeshes=this.models;v.merchantMeshes=this.npcs;this.addMarkers();}
   return true;
  }
- setMap(map){this.map=map;if(this.view){for(const m of [...this.markers,...this.npcs])this.disposeObject(m);this.markers=[];this.npcs=[];this.view.merchantMeshes=this.npcs;this.addMarkers();}}
+ setMap(map){this.objects?.clear();this.map=map;if(this.view){for(const m of [...this.markers,...this.npcs])this.disposeObject(m);this.markers=[];this.npcs=[];this.view.merchantMeshes=this.npcs;this.addMarkers();}}
  merchant(position,kind){
   // These immobile shop NPCs are part of the public frozen arena definition.
   // The upstream viewer's villager has geometry.default but no textures.default,
@@ -93,6 +93,7 @@ class SpectatorActors {
   for(const t of Object.values(this.map.teams)){add('物品商店',t.shop,'#fff0bd');this.merchant(t.shop,'shop');if(t.upgrade_shop){add('团队升级',t.upgrade_shop,'#b8dcff');this.merchant(t.upgrade_shop,'upgrade_shop');}}
   for(const s of this.map.spawners){if(s.team&&s.resource!=='iron')continue;add(s.team?'铁 / 金':s.resource==='diamond'?'钻石':'绿宝石',s.position,s.resource==='emerald'?'#72efb7':s.resource==='diamond'?'#90ecff':'#fff0bd');}
  }
+ renderObjects(frame,next,alpha){if(this.ensure())this.objects.sync(frame,next,alpha,this.map);}
  render(players,tick){
   if(!this.ensure()||!this.native.catalog)return;this.native.animate(tick);
   const present=new Set();
@@ -152,7 +153,7 @@ class SpectatorActors {
  setLive(state){
   if(!state)return;
   const prior=this.buffer.at(-1);
-  if(prior&&prior.state.match_id===state.match_id&&prior.state.tick===state.tick&&prior.state.phase===state.phase)return;
+  if(prior&&prior.state.match_id===state.match_id&&prior.state.tick===state.tick&&prior.state.phase===state.phase&&prior.state.snapshot_seq===state.snapshot_seq)return;
   if(prior?.state.match_id!==state.match_id){this.buffer=[];this.travel.clear();}
   for(const p of state.players||[]){const old=prior?.state.players?.find(q=>q.name===p.name),d=old&&p.mode==='SURVIVAL'&&old.mode==='SURVIVAL'?Math.hypot(...p.pos.map((v,i)=>v-old.pos[i])):0;const amount=(this.travel.get(p.name)||0)+(d<6?d:0);p.walk_distance=amount;this.travel.set(p.name,amount);}
   this.buffer.push({state,at:performance.now()});if(this.buffer.length>3)this.buffer.shift();
@@ -162,7 +163,7 @@ class SpectatorActors {
   const when=now-125;let a=this.buffer[0],b=a;
   for(const entry of this.buffer){if(entry.at<=when)a=entry;if(entry.at>=when){b=entry;break;}b=entry;}
   const alpha=b.at>a.at?Math.max(0,Math.min(1,(when-a.at)/(b.at-a.at))):0;
-  const players=PlayerMotion.interpolatePlayers(a.state,b.state,alpha);window.syncProjectiles?.(a.state.projectiles,a.state.tick,b.state.projectiles,alpha);this.render(players,(a.state.tick||0)+((b.state.tick||0)-(a.state.tick||0))*alpha);return players;
+  this.renderObjects(a.state,b.state,alpha);const players=PlayerMotion.interpolatePlayers(a.state,b.state,alpha);window.syncProjectiles?.(a.state.projectiles,a.state.tick,b.state.projectiles,alpha);this.render(players,(a.state.tick||0)+((b.state.tick||0)-(a.state.tick||0))*alpha);return players;
  }
 }
 window.SpectatorActors=SpectatorActors;

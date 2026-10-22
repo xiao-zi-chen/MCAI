@@ -1,0 +1,403 @@
+{
+  "date": "2026-10-22",
+  "logical_cpus": 4,
+  "notes": [
+    "Short capacity screening, not a long-term capacity guarantee.",
+    "The multi-process spectator browser timed out while loading terrain; this is not a successful 48-AI visual acceptance.",
+    "Testing ended at the owner request. The final overload report was finalized offline after a saved arena failed reset; one reservation remained unreleased."
+  ],
+  "runs": [
+    {
+      "started_at": "2026-10-22T08:44:24.374Z",
+      "finished_at": "2026-10-22T09:08:11.194Z",
+      "parameters": {
+        "levels": [
+          8,
+          12,
+          16,
+          24,
+          32,
+          32
+        ],
+        "seconds": 120,
+        "warmup": 90,
+        "minimum": 60,
+        "count": 128,
+        "drain": 2100
+      },
+      "stages": [
+        {
+          "watching": false,
+          "ai_decision_hz_p10": 9.992067053160836,
+          "ai_event_loop_p95_max_ms": 23.527423,
+          "target_arenas": 8,
+          "target_ai": 16,
+          "started_at": 1792658665189,
+          "samples": 209,
+          "steady_full_samples": 119,
+          "max_actual_ai": 16,
+          "min_free_mb": 9760,
+          "tps_min": 19.996011949385988,
+          "mean_mspt_p50": 15.592936739999999,
+          "tick_window_p95_max_ms": 54.152786,
+          "tick_max_ms": 96.498099,
+          "tick_window_samples": 100,
+          "gates": [
+            "open"
+          ],
+          "valid_full_samples": 116,
+          "passed": true
+        },
+        {
+          "watching": false,
+          "ai_decision_hz_p10": 9.96362274361769,
+          "ai_event_loop_p95_max_ms": 28.311551,
+          "target_arenas": 12,
+          "target_ai": 24,
+          "started_at": 1792658876173,
+          "samples": 208,
+          "steady_full_samples": 111,
+          "max_actual_ai": 24,
+          "min_free_mb": 9017,
+          "tps_min": 19.970563758143083,
+          "mean_mspt_p50": 22.336329929999998,
+          "tick_window_p95_max_ms": 68.7888,
+          "tick_max_ms": 118.108554,
+          "tick_window_samples": 100,
+          "gates": [
+            "open",
+            "tick_pressure"
+          ],
+          "valid_full_samples": 86,
+          "passed": true
+        },
+        {
+          "watching": false,
+          "ai_decision_hz_p10": 9.500087880563003,
+          "ai_event_loop_p95_max_ms": 22.249471,
+          "target_arenas": 16,
+          "target_ai": 32,
+          "started_at": 1792659086691,
+          "samples": 118,
+          "steady_full_samples": 18,
+          "max_actual_ai": 32,
+          "min_free_mb": 8411,
+          "tps_min": 19.999997861666895,
+          "mean_mspt_p50": 27.13485521,
+          "tick_window_p95_max_ms": 72.415756,
+          "tick_max_ms": 110.246216,
+          "tick_window_samples": 100,
+          "gates": [
+            "open",
+            "tick_pressure"
+          ],
+          "valid_full_samples": 9,
+          "passed": false
+        }
+      ],
+      "max_tested_ai": 32,
+      "max_passed_ai": 24,
+      "completed": true,
+      "competition_completed": true,
+      "result_status_counts": {
+        "complete": 21
+      },
+      "natural_completed_matches": 21,
+      "stop_reason": "resource_protection",
+      "unsettled": [],
+      "invariant_errors": [],
+      "warnings": [],
+      "label": "single_process_capacity",
+      "quota": {
+        "cpu_cores": 3,
+        "memory_gib": 9
+      },
+      "memory_peak_mib": 5651.69921875
+    },
+    {
+      "started_at": "2026-10-22T09:05:24.357Z",
+      "finished_at": "2026-10-22T09:29:38.487Z",
+      "mode": "overload",
+      "parameters": {
+        "levels": [
+          16,
+          24,
+          32,
+          32
+        ],
+        "seconds": 120,
+        "warmup": 120,
+        "minimum": 60,
+        "count": 128,
+        "drain": 2100
+      },
+      "stages": [
+        {
+          "watching": false,
+          "ai_decision_hz_p10": 9.497739656683553,
+          "ai_event_loop_p95_max_ms": 45.285375,
+          "target_arenas": 16,
+          "target_ai": 32,
+          "started_at": 1792659925238,
+          "samples": 236,
+          "steady_full_samples": 55,
+          "max_actual_ai": 32,
+          "min_free_mb": 8246,
+          "tps_min": 19.963674186622914,
+          "mean_mspt_p50": 27.90183561,
+          "tick_window_p95_max_ms": 86.410991,
+          "tick_max_ms": 236.169902,
+          "tick_window_samples": 100,
+          "gates": [
+            "paused"
+          ],
+          "valid_full_samples": 26,
+          "passed": false
+        },
+        {
+          "watching": false,
+          "ai_decision_hz_p10": null,
+          "ai_event_loop_p95_max_ms": null,
+          "target_arenas": 24,
+          "target_ai": 48,
+          "started_at": 1792660165393,
+          "samples": 231,
+          "steady_full_samples": 0,
+          "max_actual_ai": 48,
+          "min_free_mb": 6997,
+          "tps_min": null,
+          "mean_mspt_p50": null,
+          "tick_window_p95_max_ms": null,
+          "tick_max_ms": null,
+          "tick_window_samples": 0,
+          "gates": [
+            "paused"
+          ],
+          "valid_full_samples": 0,
+          "passed": false
+        },
+        {
+          "watching": false,
+          "ai_decision_hz_p10": null,
+          "ai_event_loop_p95_max_ms": null,
+          "target_arenas": 32,
+          "target_ai": 64,
+          "started_at": 1792660406082,
+          "samples": 227,
+          "steady_full_samples": 0,
+          "max_actual_ai": 62,
+          "min_free_mb": 5725,
+          "tps_min": null,
+          "mean_mspt_p50": null,
+          "tick_window_p95_max_ms": null,
+          "tick_max_ms": null,
+          "tick_window_samples": 0,
+          "gates": [
+            "paused"
+          ],
+          "valid_full_samples": 0,
+          "passed": false
+        }
+      ],
+      "max_tested_ai": 62,
+      "max_passed_ai": 0,
+      "completed": true,
+      "competition_completed": true,
+      "result_status_counts": {
+        "complete": 62
+      },
+      "natural_completed_matches": 62,
+      "stop_reason": "error: The operation was aborted due to timeout",
+      "unsettled": [],
+      "invariant_errors": [],
+      "warnings": [
+        "TimeoutError: The operation was aborted due to timeout\n    at node:internal/deps/undici/undici:15141:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async api (/usr/mcai-pvp-lab/scripts/stress-scheduler.cjs:50:39)\n    at async main (/usr/mcai-pvp-lab/scripts/stress-scheduler.cjs:83:57)"
+      ],
+      "label": "single_process_overload",
+      "quota": {
+        "cpu_cores": 3,
+        "memory_gib": "9 initially, 10 during 64-AI stage"
+      },
+      "memory_peak_mib": 8909.83984375
+    },
+    {
+      "started_at": "2026-10-22T09:36:31.597Z",
+      "finished_at": "2026-10-22T09:56:00.747Z",
+      "mode": "capacity",
+      "parameters": {
+        "levels": [
+          24,
+          24
+        ],
+        "seconds": 180,
+        "warmup": 180,
+        "minimum": 60,
+        "count": 128,
+        "drain": 2100
+      },
+      "stages": [
+        {
+          "watching": false,
+          "ai_decision_hz_p10": null,
+          "ai_event_loop_p95_max_ms": null,
+          "target_arenas": 24,
+          "target_ai": 48,
+          "started_at": 1792661792361,
+          "samples": 187,
+          "steady_full_samples": 0,
+          "max_actual_ai": 38,
+          "min_free_mb": 7331,
+          "tps_min": null,
+          "mean_mspt_p50": null,
+          "tick_window_p95_max_ms": null,
+          "tick_max_ms": null,
+          "tick_window_samples": 0,
+          "gates": [
+            "open",
+            "tick_pressure"
+          ],
+          "valid_full_samples": 0,
+          "passed": false
+        }
+      ],
+      "max_tested_ai": 38,
+      "max_passed_ai": 0,
+      "completed": true,
+      "competition_completed": false,
+      "result_status_counts": {
+        "complete": 19,
+        "aborted": 2
+      },
+      "natural_completed_matches": 19,
+      "stop_reason": "resource_protection",
+      "unsettled": [],
+      "invariant_errors": [],
+      "warnings": [],
+      "label": "three_process_capacity",
+      "quota": {
+        "cpu_cores": 3,
+        "memory_gib": 10
+      },
+      "memory_peak_mib": 7424.46875
+    },
+    {
+      "started_at": "2026-10-22T09:56:02.070Z",
+      "finished_at": "2026-10-22T10:18:22.857Z",
+      "mode": "overload",
+      "parameters": {
+        "levels": [
+          24,
+          24
+        ],
+        "seconds": 180,
+        "warmup": 180,
+        "minimum": 60,
+        "count": 128,
+        "drain": 2100
+      },
+      "stages": [
+        {
+          "watching": false,
+          "ai_decision_hz_p10": 8.14596095394458,
+          "ai_event_loop_p95_max_ms": 219.676671,
+          "target_arenas": 24,
+          "target_ai": 48,
+          "started_at": 1792662963084,
+          "samples": 346,
+          "steady_full_samples": 45,
+          "max_actual_ai": 48,
+          "min_free_mb": 6184,
+          "tps_min": 17.105510826954223,
+          "mean_mspt_p50": 54.16401838,
+          "tick_window_p95_max_ms": 194.778264,
+          "tick_max_ms": 438.76316,
+          "tick_window_samples": 100,
+          "gates": [
+            "paused"
+          ],
+          "valid_full_samples": 0,
+          "passed": false
+        },
+        {
+          "watching": true,
+          "ai_decision_hz_p10": null,
+          "ai_event_loop_p95_max_ms": null,
+          "target_arenas": 24,
+          "target_ai": 48,
+          "started_at": 1792663333076,
+          "samples": 261,
+          "steady_full_samples": 0,
+          "max_actual_ai": 48,
+          "min_free_mb": 5962,
+          "tps_min": null,
+          "mean_mspt_p50": null,
+          "tick_window_p95_max_ms": null,
+          "tick_max_ms": null,
+          "tick_window_samples": 0,
+          "gates": [
+            "paused"
+          ],
+          "valid_full_samples": 0,
+          "passed": false
+        }
+      ],
+      "max_tested_ai": 48,
+      "max_passed_ai": 0,
+      "completed": false,
+      "competition_completed": false,
+      "result_status_counts": {
+        "complete": 29,
+        "aborted": 19
+      },
+      "natural_completed_matches": 29,
+      "stop_reason": "integrity_or_arena_failure",
+      "unsettled": [
+        {
+          "id": "962a6690-c161-4d80-ada3-536a1e189138",
+          "arena": "arena-6",
+          "state": "resetting"
+        }
+      ],
+      "pending_result_releases": [
+        "962a6690-c161-4d80-ada3-536a1e189138"
+      ],
+      "arena_failures": [
+        {
+          "id": "arena-6",
+          "task_id": "962a6690-c161-4d80-ada3-536a1e189138",
+          "state": "quarantined",
+          "error": "scheduler_quarantined",
+          "saved": true,
+          "restored": false
+        }
+      ],
+      "invariant_errors": [],
+      "termination": {
+        "reason": "user_requested_server_cleanup",
+        "finalized_from": "saved coordinator snapshot after all running games stopped",
+        "replays_validated": 48,
+        "matches": 48,
+        "launch_counts_revalidated": false
+      },
+      "warnings": [
+        "User ended testing. Sampler drain was stopped because one saved arena remained quarantined; report finalized offline from preserved coordinator snapshot. Launch-count checks were not repeated."
+      ],
+      "label": "three_process_overload",
+      "quota": {
+        "cpu_cores": 3,
+        "memory_gib": 10
+      },
+      "memory_peak_mib": 9055.9296875
+    }
+  ],
+  "cleanup": {
+    "finished_at": 1792665123.2891853,
+    "directory_absent": true,
+    "disk_free_increase_bytes": 16115421184,
+    "baseline_listeners": 30,
+    "baseline_listeners_preserved": true,
+    "project_listeners_remaining": [],
+    "project_units_remaining": "",
+    "owned_processes_before_delete": 0
+  }
+}

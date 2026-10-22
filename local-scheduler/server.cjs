@@ -1,3 +1,4 @@
+const {memoryBudget,hasHeadroom}=require('./resources.cjs');
 const fs=require('node:fs');
 const fsp=fs.promises;
 const path=require('node:path');
@@ -8,7 +9,8 @@ const {spawn}=require('node:child_process');
 const Redis=require('ioredis');
 const {Queue,Worker}=require('bullmq');
 const {Store}=require('./store.cjs');
-const {Control}=require('./control.cjs');
+const {ControlPool}=require('./control-pool.cjs');
+const {backendFor}=require('./backends.cjs');
 const {Driver}=require('./driver.cjs');
 const {renewOrAcquire}=require('./ownership.cjs');
 const root=path.resolve(__dirname,'..');
@@ -16,36 +18,38 @@ const config=JSON.parse(fs.readFileSync(path.resolve(root,process.env.SKYDUEL_SC
 const connection={host:'127.0.0.1',port:config.redis_port||26379,maxRetriesPerRequest:null};
 const redis=new Redis(connection);redis.on('error',e=>console.error('Redis',e.message));
 const store=new Store(redis,config.namespace||'skyduel-local');
-const control=new Control({port:config.control_port||25610});
+const control=new ControlPool(config);
 const driver=new Driver({root,config,store,control});
 const owner=crypto.randomUUID(),queues=new Map(),workers=[],viewers=new Map();
-let cached={arenas:[]},lastControlAt=0,lastError='',paused=false,maxActive=config.max_active||2,stopping=false,busy=false,leader=false,gate='starting';
+let cached={arenas:[]},lastControlAt=0,lastError='',paused=false,maxActive=config.max_active||2,stopping=false,busy=false,leader=false,gate='starting',lastAdmission=0;
 async function dispatch(){if(busy||stopping)return;busy=true;try{
  leader=await renewOrAcquire(redis,store.k('coordinator'),owner);if(!leader){gate='coordinator_lease_lost';return;}
  const settings=await redis.hmget(store.k('settings'),'paused','max_active');paused=settings[0]==='1';maxActive=settings[1]===null?(config.max_active||2):Number(settings[1]);
  cached=await control.request('status');lastControlAt=Date.now();lastError='';
- const freeMb=Math.round(os.freemem()/1048576);
- gate=paused?'paused':freeMb<(config.min_free_mb??512)?'memory_pressure':cached.mspt>(config.max_mspt||35)?'tick_pressure':'open';
+ const budget=memoryBudget();
+ gate=paused?'paused':!hasHeadroom(budget,config)?'memory_pressure':cached.performance.backends.filter(s=>s.available).every(s=>s.mspt>(config.max_mspt||35))?'tick_pressure':'open';
  let occupied=Object.keys(await redis.hgetall(store.k('slots'))).length;
  for(const arena of config.arenas){
-  let m=await store.active(arena.id);const state=cached.arenas.find(a=>a.arena_id===arena.id);
-  if(!m&&gate==='open'&&occupied<maxActive&&state?.state==='available'){
-   m=await store.allocate(arena.id);if(m){occupied++;await store.event('match_reserved',{match_id:m.id,arena_id:arena.id,players:m.players.map(p=>p.id)});}
+  let m=await store.active(arena.id);const state=cached.arenas.find(a=>a.arena_id===arena.id),backendState=cached.performance.backends.find(s=>s.server_id===backendFor(config,arena.id).id);
+  if(!m&&gate==='open'&&occupied<maxActive&&state?.state==='available'&&backendState?.available&&backendState.mspt<=(config.max_mspt||35)&&Date.now()-lastAdmission>=(config.admission_interval_ms??5000)){
+   // Reserve headroom before starting a process; stagger startups so real RSS can settle.
+   if(!hasHeadroom(memoryBudget(),config,config.admission_reserve_mb??256)){gate='memory_headroom';continue;}
+   m=await store.allocate(arena.id);if(m){occupied++;lastAdmission=Date.now();await store.event('match_reserved',{match_id:m.id,arena_id:arena.id,players:m.players.map(p=>p.id)});}
   }
   // Reconcile an allocation committed just before a process crash, using the same job ID.
   if(m){const q=queues.get(arena.id);if(!await q.getJob(m.id))await q.add('match',m,{jobId:m.id,attempts:5,backoff:{type:'fixed',delay:3000},removeOnComplete:{count:1000},removeOnFail:{count:1000}});}
  }
 }catch(e){lastError=e.message;gate='control_unavailable';}finally{busy=false;}}
-async function snapshot(){const data=await store.snapshot();return {...data,now:Date.now(),paused,max_active:maxActive,capacity:config.arenas.length,gate,error:lastError,control_updated_at:lastControlAt,metrics:{free_mb:Math.round(os.freemem()/1048576),scheduler_rss_mb:Math.round(process.memoryUsage().rss/1048576),tps:cached.tps,mspt:cached.mspt},arenas:config.arenas.map(a=>{const s=cached.arenas.find(s=>s.arena_id===a.id)||{};const {last_released,...safe}=s;return {...a,...safe};})};}
+async function snapshot(){const data=await store.snapshot();return {...data,namespace:config.namespace||'skyduel-local',now:Date.now(),paused,max_active:maxActive,capacity:config.arenas.length,gate,error:lastError,control_updated_at:lastControlAt,metrics:{...memoryBudget(),scheduler_rss_mb:Math.round(process.memoryUsage().rss/1048576),tps:cached.tps,mspt:cached.mspt,...cached.performance},arenas:config.arenas.map(a=>{const s=cached.arenas.find(s=>s.arena_id===a.id)||{};const {last_released,...safe}=s;return {...a,...safe};})};}
 async function demo(count,rounds=1){if(!Number.isInteger(count)||count<1||count>1000||!Number.isInteger(rounds)||rounds<1||rounds>100)throw Error('Count 1–1000 and rounds 1–100 required');
  const values=[];for(let i=0;i<count;i++){const n=await redis.incr(store.k('entrant_seq'));const id='AI_'+String(n).padStart(5,'0');const model=n%2?'EmberAI':'BastionAI',style=n%4<2?'rush':'fortify';values.push(await store.add({id,model,style,seed:1000+n*7919,rounds,label:`${model==='EmberAI'?'余烬':'堡垒'} · ${style==='rush'?'突袭':'稳健'} ${n}`}));}await store.event('entrants_added',{count,rounds,ids:values.map(e=>e.id)});return values;}
-async function watch(id){const arena=config.arenas.find(a=>a.id===id);if(!arena)throw Error('Unknown arena');let child=viewers.get(id);
+async function watch(id){const arena=config.arenas.find(a=>a.id===id);if(!arena)throw Error('Unknown arena');const backend=backendFor(config,id);let child=viewers.get(id);
  const port=arena.viewer_port;const url=`http://127.0.0.1:${port}/`;
  let reuse=Boolean(child&&child.exitCode===null&&!child.killed);
  try{const response=await fetch(url+'status',{signal:AbortSignal.timeout(500)});if(response.ok){reuse=true;if((await response.json()).connected)return {url};}}catch{}
  if(!reuse){const logs=path.join(root,'runs/scheduler');const out=fs.openSync(path.join(logs,`${id}-viewer.out.log`),'a'),err=fs.openSync(path.join(logs,`${id}-viewer.err.log`),'a');
  const viewerModules=process.env.BEDWARS_VIEWER_MODULES||(fs.existsSync(path.join(root,'local-viewer/node_modules'))?path.join(root,'local-viewer/node_modules'):'D:/codex-local-cache/skyduel-viewer/node_modules');
- child=spawn(process.execPath,[path.join(root,'local-viewer/server.cjs')],{cwd:root,windowsHide:true,stdio:['ignore',out,err],env:{...process.env,BEDWARS_VIEWER_MODULES:viewerModules,BEDWARS_VIEW_PORT:String(port),BEDWARS_PORT:String(config.game_port),SKYDUEL_OBSERVER_PORT:String(arena.observer_port),SKYDUEL_CAMERA_NAME:`Camera_${id.replace(/-/g,'_')}`,SKYDUEL_WORLD:arena.world,SKYDUEL_ARENA_ID:id,SKYDUEL_SERVER_ROOT:config.server_root,SKYDUEL_VIEWER_IDLE_MS:'180000'}});
+ child=spawn(process.execPath,[path.join(root,'local-viewer/server.cjs')],{cwd:root,windowsHide:true,stdio:['ignore',out,err],env:{...process.env,BEDWARS_VIEWER_MODULES:viewerModules,BEDWARS_VIEW_PORT:String(port),BEDWARS_PORT:String(backend.game_port),SKYDUEL_OBSERVER_PORT:String(arena.observer_port),SKYDUEL_CAMERA_NAME:`Camera_${id.replace(/-/g,'_')}`,SKYDUEL_WORLD:arena.world,SKYDUEL_ARENA_ID:id,SKYDUEL_SERVER_ROOT:backend.server_root,SKYDUEL_VIEWER_IDLE_MS:'180000'}});
  fs.closeSync(out);fs.closeSync(err);child.on('error',e=>console.error(e.message));viewers.set(id,child);}
  for(let attempt=0;attempt<30;attempt++){try{const r=await fetch(url+'status',{signal:AbortSignal.timeout(500)});if(r.ok&&(await r.json()).connected)return {url};}catch{}await new Promise(r=>setTimeout(r,500));}throw Error('Viewer did not become ready; inspect viewer log');}
 async function body(req){let data='';for await(const chunk of req){data+=chunk;if(data.length>16384)throw Error('Request too large');}return JSON.parse(data||'{}');}

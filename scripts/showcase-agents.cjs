@@ -18,6 +18,7 @@ const {baseX,bedX,footX,feetY,nearBase,home,approach}=require('./arena-geometry.
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 function connectReferee(){
  const socket=net.createConnection({host:'127.0.0.1',port:Number(process.env.SKYDUEL_OBSERVER_PORT||25600)});let buffer='';
+ socket.on('connect',()=>socket.write('controller\n'));
  socket.on('data',data=>{buffer+=data;let i;while((i=buffer.indexOf('\n'))>=0){const line=buffer.slice(0,i);buffer=buffer.slice(i+1);try{match=JSON.parse(line)}catch{}}});
  socket.on('error',()=>{});socket.on('close',()=>setTimeout(connectReferee,1000));
 }
@@ -214,13 +215,16 @@ class Agent{
 function run(AgentType=Agent, reportDir=output) {
 const agents=roster.map(p=>new AgentType(p.name,p.style));
 for(const agent of agents)clearInterval(agent.timer);
-let sequence=0;
-const decisions=setInterval(()=>{const offset=sequence++%agents.length;for(let i=0;i<agents.length;i++){const agent=agents[(offset+i)%agents.length];if(agent.updating)continue;agent.updating=true;agent.update().catch(e=>agent.failure(e)).finally(()=>agent.updating=false);}},100);
+const {monitorEventLoopDelay,performance}=require('node:perf_hooks'),loop=monitorEventLoopDelay({resolution:10});loop.enable();
+let sequence=0,decisionsInWindow=0,lastReport=performance.now();
+const decisions=setInterval(()=>{decisionsInWindow++;const offset=sequence++%agents.length;for(let i=0;i<agents.length;i++){const agent=agents[(offset+i)%agents.length];if(agent.updating)continue;agent.updating=true;agent.update().catch(e=>agent.failure(e)).finally(()=>agent.updating=false);}},100);
 const reports=setInterval(()=>{
- const data={updated_at:new Date().toISOString(),method:'trained_melee_with_public_macro_plans',agents:agents.map(a=>a.status())};
+ const elapsed=performance.now()-lastReport;lastReport=performance.now();
+ const runtime={decision_hz:decisionsInWindow*1000/elapsed,event_loop_p95_ms:loop.percentile(95)/1e6,event_loop_max_ms:loop.max/1e6,rss_mb:process.memoryUsage().rss/1048576};decisionsInWindow=0;loop.reset();
+ const data={updated_at:new Date().toISOString(),runtime,method:'trained_melee_with_public_macro_plans',agents:agents.map(a=>a.status())};
  for(const file of managed?[path.join(reportDir,'live.json')]:[path.join(reportDir,'live.json'),path.join(root,'runs/showcase-live.json')]){const temp=file+'.tmp';fs.writeFileSync(temp,JSON.stringify(data));fs.renameSync(temp,file);}
 },2000);
-function stop(){clearInterval(decisions);clearInterval(reports);for(const a of agents){a.cancel();a.bot.quit()}setTimeout(()=>process.exit(),500)}
+function stop(){loop.disable();clearInterval(decisions);clearInterval(reports);for(const a of agents){a.cancel();a.bot.quit()}setTimeout(()=>process.exit(),500)}
 if(managed){let started=false;const life=setInterval(()=>{if(match.match_id===expectedMatch&&match.phase==='running')started=true;if(started&&!['running','game_end_celebrating'].includes(match.phase)){clearInterval(life);stop()}},500);setTimeout(stop,Number(process.env.SKYDUEL_MAX_RUNTIME_MS||2400000)).unref();}
 process.on('message',message=>{if(message==='stop')stop()});
 process.on('SIGTERM',stop);

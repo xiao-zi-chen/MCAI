@@ -2,6 +2,14 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const http = require('node:http');
+const gzip=require('node:util').promisify(require('node:zlib').gzip);
+const compressedAssets=new Map();
+function asset(req,res,next,key,type,load){
+ res.type(type);res.vary('Accept-Encoding');
+ if(!req.acceptsEncodings('gzip')){load().then(data=>res.send(data)).catch(next);return;}
+ if(!compressedAssets.has(key)){const pending=load().then(data=>gzip(data,{level:3}));compressedAssets.set(key,pending);pending.catch(()=>compressedAssets.delete(key));}
+ compressedAssets.get(key).then(data=>res.set('Content-Encoding','gzip').send(data)).catch(next);
+}
 const net = require('node:net');
 const { execFile } = require('node:child_process');
 const { createRequire } = require('node:module');
@@ -44,7 +52,7 @@ bundle = bundle.replace(/(\w+)\.position\.y\+=(\w+)\.height\+\.6/, '$1.position.
 app.get('/', (_req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/rules-source',(_req,res)=>res.type('text/plain').sendFile(path.join(projectRoot,'competition/RULES.zh-CN.md')));
 app.get('/rules', (_req,res)=>res.sendFile(path.join(__dirname,'rules.html')));
-for(const file of ['effects.js','spectator-camera.js','replay.js','replay-timeline.js','player-motion.js','spectator-actors.js','native-items.js','native-poses.js']) app.get('/'+file, (_req,res)=>res.sendFile(path.join(__dirname,file)));
+for(const file of ['effects.js','spectator-camera.js','replay.js','replay-timeline.js','player-motion.js','spectator-actors.js','world-objects.js','native-items.js','native-poses.js']) app.get('/'+file, (_req,res)=>res.sendFile(path.join(__dirname,file)));
 app.get('/api/native-items',(_req,res)=>res.sendFile(path.join(projectRoot,'runs/native-assets-1.21/items.json')));
 app.use('/native-assets',express.static(path.join(projectRoot,'downloads/minecraft-assets-1.21/assets/minecraft')));
 app.get('/favicon.ico', (_req,res)=>res.status(204).end());
@@ -67,7 +75,7 @@ app.get('/api/replays', (_req,res)=>{
   const files=fs.readdirSync(replayDir).filter(f=>/^[a-f0-9-]+\.json$/.test(f)).map(file=>({file,mtime:fs.statSync(path.join(replayDir,file)).mtimeMs})).sort((a,b)=>b.mtime-a.mtime);
   const list=[];
   for(const {file,mtime} of files){
-    try{const d=JSON.parse(fs.readFileSync(path.join(replayDir,file),'utf8'));if(d.status!=='complete')continue;list.push({id:d.match_id,date:mtime,status:d.status,winner:d.winner,reason:d.reason,rules_version:d.rules_version,seconds:(d.frames.at(-1)?.tick||0)/20,frames:d.frames.length,events:d.events.length});if(list.length===20)break;}catch{}
+    try{const d=JSON.parse(fs.readFileSync(fs.existsSync(path.join(replayDir,'results',file))?path.join(replayDir,'results',file):path.join(replayDir,file),'utf8'));if(d.status!=='complete')continue;list.push({id:d.match_id,date:mtime,status:d.status,winner:d.winner,reason:d.reason,rules_version:d.rules_version,seconds:(d.frames.at(-1)?.tick||0)/20,frames:d.frame_count||d.frames.length,events:d.events.length});if(list.length===20)break;}catch{}
   }
   res.json(list);
 });
@@ -75,7 +83,9 @@ app.get('/api/replays/:id', (req,res)=>{
   if(!/^[a-f0-9-]{36}$/.test(req.params.id))return res.sendStatus(400);
   const file=path.join(replayDir,req.params.id+'.json');if(!fs.existsSync(file))return res.sendStatus(404);res.sendFile(file);
 });
-app.get('/scene/index.js', (_req, res) => res.type('js').send(bundle));
+app.get('/scene/index.js',(req,res,next)=>asset(req,res,next,'bundle','js',async()=>bundle));
+app.get('/scene/worker.js',(req,res,next)=>asset(req,res,next,'worker','js',()=>fs.promises.readFile(path.join(assets,'worker.js'))));
+app.get('/scene/blocksStates/:version.json',(req,res,next)=>{const v=req.params.version;if(!/^\d+\.\d+(?:\.\d+)?$/.test(v))return res.sendStatus(400);asset(req,res,next,'states-'+v,'json',()=>fs.promises.readFile(path.join(assets,'blocksStates',v+'.json')));});
 app.use('/scene', express.static(assets));
 
 const bot = mineflayer.createBot({host:'127.0.0.1',port:gamePort,username:cameraName,auth:'offline',version:'1.21',viewDistance:'far'});
@@ -87,7 +97,7 @@ bot.once('spawn', () => {
   bot.physicsEnabled = false;
   ready = false;
   console.log('Spectator connected:',cameraName,worldName);
-  const python = path.join(__dirname, '../.venv/Scripts/python.exe');
+  const python = process.env.SKYDUEL_PYTHON||path.join(projectRoot,process.platform==='win32'?'.venv/Scripts/python.exe':'.venv/bin/python');
   const admin = path.join(__dirname, '../scripts/bedwars-rcon.py');
   execFile(python, [admin, 'gamemode', 'spectator', cameraName], error => {
     if (error) { console.error('Could not configure spectator:', error.message); return; }
@@ -111,7 +121,8 @@ io.on('connection', socket => {
     try {
       const id=socket.handshake.query.replay;
       if(typeof id!=='string'||!/^[a-f0-9-]{36}$/.test(id))throw new Error('比赛编号无效');
-      const record=JSON.parse(fs.readFileSync(path.join(replayDir,id+'.json'),'utf8'));
+      const summary=path.join(replayDir,'results',id+'.json');
+      const record=JSON.parse(fs.readFileSync(fs.existsSync(summary)?summary:path.join(replayDir,id+'.json'),'utf8'));
       replayWorld.stream(socket,record);
     } catch(error) { socket.emit('replayError',error.message); }
     return;

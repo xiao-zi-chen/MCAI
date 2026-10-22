@@ -19,3 +19,4 @@ bedwars-map-plugin/.gradle/
 referee-plugin/.gradle/
 server-plugin/build/
 
+deps/

@@ -1,5 +1,6 @@
 param(
     [ValidateSet('Prepare','Start','Stop','Status','Redis')][string]$Mode='Start',
+    [Alias('Config')][string]$ConfigFile='configs/scheduler.local.json',
     [string]$RedisExe='',
     [string]$JavaHome='',
     [ValidateRange(1,8)][int]$MemoryGB=2,
@@ -8,14 +9,16 @@ param(
 $ErrorActionPreference='Stop'
 $repoRoot=$PSScriptRoot
 $env:PYTHONUTF8='1'
-$config=Get-Content -LiteralPath (Join-Path $repoRoot 'configs/scheduler.local.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+$configPath=if([IO.Path]::IsPathRooted($ConfigFile)){$ConfigFile}else{Join-Path $repoRoot $ConfigFile}
+$config=Get-Content -LiteralPath $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
+$env:SKYDUEL_SCHEDULER_CONFIG=$configPath
 $runPath=Join-Path $repoRoot 'runs/scheduler'
 $serverPath=Join-Path $repoRoot $config.server_root
 $env:SKYDUEL_SERVER_ROOT=$config.server_root
 $redisPath=Join-Path $runPath 'redis'
 $pythonExe=Join-Path $repoRoot '.venv/Scripts/python.exe'
 function Test-Port([int]$Port){$client=New-Object Net.Sockets.TcpClient;try{$task=$client.ConnectAsync('127.0.0.1',$Port);return $task.Wait(200) -and $client.Connected}catch{return $false}finally{$client.Dispose()}}
-function Wait-Port([int]$Port){$deadline=(Get-Date).AddSeconds(45);while(-not(Test-Port $Port)){if((Get-Date) -gt $deadline){throw "Service did not start on port $Port"};Start-Sleep -Milliseconds 500}}
+function Wait-Port([int]$Port){$deadline=(Get-Date).AddSeconds(180);while(-not(Test-Port $Port)){if((Get-Date) -gt $deadline){throw "Service did not start on port $Port"};Start-Sleep -Milliseconds 500}}
 function Scheduler-Process{
     $file=Join-Path $runPath 'scheduler.pid';if(-not(Test-Path -LiteralPath $file)){return $null}
     $schedulerProcessId=[int](Get-Content -LiteralPath $file);$proc=Get-CimInstance Win32_Process -Filter "ProcessId=$schedulerProcessId"
@@ -29,7 +32,7 @@ if($Mode -eq 'Prepare'){
         & (Join-Path $repoRoot 'downloads/tools/gradle-8.7/bin/gradle.bat') -p (Join-Path $repoRoot $project) build --no-daemon --max-workers=2 '-Dorg.gradle.jvmargs=-Xmx512m -Dfile.encoding=COMPAT'
         if($LASTEXITCODE -ne 0){throw "Build failed: $project"}
     }
-    & $pythonExe (Join-Path $repoRoot 'scripts/prepare-bedwars.py') --apply-rules --scheduler-config (Join-Path $repoRoot 'configs/scheduler.local.json')
+    & $pythonExe (Join-Path $repoRoot 'scripts/prepare-bedwars.py') --apply-rules --scheduler-config $configPath
     if($LASTEXITCODE -ne 0){throw 'Arena preparation failed'}
     Push-Location (Join-Path $repoRoot 'local-scheduler');try{& npm ci --no-fund;if($LASTEXITCODE -ne 0){throw 'Scheduler install failed'}}finally{Pop-Location}
     exit

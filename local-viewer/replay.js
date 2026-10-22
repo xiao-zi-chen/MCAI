@@ -25,7 +25,7 @@ function drawFrame(){
 function drawActors(){
   const frame=record.frames[index],next=record.frames[index+1];
   const alpha=next?Math.max(0,Math.min(1,(clock*20-frame.tick)/(next.tick-frame.tick))):0;
-  const players=PlayerMotion.interpolatePlayers(frame,next,alpha);
+  avatarLayer.renderObjects(frame,next,alpha);const players=PlayerMotion.interpolatePlayers(frame,next,alpha);
   window.syncProjectiles?.(frame.projectiles,clock*20,next?.projectiles,alpha);avatarLayer.render(players,clock*20);camera.setPlayers(players);
 }
 async function load(id){
