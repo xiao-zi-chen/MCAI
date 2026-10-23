@@ -28,11 +28,12 @@ function pressureReasons(row,config,args={}){
 function ownedResources(config){
  const result={at:Date.now(),processes:[]};
  if(process.platform==='linux'){
+  let runtimeGroup;try{const pid=fs.readFileSync(path.join(root,backends(config)[0].server_root,'server.pid'),'utf8').trim();runtimeGroup=fs.readFileSync(`/proc/${pid}/cgroup`,'utf8');}catch{}
   for(const id of fs.readdirSync('/proc').filter(x=>/^\d+$/.test(x))){
-   try{const cwd=fs.realpathSync(`/proc/${id}/cwd`);if(cwd!==root&&!cwd.startsWith(root+'/'))continue;
+   try{const cwd=fs.realpathSync(`/proc/${id}/cwd`);if(cwd!==root&&!cwd.startsWith(root+'/'))continue;if(runtimeGroup&&fs.readFileSync(`/proc/${id}/cgroup`,'utf8')!==runtimeGroup)continue;
     const stat=fs.readFileSync(`/proc/${id}/stat`,'utf8'),fields=stat.slice(stat.lastIndexOf(')')+2).split(' '),status=fs.readFileSync(`/proc/${id}/status`,'utf8');
     const command=fs.readFileSync(`/proc/${id}/cmdline`,'utf8').replaceAll('\0',' '),name=stat.slice(stat.indexOf('(')+1,stat.lastIndexOf(')'));
-    const role=name==='java'?'minecraft':name.startsWith('redis')?'redis':command.includes('showcase-v2.cjs')?'ai':command.includes('local-scheduler/server.cjs')?'scheduler':command.includes('local-viewer/server.cjs')?'viewer':'diagnostic';
+    const role=name==='java'?'minecraft':name.startsWith('redis')?'redis':/showcase-v2\.cjs|squad-agents\.cjs/.test(command)?'ai':command.includes('local-scheduler/server.cjs')?'scheduler':command.includes('local-viewer/server.cjs')?'viewer':'diagnostic';
     result.processes.push({pid:Number(id),role,server_id:backends(config).find(s=>cwd===path.resolve(root,s.server_root))?.id,rss_mb:Number(/VmRSS:\s+(\d+)/.exec(status)?.[1]||0)/1024,cpu_seconds:(Number(fields[11])+Number(fields[12]))/100});
    }catch{}
   }
@@ -58,8 +59,9 @@ function benchmarkLock(file){
 }
 async function main(){
  const args=options(process.argv.slice(2)),config=JSON.parse(fs.readFileSync(path.resolve(root,args.config||'configs/scheduler.stress.json'),'utf8'));
- const levels=(args.levels||'2,4,6,8').split(',').map(Number),seconds=Number(args.seconds||120),warmup=Number(args.warmup||30),minimum=Number(args['min-steady']||60),drain=Number(args['drain-seconds']||1200),count=Number(args.entrants||Math.max(...levels)*8);
- if(levels.some(n=>!Number.isInteger(n)||n<1||n>config.arenas.length)||seconds<minimum||minimum<10||warmup<0||count<2*Math.max(...levels)||count>1000)throw Error('Invalid benchmark options');
+ const rules=require('./match-format.cjs').loadRules(config.rules_file||'competition/rules.json'),format={teams:Object.keys(rules.map.teams),players_per_team:rules.match.players_per_team},matchSize=rules.match.teams*rules.match.players_per_team;
+ const levels=(args.levels||'2,4,6,8').split(',').map(Number),seconds=Number(args.seconds||120),warmup=Number(args.warmup||30),minimum=Number(args['min-steady']||60),drain=Number(args['drain-seconds']||1200),count=Number(args.entrants||Math.max(...levels)*matchSize*4);
+ if(levels.some(n=>!Number.isInteger(n)||n<1||n>config.arenas.length)||seconds<minimum||minimum<10||warmup<0||count<matchSize*Math.max(...levels)||count>1000)throw Error('Invalid benchmark options');
  const api=async(name,data)=>{const r=await fetch(`http://127.0.0.1:${config.web_port}/api/${name}`,{method:data?'POST':'GET',headers:data?{'Content-Type':'application/json'}:undefined,body:data?JSON.stringify(data):undefined,signal:AbortSignal.timeout(name==='watch'?25000:5000)});const d=await r.json();if(!r.ok)throw Error(d.error||r.status);return d;};
  let initial=await api('status');if(initial.namespace&&initial.namespace!==config.namespace)throw Error('Benchmark configuration does not match the running coordinator');const waitDeadline=Date.now()+Number(args['wait-drained']||0)*1000;
  if(initial.arenas.some(a=>a.task_id)&&args['wait-drained'])console.log(JSON.stringify({waiting_for_previous_matches:true,timeout_seconds:Number(args['wait-drained'])}));
@@ -70,19 +72,19 @@ async function main(){
  const report={mode,started_at:new Date().toISOString(),platform:process.platform,cpu:os.cpus()[0]?.model,logical_cpus:os.cpus().length,total_ram_mb:os.totalmem()/1048576,config:path.relative(root,path.resolve(root,args.config||'configs/scheduler.stress.json')),parameters:{levels,seconds,warmup,minimum,count,drain},backends:backends(config),stages:[],invariant_errors:[],warnings:[],entrants:[],resources:[],transitions:[],stop_reason:'',completed:false};
  const save=()=>fs.writeFileSync(path.join(dir,'report.json'),JSON.stringify(report,null,2));const append=(file,row)=>fs.appendFileSync(path.join(dir,file),JSON.stringify(row)+'\n');
  let allocationRedis,allocationStore,lastForcedAdmission=0;
- if(mode==='overload'){const Redis=require('../local-scheduler/node_modules/ioredis');allocationRedis=new Redis({host:'127.0.0.1',port:config.redis_port,maxRetriesPerRequest:1});allocationStore=new (require('../local-scheduler/store.cjs').Store)(allocationRedis,config.namespace);}
+ if(mode==='overload'){const Redis=require('../local-scheduler/node_modules/ioredis');allocationRedis=new Redis({host:'127.0.0.1',port:config.redis_port,maxRetriesPerRequest:1});allocationStore=new (require('../local-scheduler/store.cjs').Store)(allocationRedis,config.namespace,format);}
  let owned=new Set(),previous=new Map(),signaled=false,lastResource=0,lastStatus=initial;process.on('SIGINT',()=>{signaled=true});process.on('SIGTERM',()=>{signaled=true});
  function inspect(s){
   const active=s.arenas.filter(a=>a.task_id&&a.assigned?.some(id=>owned.has(id))),players=active.flatMap(a=>a.players||[]);
   if(new Set(players).size!==players.length)report.invariant_errors.push({at:Date.now(),error:'duplicate player in active arenas'});
   for(const a of active){for(const id of a.players||[])if(!a.assigned.includes(id))report.invariant_errors.push({at:Date.now(),error:'foreign player',arena:a.id,player:id});}
   for(const m of s.matches.filter(m=>m.players.some(p=>owned.has(p.id))))if(previous.get(m.id)!==m.state){report.transitions.push({at:Date.now(),match_id:m.id,arena_id:m.arena_id,state:m.state,created_at:m.created_at});previous.set(m.id,m.state);}
-  const running=active.filter(a=>a.state==='running'&&a.players?.length===2);
+  const running=active.filter(a=>a.state==='running'&&a.players?.length===matchSize);
   return {active_arenas:running.length,actual_ai:running.reduce((n,a)=>n+a.players.length,0),occupied:active.length};
  }
  async function sample(stage,steady){
   const s=await api('status');lastStatus=s;const row={at:Date.now(),stage,steady,...inspect(s),metrics:s.metrics,gate:s.gate,control_age_ms:Date.now()-s.control_updated_at,host_cpu_percent:hostCpu(),matches:s.arenas.map(a=>({arena:a.id,state:a.state,id:a.task_id,players:a.players}))};
-  row.ai_runtime=[];for(const a of s.arenas.filter(a=>a.state==='running'&&a.task_id))try{const live=JSON.parse(fs.readFileSync(path.join(root,'runs/scheduler/matches',a.task_id,'live.json'),'utf8'));row.ai_runtime.push({arena:a.id,age_ms:Date.now()-Date.parse(live.updated_at),...live.runtime});}catch{}
+  row.ai_runtime=[];for(const a of s.arenas.filter(a=>a.state==='running'&&a.task_id))try{const live=JSON.parse(fs.readFileSync(path.join(require('../local-scheduler/paths.cjs').matchDirectory(root,config,a.task_id),'live.json'),'utf8'));row.ai_runtime.push({arena:a.id,age_ms:Date.now()-Date.parse(live.updated_at),...live.runtime});}catch{}
   const disk=fs.statfsSync(root);row.disk_free_gb=Number(disk.bavail)*Number(disk.bsize)/1073741824;append('samples.ndjson',row);
   if(Date.now()-lastResource>5000){const r=ownedResources(config);report.resources.push(r);append('resources.ndjson',r);lastResource=Date.now();}
   return row;
@@ -115,7 +117,7 @@ async function main(){
    }
    const summary=summarize(samples,target);const full=samples.filter(s=>s.steady&&s.active_arenas===target),valid=full.filter(s=>s.control_age_ms<3000&&s.metrics.tick_window?.p95_ms<=50&&s.metrics.mspt<=35&&s.metrics.tps>=19&&s.ai_runtime.length===target&&s.ai_runtime.every(a=>a.age_ms<4000&&a.decision_hz>=7&&a.event_loop_p95_ms<=100));
    const ai=full.flatMap(s=>s.ai_runtime);
-   const stage={watching,ai_decision_hz_p10:percentile(ai.map(a=>a.decision_hz),.1),ai_event_loop_p95_max_ms:ai.length?Math.max(...ai.map(a=>a.event_loop_p95_ms||0)):null,target_arenas:target,target_ai:target*2,started_at:start,...summary,valid_full_samples:valid.length,passed:!report.stop_reason&&!signaled&&valid.length>=minimum};report.stages.push(stage);save();console.log(JSON.stringify({stage}));
+   const stage={watching,ai_decision_hz_p10:percentile(ai.map(a=>a.decision_hz),.1),ai_event_loop_p95_max_ms:ai.length?Math.max(...ai.map(a=>a.event_loop_p95_ms||0)):null,target_arenas:target,target_ai:target*matchSize,started_at:start,...summary,valid_full_samples:valid.length,passed:!report.stop_reason&&!signaled&&valid.length>=minimum};report.stages.push(stage);save();console.log(JSON.stringify({stage}));
    if(report.stop_reason||signaled||(!stage.passed&&mode!=='overload')){report.stop_reason ||= signaled?'operator_interrupted':'target_not_sustained';break;}
   }
  }catch(e){report.stop_reason='error: '+e.message;report.warnings.push(e.stack);}

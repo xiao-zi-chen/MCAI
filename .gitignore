@@ -20,3 +20,29 @@ referee-plugin/.gradle/
 server-plugin/build/
 
 deps/
+
+# Local validation sources and generated evidence stay off the distribution.
+**/test/
+**/tests/
+*.test.cjs
+*.test.ts
+test_*.py
+scripts/test-*.ps1
+docs/verification/
+*.fixtures.json
+models/*/training-progress.json
+models/squads-v2/
+
+# Recordings, archives and machine-specific credentials stay local.
+*.mp4
+*.webm
+*.mkv
+*.mov
+*.avi
+*.tar.gz
+*.7z
+.env
+.env.*
+!.env.example
+*.pem
+*.key

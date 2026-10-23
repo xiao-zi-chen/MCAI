@@ -1,0 +1,439 @@
+{
+  "name": "CryptSquads",
+  "pauseCountdown": 12,
+  "gameTime": 900,
+  "world": "crypt-squads-v1",
+  "pos1": "-116;0;-116",
+  "pos2": "116;100;116",
+  "specSpawn": "0.5;96;0.5;0;35",
+  "lobbySpawn": "0.5;111;118.5;180;20",
+  "lobbySpawnWorld": "crypt-squads-v1",
+  "lobbyPos1": "-8;109;110",
+  "lobbyPos2": "8;116;126",
+  "minPlayers": 16,
+  "postGameWaiting": 8,
+  "arenaTime": "NOON",
+  "arenaWeather": "CLEAR",
+  "teams": {
+    "Red": {
+      "isNewColor": true,
+      "color": "RED",
+      "maxPlayers": 4,
+      "bed": "0;65;-73",
+      "spawn": "0.5;65;-84.5;0;0"
+    },
+    "Blue": {
+      "isNewColor": true,
+      "color": "BLUE",
+      "maxPlayers": 4,
+      "bed": "73;65;0",
+      "spawn": "85.5;65;0.5;90;0"
+    },
+    "Green": {
+      "isNewColor": true,
+      "color": "GREEN",
+      "maxPlayers": 4,
+      "bed": "0;65;73",
+      "spawn": "0.5;65;85.5;180;0"
+    },
+    "Yellow": {
+      "isNewColor": true,
+      "color": "YELLOW",
+      "maxPlayers": 4,
+      "bed": "-73;65;0",
+      "spawn": "-84.5;65;0.5;270;0"
+    }
+  },
+  "spawners": [
+    {
+      "location": "-11.5;65.2;-79.5",
+      "type": "iron",
+      "team": "Red",
+      "maxSpawnedResources": 32,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "-11.5;65.2;-79.5",
+      "type": "gold",
+      "team": "Red",
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "-3.5;65.2;-79.5",
+      "type": "iron",
+      "team": "Red",
+      "maxSpawnedResources": 32,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "-3.5;65.2;-79.5",
+      "type": "gold",
+      "team": "Red",
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "4.5;65.2;-79.5",
+      "type": "iron",
+      "team": "Red",
+      "maxSpawnedResources": 32,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "4.5;65.2;-79.5",
+      "type": "gold",
+      "team": "Red",
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "12.5;65.2;-79.5",
+      "type": "iron",
+      "team": "Red",
+      "maxSpawnedResources": 32,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "12.5;65.2;-79.5",
+      "type": "gold",
+      "team": "Red",
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "0.5;65.2;-81.5",
+      "type": "emerald",
+      "team": "Red",
+      "maxSpawnedResources": 4,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "52.5;65.2;-51.5",
+      "type": "diamond",
+      "team": null,
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": true
+    },
+    {
+      "location": "0.5;65.2;-21.5",
+      "type": "emerald",
+      "team": null,
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": true
+    },
+    {
+      "location": "80.5;65.2;-11.5",
+      "type": "iron",
+      "team": "Blue",
+      "maxSpawnedResources": 32,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "80.5;65.2;-11.5",
+      "type": "gold",
+      "team": "Blue",
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "80.5;65.2;-3.5",
+      "type": "iron",
+      "team": "Blue",
+      "maxSpawnedResources": 32,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "80.5;65.2;-3.5",
+      "type": "gold",
+      "team": "Blue",
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "80.5;65.2;4.5",
+      "type": "iron",
+      "team": "Blue",
+      "maxSpawnedResources": 32,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "80.5;65.2;4.5",
+      "type": "gold",
+      "team": "Blue",
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "80.5;65.2;12.5",
+      "type": "iron",
+      "team": "Blue",
+      "maxSpawnedResources": 32,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "80.5;65.2;12.5",
+      "type": "gold",
+      "team": "Blue",
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "82.5;65.2;0.5",
+      "type": "emerald",
+      "team": "Blue",
+      "maxSpawnedResources": 4,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "52.5;65.2;52.5",
+      "type": "diamond",
+      "team": null,
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": true
+    },
+    {
+      "location": "22.5;65.2;0.5",
+      "type": "emerald",
+      "team": null,
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": true
+    },
+    {
+      "location": "12.5;65.2;80.5",
+      "type": "iron",
+      "team": "Green",
+      "maxSpawnedResources": 32,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "12.5;65.2;80.5",
+      "type": "gold",
+      "team": "Green",
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "4.5;65.2;80.5",
+      "type": "iron",
+      "team": "Green",
+      "maxSpawnedResources": 32,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "4.5;65.2;80.5",
+      "type": "gold",
+      "team": "Green",
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "-3.5;65.2;80.5",
+      "type": "iron",
+      "team": "Green",
+      "maxSpawnedResources": 32,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "-3.5;65.2;80.5",
+      "type": "gold",
+      "team": "Green",
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "-11.5;65.2;80.5",
+      "type": "iron",
+      "team": "Green",
+      "maxSpawnedResources": 32,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "-11.5;65.2;80.5",
+      "type": "gold",
+      "team": "Green",
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "0.5;65.2;82.5",
+      "type": "emerald",
+      "team": "Green",
+      "maxSpawnedResources": 4,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "-51.5;65.2;52.5",
+      "type": "diamond",
+      "team": null,
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": true
+    },
+    {
+      "location": "0.5;65.2;22.5",
+      "type": "emerald",
+      "team": null,
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": true
+    },
+    {
+      "location": "-79.5;65.2;12.5",
+      "type": "iron",
+      "team": "Yellow",
+      "maxSpawnedResources": 32,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "-79.5;65.2;12.5",
+      "type": "gold",
+      "team": "Yellow",
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "-79.5;65.2;4.5",
+      "type": "iron",
+      "team": "Yellow",
+      "maxSpawnedResources": 32,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "-79.5;65.2;4.5",
+      "type": "gold",
+      "team": "Yellow",
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "-79.5;65.2;-3.5",
+      "type": "iron",
+      "team": "Yellow",
+      "maxSpawnedResources": 32,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "-79.5;65.2;-3.5",
+      "type": "gold",
+      "team": "Yellow",
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "-79.5;65.2;-11.5",
+      "type": "iron",
+      "team": "Yellow",
+      "maxSpawnedResources": 32,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "-79.5;65.2;-11.5",
+      "type": "gold",
+      "team": "Yellow",
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "-81.5;65.2;0.5",
+      "type": "emerald",
+      "team": "Yellow",
+      "maxSpawnedResources": 4,
+      "startLevel": 1,
+      "hologramEnabled": false
+    },
+    {
+      "location": "-51.5;65.2;-51.5",
+      "type": "diamond",
+      "team": null,
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": true
+    },
+    {
+      "location": "-21.5;65.2;0.5",
+      "type": "emerald",
+      "team": null,
+      "maxSpawnedResources": 8,
+      "startLevel": 1,
+      "hologramEnabled": true
+    }
+  ],
+  "stores": [
+    "-14.5;65;-84.5;0;0",
+    "85.5;65;-14.5;0;0",
+    "15.5;65;85.5;0;0",
+    "-84.5;65;15.5;0;0",
+    {
+      "loc": "14.5;65;-84.5;0;0",
+      "shop": "team-upgrades.yml",
+      "parent": "false",
+      "name": "团队升级",
+      "type": "VILLAGER",
+      "team": "Red"
+    },
+    {
+      "loc": "85.5;65;14.5;0;0",
+      "shop": "team-upgrades.yml",
+      "parent": "false",
+      "name": "团队升级",
+      "type": "VILLAGER",
+      "team": "Blue"
+    },
+    {
+      "loc": "-13.5;65;85.5;0;0",
+      "shop": "team-upgrades.yml",
+      "parent": "false",
+      "name": "团队升级",
+      "type": "VILLAGER",
+      "team": "Green"
+    },
+    {
+      "loc": "-84.5;65;-13.5;0;0",
+      "shop": "team-upgrades.yml",
+      "parent": "false",
+      "name": "团队升级",
+      "type": "VILLAGER",
+      "team": "Yellow"
+    }
+  ]
+}

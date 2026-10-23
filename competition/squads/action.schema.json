@@ -1,0 +1,1282 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skyduel:action:0.1",
+  "title": "skyduel-strategy-0.2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "v",
+    "order"
+  ],
+  "properties": {
+    "v": {
+      "const": 1
+    },
+    "order": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "const": "wait"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "target"
+          ],
+          "properties": {
+            "type": {
+              "const": "move"
+            },
+            "target": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "x",
+                "y",
+                "z"
+              ],
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": -116,
+                  "maximum": 116
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "z": {
+                  "type": "number",
+                  "minimum": -116,
+                  "maximum": 116
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "target"
+          ],
+          "properties": {
+            "type": {
+              "const": "bridge"
+            },
+            "target": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "x",
+                "y",
+                "z"
+              ],
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": -116,
+                  "maximum": 116
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "z": {
+                  "type": "number",
+                  "minimum": -116,
+                  "maximum": 116
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "block",
+            "item"
+          ],
+          "properties": {
+            "type": {
+              "const": "place"
+            },
+            "block": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "x",
+                "y",
+                "z"
+              ],
+              "properties": {
+                "x": {
+                  "type": "integer",
+                  "minimum": -116,
+                  "maximum": 116
+                },
+                "y": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "z": {
+                  "type": "integer",
+                  "minimum": -116,
+                  "maximum": 116
+                }
+              }
+            },
+            "item": {
+              "enum": [
+                "wool",
+                "end_stone",
+                "oak_planks",
+                "obsidian",
+                "glass",
+                "ladder",
+                "tnt",
+                "sponge"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "block"
+          ],
+          "properties": {
+            "type": {
+              "const": "mine"
+            },
+            "block": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "x",
+                "y",
+                "z"
+              ],
+              "properties": {
+                "x": {
+                  "type": "integer",
+                  "minimum": -116,
+                  "maximum": 116
+                },
+                "y": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "z": {
+                  "type": "integer",
+                  "minimum": -116,
+                  "maximum": 116
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "targetId"
+          ],
+          "properties": {
+            "type": {
+              "const": "attack"
+            },
+            "targetId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "slot"
+          ],
+          "properties": {
+            "type": {
+              "const": "equip"
+            },
+            "slot": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 8
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item"
+          ],
+          "properties": {
+            "type": {
+              "const": "equip"
+            },
+            "item": {
+              "enum": [
+                "wooden_sword",
+                "wool",
+                "end_stone",
+                "oak_planks",
+                "stone_sword",
+                "iron_sword",
+                "wooden_pickaxe",
+                "diamond_pickaxe",
+                "shears",
+                "golden_apple",
+                "diamond_sword",
+                "obsidian",
+                "glass",
+                "ladder",
+                "iron_pickaxe",
+                "wooden_axe",
+                "iron_axe",
+                "bow",
+                "arrow",
+                "chainmail_armor",
+                "iron_armor",
+                "diamond_armor",
+                "tnt",
+                "fireball",
+                "ender_pearl",
+                "water_bucket",
+                "speed_potion",
+                "jump_potion",
+                "invisibility_potion",
+                "knockback_stick",
+                "power_bow",
+                "punch_bow",
+                "sponge",
+                "stone_pickaxe",
+                "stone_axe",
+                "diamond_axe"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "const": "use"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "target"
+          ],
+          "properties": {
+            "type": {
+              "const": "look"
+            },
+            "target": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "x",
+                "y",
+                "z"
+              ],
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": -116,
+                  "maximum": 116
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "z": {
+                  "type": "number",
+                  "minimum": -116,
+                  "maximum": 116
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "id"
+          ],
+          "properties": {
+            "type": {
+              "const": "upgrade"
+            },
+            "id": {
+              "enum": [
+                "sharpness",
+                "protection",
+                "haste",
+                "forge",
+                "heal_pool",
+                "trap"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "container",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "deposit"
+            },
+            "container": {
+              "enum": [
+                "team_chest",
+                "ender_chest"
+              ]
+            },
+            "item": {
+              "enum": [
+                "iron",
+                "gold",
+                "diamond",
+                "emerald"
+              ]
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "container",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "withdraw"
+            },
+            "container": {
+              "enum": [
+                "team_chest",
+                "ender_chest"
+              ]
+            },
+            "item": {
+              "enum": [
+                "iron",
+                "gold",
+                "diamond",
+                "emerald"
+              ]
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "target",
+            "durationTicks"
+          ],
+          "properties": {
+            "type": {
+              "const": "use"
+            },
+            "target": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "x",
+                "y",
+                "z"
+              ],
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": -116,
+                  "maximum": 116
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "z": {
+                  "type": "number",
+                  "minimum": -116,
+                  "maximum": 116
+                }
+              }
+            },
+            "durationTicks": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 40
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "wool"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 16,
+              "maximum": 64,
+              "multipleOf": 16
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "end_stone"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 12,
+              "maximum": 64,
+              "multipleOf": 12
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "oak_planks"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 16,
+              "maximum": 64,
+              "multipleOf": 16
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "stone_sword"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "multipleOf": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "iron_sword"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "multipleOf": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "wooden_pickaxe"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "multipleOf": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "diamond_pickaxe"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "multipleOf": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "shears"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "multipleOf": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "golden_apple"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "multipleOf": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "diamond_sword"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "multipleOf": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "obsidian"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 4,
+              "maximum": 64,
+              "multipleOf": 4
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "glass"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 4,
+              "maximum": 64,
+              "multipleOf": 4
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "ladder"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 16,
+              "maximum": 64,
+              "multipleOf": 16
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "iron_pickaxe"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "multipleOf": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "wooden_axe"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "multipleOf": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "iron_axe"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "multipleOf": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "bow"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "multipleOf": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "arrow"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 8,
+              "maximum": 64,
+              "multipleOf": 8
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "chainmail_armor"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "multipleOf": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "iron_armor"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "multipleOf": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "diamond_armor"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "multipleOf": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "tnt"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "multipleOf": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "fireball"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "multipleOf": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "ender_pearl"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "multipleOf": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "water_bucket"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "multipleOf": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "speed_potion"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "multipleOf": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "jump_potion"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "multipleOf": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "invisibility_potion"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "multipleOf": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "knockback_stick"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "multipleOf": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "power_bow"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "multipleOf": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "punch_bow"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "multipleOf": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "sponge"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 4,
+              "maximum": 64,
+              "multipleOf": 4
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "stone_pickaxe"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "multipleOf": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "stone_axe"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "multipleOf": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "item",
+            "quantity"
+          ],
+          "properties": {
+            "type": {
+              "const": "buy"
+            },
+            "item": {
+              "const": "diamond_axe"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "multipleOf": 1
+            }
+          }
+        }
+      ]
+    }
+  }
+}

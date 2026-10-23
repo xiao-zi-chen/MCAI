@@ -11,8 +11,8 @@
     walk_speed:dt>0?Math.hypot(q.pos[0]-p.pos[0],q.pos[2]-p.pos[2])/dt:0};
   });
  }
- function addDistances(frames){
-  const previous=new Map(),travel=new Map();
+ function addDistances(frames,state={previous:new Map(),travel:new Map()}){
+  const {previous,travel}=state;
   for(const f of frames)for(const p of f.players||[]){
    const old=previous.get(p.name),continuous=old?.mode==='SURVIVAL'&&p.mode==='SURVIVAL',d=continuous?distance(old.pos,p.pos):Infinity;
    const amount=(travel.get(p.name)||0)+(d<6?Math.hypot(p.pos[0]-old.pos[0],p.pos[2]-old.pos[2]):0);

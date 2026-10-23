@@ -6,8 +6,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 
-def load_rules():
-    return json.loads((ROOT / "rules.json").read_text(encoding="utf-8"))
+def load_rules(source=None):
+    return json.loads(Path(source or ROOT / "rules.json").read_text(encoding="utf-8"))
 
 def location(values):
     return ";".join(str(value) for value in values)
@@ -77,7 +77,7 @@ def markdown(rules):
     phases = "\n".join(f"| {p['at_seconds']//60}:{p['at_seconds']%60:02d} | {phase_names[p['type']]}" + (f"，等级 {p['level']}" if 'level' in p else '') + " |" for p in rules['phases'])
     return f"""# {rules['title']} · {rules['version']}
 
-本文件由 `competition/rules.json` 生成。状态为本地规则测试版；修改数值后必须重新生成，并给正式赛事发布新的版本。主办方负责地图、规则、裁判、运行和回放；参赛者自行编写策略或训练模型。训练模型不是报名的强制条件。
+本文件由当前模式的 `rules.json` 生成。状态为本地规则测试版；修改数值后必须重新生成，并给正式赛事发布新的版本。主办方负责地图、规则、裁判、运行和回放；参赛者自行编写策略或训练模型。训练模型不是报名的强制条件。
 
 ## 原版机制与起床战争规则
 
@@ -99,13 +99,13 @@ def markdown(rules):
 ## 游戏规则
 
 - Minecraft Java {rules['engine']['minecraft']} / Paper {rules['engine']['paper_build']} / Screaming BedWars {rules['engine']['bedwars_plugin']}。
-- 两队各 {m['players_per_team']} 人，开局倒计时 {m['countdown_seconds']} 秒，每局最多 {m['duration_seconds']} 秒游戏时间。卡服时不按墙钟提前结算。
-- 地图为五座悬空岛：两座基地、两座钻石岛、一座中心绿宝石岛；远处等待区不属于赛场。出生点、商店与资源点关于 x={rules['map']['mirror_plane_x']} 镜像且等距。主桥留有缺口，需要选手搭建；基地屋顶、楼梯、中央上下层通道和掩体属于受保护的原始结构。
+- {m['teams']} 队各 {m['players_per_team']} 人，开局倒计时 {m['countdown_seconds']} 秒，每局最多 {m['duration_seconds']} 秒游戏时间。卡服时不按墙钟提前结算。
+- {rules['map'].get('description', '九座悬空岛，左右镜像；包括两座基地、两座前哨、四座钻石岛和中心绿宝石岛。')} 主桥留有缺口，需要选手搭建；原始建筑受保护。
 - 初始 {m['initial_health']} 生命和一把木剑；无饥饿、无自然回血，金苹果效果按 Minecraft 1.21 处理。剑冷却、击退、暴击和挖掘时间采用固定版本原版机制。
-- 床存在时死亡，{m['respawn_seconds']} 秒后在己方基地复活，获得木剑和 {m['respawn_protection_seconds']} 秒出生保护。等待复活的旁观状态不显示为赛场角色。
+- 以死亡时的床状态判定复活资格：死亡时床存在，{m['respawn_seconds']} 秒后在己方基地复活，获得木剑和 {m['respawn_protection_seconds']} 秒出生保护。倒计时期间床被拆，已经获得的这一次复活仍可完成；床被拆后再死亡，最终淘汰，不能复活。等待复活的旁观状态不显示为赛场角色。
 - 初始皮甲；购买锁链、铁、钻石护甲升级护腿和靴子，头盔与胸甲保持队色皮甲。护甲永久保留，镐/斧死亡降一级、最低木制；剪刀保留。其余随身物品死亡掉落；箱内物资保留到本局结束。永久装备不能丢弃，重复购买同级或较低装备退回费用。
-- 永久装备不生成地面掉落物，也不能存入箱子复制。工具可直接购买任意已列出的等级，按表格收费；商店没有列出的工具等级不可购买。普通箱可被双方访问；末影箱按玩家隔离，同一玩家可以从任意末影箱访问自己的储物。允许存取铁、金、钻石、绿宝石。
-- 床被拆后当前玩家可以继续行动，但下次死亡最终淘汰。只剩一队未淘汰时，该队获胜；同时淘汰或到达时限后两队仍存活则平局。
+- 永久装备不生成地面掉落物，也不能存入箱子复制。工具可直接购买任意已列出的等级，按表格收费；商店没有列出的工具等级不可购买。普通箱可被各队访问；末影箱按玩家隔离，同一玩家可以从任意末影箱访问自己的储物。允许存取铁、金、钻石、绿宝石。
+- 床被拆后当前玩家可以继续行动，但下次死亡最终淘汰。全队最终淘汰后该队出局；只剩一队时全队获胜；同时淘汰或到达时限后多队仍存活则平局。
 - 只允许在赛区内放置/破坏参赛者放置的方块及敌方床；原始岛体受保护。建造范围为 {rules['map']['build_min']} 至 {rules['map']['build_max']}，按方块坐标含边界。
 - 商店、装备和资源固定，不允许创造模式、非法飞行/位移、管理命令或修改裁判；末影珍珠属于允许的游戏内传送道具；实际到达商店范围、资源足够且背包可容纳时才能成交。
 - 提供团队升级、弓箭、金苹果、自动点燃的 TNT、火球、末影珍珠、水桶和速度/跳跃/隐身药水。玻璃防爆；黑曜石需要合适工具，原始地图不受爆炸破坏。药水等级和时长由下表固定，隐身保留原版的装备可见性。它不会像部分 BedWars 插件那样额外隐藏盔甲。
@@ -147,11 +147,11 @@ def markdown(rules):
 | --- | --- |
 {phases}
 
-突然死亡阶段，边界在 180 秒内从 116 格收缩到 16 格；越界按规则受伤。到 {m['duration_seconds']//60} 分钟仍有两队存活则平局。每局结束恢复床、方块、生成器和边界，清空装备与升级。
+突然死亡阶段，边界在 180 秒内从 {max(rules['map']['build_max'][i]-rules['map']['build_min'][i] for i in [0,2])+8} 格收缩到 16 格；越界按规则受伤。到 {m['duration_seconds']//60} 分钟仍有多队存活则平局。每局结束恢复床、方块、生成器和边界，清空装备与升级。
 
 ## 对阵与判分
 
-同一对手交换红蓝各打一局；胜 {m['series']['win_points']} 分、平 {m['series']['draw_points']} 分、负 {m['series']['loss_points']} 分。比较同一赛程的积分，同分保留并列，不用伤害、采集或普通击杀破平。平台故障作废重赛；参赛策略运行故障判该席负。这一赛程与故障结算还需要接入 AGX 执行器，不使用插件自带累计分数代替。
+{'同组四队打一局，获胜队全员获胜；' if m['teams']>2 else '同一对手交换红蓝各打一局；'}胜 {m['series']['win_points']} 分、平 {m['series']['draw_points']} 分、负 {m['series']['loss_points']} 分。比较同一赛程的积分，同分保留并列，不用伤害、采集或普通击杀破平。平台故障作废重赛；参赛策略运行故障的正式裁定还需要接入 AGX 执行器。本地调度器保存每名选手的场次和胜场，中止或测试局不计胜场。
 
 ## 投稿与观察合同
 
@@ -168,16 +168,18 @@ def markdown(rules):
 已提供真实 Minecraft 地图、商店与经典机制扩展、机器可读规则源、动作 schema、示例策略、实时观战和整局结构化回放。网页按 10 Hz 服务器状态、逐刻事件和官方 1.21 物品模型重建画面，可播放、暂停和跳转；它不是原版客户端录屏。原版旁观入口使用未修改的 Java 1.21 客户端，真实动作、物品、界面和音效由游戏自身绘制。调试资源/阶段测试会标记为测试局，不列入正式演示回放。投稿执行器与 AGX 排名尚未接通；运行预算仍是候选值，不能据此开放正式报名。
 """
 
-def build():
-    rules = load_rules()
-    generated = ROOT / "generated"
+def build(source=None):
+    source = Path(source or ROOT / "rules.json")
+    output = source.parent
+    rules = load_rules(source)
+    generated = output / "generated"
     generated.mkdir(exist_ok=True)
     arena, shop, settings = server_configs(rules)
     for name, obj in [("arena.yml", arena), ("shop.yml", shop), ("settings.yml", settings)]:
         (generated/name).write_text(json.dumps(obj, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    (ROOT/"action.schema.json").write_text(json.dumps(action_schema(rules), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    (ROOT/"RULES.zh-CN.md").write_text(markdown(rules), encoding="utf-8")
-    paths = [ROOT/"rules.json", ROOT/"action.schema.json", generated/"arena.yml", generated/"shop.yml", generated/"settings.yml"]
+    (output/"action.schema.json").write_text(json.dumps(action_schema(rules), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    (output/"RULES.zh-CN.md").write_text(markdown(rules), encoding="utf-8")
+    paths = [source, output/"action.schema.json", generated/"arena.yml", generated/"shop.yml", generated/"settings.yml"]
     manifest = {"rules_version": rules["version"], "files": {str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}}
     (generated/"manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     print(f"Compiled {rules['version']} ({rules['map']['id']})")

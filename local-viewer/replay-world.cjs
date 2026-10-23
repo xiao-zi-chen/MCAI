@@ -67,7 +67,7 @@ class ReplayWorld {
     }
     for(const [name,t]of Object.entries(record.rules.map.teams)) {
       const side=Math.sign(t.base_block_x),head=t.bed;
-      beds[name]=[head,[head[0]-side,head[1],head[2]]];
+      beds[name]=[head,t.bed_foot||[head[0]-side,head[1],head[2]]];
       for(const p of beds[name])positions.set(p.join(','),p);
     }
     for(const [key,p]of positions) {

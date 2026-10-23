@@ -1,65 +1,52 @@
-# MCAI · 悬空夺床
+# MCAI · 古堡争床
 
-本地运行的 **Minecraft Java 1.21 起床战争 AI 对战**。真实 Paper 服务器负责规则与物理，每场两个 AI 用本地模型和公开策略比赛，支持原版客户端观战、平视网页观战和整局回放。对局不调用云模型 API。
+**Minecraft Java 1.21 的 4v4v4v4 起床战争 AI 比赛，当前版本 0.9.1。** 真实 Paper 服务器运行规则、战斗和方块物理；16 个无图形客户端分为红、蓝、绿、黄四队。网页可以观看比赛、完整回放、切换选手第一视角，并跳到拆床等关键事件。对局不调用云模型 API。
 
-当前版本 **0.7.1** 增加 Linux 多进程测试、实际并发与延迟监测，修复长录像内存增长，并显示真实床和掉落物；保留多竞技场排队、自动补位和观战中心。沿用 0.6 的九岛地图、35 种商品、6 类团队升级。基地间距 112 格，包含南北钻石分路、前哨岛、双绿宝石点和高地通道。
+233×233 格地图包含 13 座岛，基于带 GPL-3.0 许可的 Crypt 地图扩建。16 个独立近战模型配合守床、采集、进攻和支援策略；每个模型含 312,587 个参数。模型采用二进制权重，文件总量约 20 MB，保留原始权重与推理结果。训练是行为克隆，宏观战术仍由公开策略控制。
 
-## 运行
+## 启动四队比赛
 
-需要 Windows 10/11、JDK 21、Node.js 22+ 和 Python 3.11。首次安装会下载带摘要校验的服务器依赖与游戏资源。
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\setup-bedwars.ps1 -JavaHome '你的 JDK 21 目录'
-```
-
-阅读 [Minecraft EULA](https://www.minecraft.net/eula) 后，如同意，将本地 `runs/bedwars-local/eula.txt` 的 `eula=false` 改为 `eula=true`，再启动：
+Windows 10/11 需要 JDK 21、Node.js 22+、Python 3.11 和 Redis。先按[安装指南](LOCAL_TRIAL.zh-CN.md)准备基础依赖，再运行：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\playtest.ps1 -NoBrowser
+powershell -NoProfile -ExecutionPolicy Bypass -File .\squads.ps1 -Mode Prepare -JavaHome '你的 JDK 21 目录'
+powershell -NoProfile -ExecutionPolicy Bypass -File .\squads.ps1 -Mode Doctor -MemoryGB 2
 ```
 
-- [实时平视观战](http://127.0.0.1:3007/)
-- [完整回放](http://127.0.0.1:3007/replays)
-- [规则和商店](http://127.0.0.1:3007/rules)
-- 原版画面：双击 `原版观战.cmd`，首次使用会下载官方 1.21 客户端资源。
-
-详细安装、停止、手动参与与验证命令见 [本地试验指南](LOCAL_TRIAL.zh-CN.md)。客户端、服务器和本地录制不包含在仓库中。
-
-## 给别人看
-
-[Releases](https://github.com/xiao-zi-chen/MCAI/releases) 提供 `MCAI-showcase-0.6.0.zip` 展示包：解压后双击 `index.html`，即可离线观看完整比赛、精彩片段、地图截图与规则。MP4 视频也可以单独发送。接收者不需要安装 Minecraft。仓库保持私有，ZIP 可由所有者直接转发。
-
-![已修复的商店村民与网页回放](docs/assets/skyduel-merchants.jpg)
-
-## 多竞技场与持续补位
-
-已接入 **BullMQ + Redis**，默认 Windows 配置在一个 Minecraft 进程中使用三个独立世界。Linux 另提供三个 Minecraft 进程、24 个世界的配置，以实际压力测试核对 48 个 AI 的运行效果；配置容量不代表通过验收。开局数量可调，已完成的场地保存结果、重置地图后独立接下一组。网页可以加入测试 AI、暂停新开局、调节并发、选择场地观战与回放。
-
-停止旧演示后，首次准备和启动：
+首次准备会创建 `runs/crypt-squads/eula.txt`。阅读并同意 [Minecraft EULA](https://www.minecraft.net/eula) 后，将其中 `eula=false` 改为 `eula=true`，然后启动：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\playtest.ps1 -Mode Stop
-powershell -ExecutionPolicy Bypass -File .\scheduler.ps1 -Mode Prepare -JavaHome '你的 JDK 21 目录'
-powershell -ExecutionPolicy Bypass -File .\scheduler.ps1 -Mode Start -RedisExe '你的 redis-server.exe 路径'
+powershell -NoProfile -ExecutionPolicy Bypass -File .\squads.ps1 -Mode Start -MemoryGB 2
 ```
 
-打开 [本地比赛中心](http://127.0.0.1:3009/)，点击“加入 4 个测试 AI”。后续启动不必重新 Prepare；自动补位模式由比赛中心分配选手，勿同时开启旧自动演示。
+也可以使用根目录的 `打开四队比赛中心.cmd`。比赛中心为 **http://127.0.0.1:3029/**，加入 16 个 AI 后由调度器开赛；观战与回放入口在比赛中心内，游戏端口为 `25570`。2 GiB Java 堆配置在首次启动前要求至少 4.5 GiB 可用内存。
 
-[0.7.1 改动与实测](docs/RELEASE_0.7.1.zh-CN.md) · [服务器测试](docs/SERVER_TEST.zh-CN.md) · [0.7 运行、恢复与验证](docs/RELEASE_0.7.zh-CN.md) · [调度选型](docs/SCHEDULING_OPTIONS.zh-CN.md)。Agones 仍为后续多机器方案的配置示例。
+[四队运行说明](docs/SQUADS_4V4V4V4.zh-CN.md) · [Linux 部署](docs/LINUX_PRIVATE_LAB.zh-CN.md) · [比赛规则与商店](competition/squads/RULES.zh-CN.md) · [地图来源与预览](maps/crypt-squads/README.md)
 
-## 内容和范围
+## 规则与调度
 
-- `competition/`：规则源文件、生成的商店/地图配置、参赛合同和动作 schema。
-- `bedwars-map-plugin/`、`referee-plugin/`：原创地图、经济扩展、裁判和记录。
-- `scripts/`、`models/showcase/`：两个示例 AI、权重、训练和验收工具。
-- `local-scheduler/`：本机队列、竞技场调度、结果去重、比赛中心；仅接受内置测试策略。
-- `local-viewer/`：实时观战与回放；默认平视，可切换第一视角。
-- `bot-controller/`、`server-plugin/`、`python/`：保留的 PvP 训练核心。
+- 死亡时床存在，可在 5 秒后复活。等待期间床被拆，已经获得的这一次复活仍可完成；失床后再死亡则最终淘汰。全队最终淘汰才算出局。
+- 第 2、4、6 分钟升级资源，第 8 分钟移除剩余床，第 10 分钟进入决胜阶段，15 分钟封顶。最后存活队获胜；平局、中止和机制验证局不计胜场。
+- BullMQ + Redis 管理预约、分队、开局、保存和复原。场地恢复后才接下一组；一场开始后不补入新选手。
+- 支持单个 Minecraft 进程管理多个独立世界，以及多个 Minecraft 进程。普通 Paper 的世界模拟共享主线程，多进程可以分散模拟工作；AI 控制器按比赛独立运行。
+- 按内存余量和服务器延迟控制新开局，错开入场峰值。Linux 可配置 `runtime_cpu_cores`；测试与运行资源计入同一个受限进程组。
 
-独立演示中 Ember 偏快攻和拆床，Bastion 偏防守、升级和远程控制；并发测试会组合两套权重、两种打法和不同种子。每个近战 actor 为 22,027 参数；0.7 系列主要改造调度、场地隔离和观战记录，没有重新训练网络。它们仍是示例对手，不能保证达到高手水平。
+两个独立世界不等于同一个世界内的两个区域。当前提供的隔离方案使用独立世界，避免地图重置和事件归属互相影响。
 
-目前是双队 1v1。本项目提供参赛规则与合同草案；**AGX 正式后端接入和安全隔离的投稿运行器尚未完成**。不宣称复刻某个商业服务器的全部模式。
+## 回放与演示
 
-[0.6 改动与验证](docs/RELEASE_0.6.zh-CN.md) · [功能范围](docs/FEATURE_COVERAGE.zh-CN.md) · [模型说明](models/showcase/MODEL_CARD.zh-CN.md) · [第三方来源](docs/THIRD_PARTY.zh-CN.md)
+网页回放保留真实地图、角色、方块变化和比赛事件，支持暂停、拖动、倍速、全屏与任意选手视角。完整录像按需读取并缓存少量分段，避免长录像持续占用内存。已核对一场 8 分 56 秒比赛的全部 5,370 帧：字段不变，压缩传输量减少约 **76.3%**。
 
-基于 [Minecraft-PVP-ROBO](https://github.com/KyaKayKya/Minecraft-PVP-ROBO) 的 MIT 开放核心，保留原许可与历史。Minecraft / Mojang 资源由安装程序从官方服务获取。
+需要离线展示时，使用 `scripts/export-replay.cjs` 导出网页画面。Chrome 与 FFmpeg 仅供视频导出使用，不参与 AI 训练和比赛运行。导出的 MP4、原始录像、测试记录与本地依赖均不随仓库发布。
+
+## 验证与范围
+
+已完成两场正常 16 AI 比赛，均有真实拆床、团队升级、录像保存和地图恢复；TPS 接近 20。3 核、5 GiB 限制下，单个 Minecraft 进程内的两个独立世界已通过 32 AI 并发检查，两场均正常结算。存在短时延迟尖峰，详细口径见[四队运行说明](docs/SQUADS_4V4V4V4.zh-CN.md)。48 AI 容量仍需以对应实测结论为准。
+
+真实验收入口保留在 `squads.ps1 -Mode Verify` 和 Linux `scripts/squads-linux.py verify`。测试用例源文件、原始报告与训练样本保存在本地；仓库发布运行代码、必要配置、模型、地图与文档。
+
+旧版双队演示和 PvP 训练核心仍可使用；四队模式以 `squads.ps1` 为入口。AGX 正式后端与安全隔离的投稿运行器尚未完成，短期实测也不能证明长期稳定或四个出生方向的胜率平衡。
+
+[功能范围](docs/FEATURE_COVERAGE.zh-CN.md) · [原双队模型说明](models/showcase/MODEL_CARD.zh-CN.md) · [第三方来源](docs/THIRD_PARTY.zh-CN.md)
+
+基于 [Minecraft-PVP-ROBO](https://github.com/KyaKayKya/Minecraft-PVP-ROBO) 的 MIT 开放核心，保留原许可与历史。地图许可单独保留；Minecraft / Mojang 资源由安装程序从官方服务获取。

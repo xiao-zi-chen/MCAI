@@ -1,40 +1,111 @@
-"""Install only project-local dependencies. Run inside a limited systemd service."""
-import argparse,hashlib,json,os,subprocess,tarfile,urllib.request
+"""Prepare an isolated Linux lab; EULA acceptance is an explicit optional flag."""
+import argparse
+import hashlib
+import json
+import os
 from pathlib import Path
-ROOT=Path(__file__).resolve().parents[1]
-p=argparse.ArgumentParser();p.add_argument('--accept-eula',action='store_true');p.add_argument('--config',default='configs/scheduler.server-test.json');a=p.parse_args()
-if not a.accept_eula:raise SystemExit('Pass --accept-eula only after the operator accepted the Minecraft EULA')
-DEPS=ROOT/'deps';DEPS.mkdir(exist_ok=True)
-os.environ['npm_config_cache']=str(DEPS/'npm-cache');os.environ['PIP_CACHE_DIR']=str(DEPS/'pip-cache')
-def fetch(url,file,checksum=None):
- if not file.exists():
-  partial=file.with_suffix(file.suffix+'.part')
-  subprocess.run(['curl','--fail','--location','--retry','2','--connect-timeout','15','--max-time','300','--output',str(partial),url],check=True)
-  partial.replace(file)
- digest=hashlib.sha256(file.read_bytes()).hexdigest()
- if checksum and digest!=checksum:raise ValueError('Downloaded checksum mismatch: '+file.name)
- return digest
-def run(args,**kw):subprocess.run([str(x) for x in args],check=True,cwd=ROOT,**kw)
-manifest={}
-if not (DEPS/'java/bin/java').exists():
- meta=json.loads(subprocess.check_output(['curl','--fail','--silent','--show-error','--max-time','45','https://api.adoptium.net/v3/assets/latest/21/hotspot?architecture=x64&image_type=jre&os=linux&vendor=eclipse']))[0]
- pkg=meta['binary']['package'];file=DEPS/'java.tar.gz';manifest['java']={'version':meta['version']['semver'],'sha256':fetch(pkg['link'],file,pkg['checksum']),'source':pkg['link']}
- with tarfile.open(file) as t:
-  prefix=t.getmembers()[0].name.split('/')[0];t.extractall(DEPS,filter='data')
- (DEPS/prefix).rename(DEPS/'java')
-version='8.10.2';redisdir=DEPS/('redis-'+version)
-if not (redisdir/'src/redis-server').exists():
- file=DEPS/'redis.tar.gz';url=f'https://download.redis.io/releases/redis-{version}.tar.gz';manifest['redis']={'version':version,'sha256':fetch(url,file),'source':url}
- with tarfile.open(file) as t:t.extractall(DEPS,filter='data')
- run(['make','-C',redisdir,'-j1','MALLOC=libc','BUILD_TLS=no','REDIS_CFLAGS=','REDIS_LDFLAGS=','redis-server'])
-venv=DEPS/'python';python=venv/'bin/python'
-if not python.exists():
- result=subprocess.run(['python3','-m','venv',venv],cwd=ROOT)
- if result.returncode:
-  run(['python3','-m','venv','--without-pip',venv]);pip=DEPS/'get-pip.py';fetch('https://bootstrap.pypa.io/get-pip.py',pip);run([python,pip])
-run([python,'-m','pip','install','PyYAML==6.0.2','jsonschema==4.23.0'])
-for component in ['bot-controller','local-scheduler','local-viewer']:run(['npm','ci','--omit=dev','--no-audit','--no-fund','--prefix',ROOT/component])
-run([python,ROOT/'scripts/prepare-bedwars.py','--apply-rules','--scheduler-config',ROOT/a.config])
-config=json.loads((ROOT/a.config).read_text());server=ROOT/config['server_root'];(server/'eula.txt').write_text('eula=true\n')
-(ROOT/'runs/deployment-dependencies.json').write_text(json.dumps(manifest,indent=2))
-print('PRIVATE_PREPARATION_COMPLETE',flush=True)
+import subprocess
+import sys
+import tarfile
+
+ROOT = Path(__file__).resolve().parents[1]
+JAVA = {
+    'version': '21.0.13+9',
+    'url': 'https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.13%2B9/OpenJDK21U-jre_x64_linux_hotspot_21.0.13_9.tar.gz',
+    'sha256': 'a535a1df9c6284d9618872984e026ae0352d1f7e9e0605425c0e6114f47351dd',
+}
+REDIS = {
+    'version': '8.10.2',
+    'url': 'https://download.redis.io/releases/redis-8.10.2.tar.gz',
+    'sha256': 'b9ffee226b5eecdba98a679260dad764b2a4ebd90dce4ad5ac9e9f3eef9c02b3',
+}
+
+
+def child_path(value):
+    result = (ROOT / value).resolve()
+    if not result.is_relative_to(ROOT) or result == ROOT:
+        raise ValueError('Path must remain inside the project: ' + str(value))
+    return result
+
+
+def fetch(spec, target):
+    if not target.exists():
+        partial = target.with_suffix(target.suffix + '.part')
+        subprocess.run(['curl', '--fail', '--location', '--retry', '2',
+                        '--connect-timeout', '15', '--max-time', '600',
+                        '--limit-rate', '8M', '--output', str(partial), spec['url']], check=True)
+        if hashlib.sha256(partial.read_bytes()).hexdigest() != spec['sha256']:
+            raise ValueError('Download checksum mismatch: ' + target.name)
+        partial.replace(target)
+    if hashlib.sha256(target.read_bytes()).hexdigest() != spec['sha256']:
+        raise ValueError('Cached download checksum mismatch: ' + target.name)
+
+
+def run(args, **kwargs):
+    subprocess.run([str(x) for x in args], check=True, cwd=ROOT, **kwargs)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--accept-eula', action='store_true',
+                        help='Only use after the operator accepts the Minecraft EULA')
+    parser.add_argument('--config', default='configs/scheduler.squads.json')
+    args = parser.parse_args()
+    config_path = child_path(args.config)
+    config = json.loads(config_path.read_text(encoding='utf-8-sig'))
+    child_path(config['server_root'])
+    deps = ROOT / 'deps'
+    deps.mkdir(exist_ok=True)
+    (ROOT / 'runs').mkdir(exist_ok=True)
+    os.environ['npm_config_cache'] = str(deps / 'npm-cache')
+    os.environ['PIP_CACHE_DIR'] = str(deps / 'pip-cache')
+    os.environ['npm_config_jobs'] = '1'
+    os.environ['MAKEFLAGS'] = '-j1'
+    print('Preparing project-local Java 21', flush=True)
+    if not (deps / 'java/bin/java').exists():
+        archive = deps / 'java.tar.gz'
+        fetch(JAVA, archive)
+        staging = deps / 'java-unpack'
+        staging.mkdir(exist_ok=True)
+        with tarfile.open(archive) as package:
+            package.extractall(staging, filter='data')
+        roots = [p for p in staging.iterdir() if (p / 'bin/java').exists()]
+        if len(roots) != 1:
+            raise ValueError('Expected one Java runtime in archive')
+        roots[0].rename(deps / 'java')
+    version = subprocess.run([str(deps / 'java/bin/java'), '-version'],
+                             capture_output=True, text=True, check=True)
+    if 'version "21.' not in version.stderr + version.stdout:
+        raise ValueError('Project Java runtime must be Java 21')
+    print('Preparing dedicated Redis', flush=True)
+    redis_dir = deps / ('redis-' + REDIS['version'])
+    if not (redis_dir / 'src/redis-server').exists():
+        archive = deps / 'redis.tar.gz'
+        fetch(REDIS, archive)
+        with tarfile.open(archive) as package:
+            package.extractall(deps, filter='data')
+        run(['make', '-C', redis_dir, '-j1', 'MALLOC=libc', 'BUILD_TLS=no',
+             'REDIS_CFLAGS=', 'REDIS_LDFLAGS=', 'redis-server'])
+    print('Preparing project Python and pinned Node packages', flush=True)
+    venv = deps / 'python'
+    python = venv / 'bin/python'
+    if not python.exists():
+        run([sys.executable, '-m', 'venv', venv])
+    run([python, '-m', 'pip', 'install', 'PyYAML==6.0.2', 'jsonschema==4.23.0', 'Pillow==10.4.0'])
+    for component in ['bot-controller', 'local-scheduler', 'local-viewer']:
+        run(['npm', 'ci', '--omit=dev', '--no-audit', '--no-fund', '--prefix', ROOT / component])
+    run([python, ROOT / 'scripts/prepare-bedwars.py', '--apply-rules',
+         '--scheduler-config', config_path])
+    run([python, ROOT / 'scripts/prepare-native-items.py', '--rules-file',
+         child_path(config.get('rules_file', 'competition/rules.json'))])
+    server = child_path(config['server_root'])
+    if args.accept_eula:
+        (server / 'eula.txt').write_text('eula=true\n', encoding='utf-8')
+    manifest = {'java': JAVA, 'redis': REDIS, 'python': str(python),
+                'config': str(config_path), 'eula_changed': args.accept_eula}
+    (ROOT / 'runs/deployment-dependencies.json').write_text(json.dumps(manifest, indent=2) + '\n')
+    print('PRIVATE_PREPARATION_COMPLETE; EULA ' + ('explicitly accepted' if args.accept_eula else 'unchanged'), flush=True)
+
+
+if __name__ == '__main__':
+    main()

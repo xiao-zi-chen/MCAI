@@ -3,7 +3,7 @@
 The generated catalog and Mojang textures stay in downloads/runs, not source control.
 """
 from __future__ import annotations
-import hashlib,json,zipfile,urllib.request
+import argparse,hashlib,json,os,subprocess,zipfile
 from pathlib import Path
 from PIL import Image
 
@@ -13,18 +13,22 @@ OUT=ROOT/'runs/native-assets-1.21/items.json'
 CLIENT_SHA1='0e9a07b9bb3390602f977073aa12884a4ce12431'
 CLIENT_URL='https://piston-data.mojang.com/v1/objects/'+CLIENT_SHA1+'/client.jar'
 
-def prepare():
+def prepare(rules_file=None):
     jar=ROOT/'downloads/minecraft-client-1.21.jar'
     if not jar.exists() or hashlib.sha1(jar.read_bytes()).hexdigest()!=CLIENT_SHA1:
-        with urllib.request.urlopen(CLIENT_URL,timeout=45) as r:data=r.read()
-        if hashlib.sha1(data).hexdigest()!=CLIENT_SHA1:raise ValueError('Official resource checksum mismatch')
-        jar.parent.mkdir(parents=True,exist_ok=True);jar.write_bytes(data)
-    if not (ASSETS/'models/item/handheld.json').exists():
-        dest=ASSETS.parents[1]
-        with zipfile.ZipFile(jar) as z:
-            for name in z.namelist():
-                if name.startswith('assets/minecraft/') and not name.endswith('/'):
-                    target=dest/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(z.read(name))
+        jar.parent.mkdir(parents=True,exist_ok=True)
+        partial=jar.with_suffix('.jar.part')
+        subprocess.run(['curl','--fail','--location','--retry','2','--connect-timeout','15','--max-time','300','--output',str(partial),CLIENT_URL],check=True)
+        if hashlib.sha1(partial.read_bytes()).hexdigest()!=CLIENT_SHA1:raise ValueError('Official resource checksum mismatch')
+        partial.replace(jar)
+    dest=ASSETS.parents[1].resolve()
+    # Re-extract the verified cache so preparation also repairs missing textures.
+    with zipfile.ZipFile(jar) as z:
+        for name in z.namelist():
+            if name.startswith('assets/minecraft/') and not name.endswith('/'):
+                target=(dest/name).resolve()
+                if not target.is_relative_to(dest):raise ValueError('Resource archive path escapes cache')
+                target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(z.read(name))
     cache={}
     def model(name):
         name=name.removeprefix('minecraft:')
@@ -54,8 +58,9 @@ def prepare():
         meta=ASSETS/'textures'/f'{tex}.png.mcmeta'
         if meta.exists():spec['animation']=json.loads(meta.read_text()).get('animation')
         return spec
-    rules=json.loads((ROOT/'competition/rules.json').read_text(encoding='utf-8'))
-    ids={i['material'].lower() for i in rules['shop']}|{'wooden_sword','red_wool','blue_wool','arrow','bow_pulling_0','bow_pulling_1','bow_pulling_2','glass_bottle','bucket','wet_sponge','iron_ingot','gold_ingot','diamond','emerald'}
+    rules=json.loads((ROOT/(rules_file or os.environ.get('SKYDUEL_RULES_FILE','competition/rules.json'))).read_text(encoding='utf-8'))
+    ids={i['material'].lower() for i in rules['shop']}|{'wooden_sword','red_wool','blue_wool','green_wool','yellow_wool','arrow','bow_pulling_0','bow_pulling_1','bow_pulling_2','glass_bottle','bucket','wet_sponge','iron_ingot','gold_ingot','diamond','emerald'}
+    ids|={team.lower()+'_wool' for team in rules['map']['teams']}
     catalog={};textures={}
     for item in sorted(ids):
         data=model('item/'+item);layers=[]
@@ -74,4 +79,7 @@ def prepare():
     print(f'Official item catalog: {len(catalog)} models, {len(textures)} sprite silhouettes; {OUT.stat().st_size} bytes')
     return result
 
-if __name__=='__main__':prepare()
+if __name__=='__main__':
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--rules-file')
+    prepare(parser.parse_args().rules_file)

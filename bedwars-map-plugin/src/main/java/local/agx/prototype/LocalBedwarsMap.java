@@ -23,7 +23,8 @@ public final class LocalBedwarsMap extends JavaPlugin implements Listener {
     private int surfaceY;
 
     @Override public void onEnable() {
-        try (var input = getResource("competition-rules.json")) {
+        Path localRules=getDataFolder().toPath().resolve("competition-rules.json");
+        try (var input = Files.exists(localRules)?Files.newInputStream(localRules):getResource("competition-rules.json")) {
             if (input == null) throw new IllegalStateException("Missing competition rules resource");
             rules = YamlConfiguration.loadConfiguration(new InputStreamReader(input, StandardCharsets.UTF_8));
         } catch (IOException e) { throw new IllegalStateException("Cannot load competition rules", e); }
@@ -93,6 +94,8 @@ public final class LocalBedwarsMap extends JavaPlugin implements Listener {
             island(((Number)island.get("x")).intValue(), ((Number)island.get("z")).intValue(),
                 ((Number)island.get("radius")).intValue(), Material.valueOf((String)island.get("accent")));
         }
+        if(rules.contains("map.structures"))cryptMap();
+        else {
         base(rules.getInt("map.teams.Red.base_block_x"), Material.RED_CONCRETE, Material.RED_BED, BlockFace.WEST);
         base(rules.getInt("map.teams.Blue.base_block_x"), Material.BLUE_CONCRETE, Material.BLUE_BED, BlockFace.EAST);
         centerGarden();
@@ -101,6 +104,7 @@ public final class LocalBedwarsMap extends JavaPlugin implements Listener {
         for(var island:rules.getMapList("map.islands"))if(island.get("id").toString().startsWith("approach_"))
             outpost(((Number)island.get("x")).intValue(),((Number)island.get("z")).intValue());
         bridgeLandings();
+        }
         for (var spawner : rules.getMapList("map.spawners")) {
             if (spawner.get("team") != null) continue;
             var position = (java.util.List<?>) spawner.get("position");
@@ -108,15 +112,67 @@ public final class LocalBedwarsMap extends JavaPlugin implements Listener {
             set((int)Math.floor(((Number)position.get(0)).doubleValue()), surfaceY,
                 (int)Math.floor(((Number)position.get(2)).doubleValue()), Material.valueOf(resource.toUpperCase() + "_BLOCK"));
         }
-        int lobbyZ = lobbyLocation().getBlockZ();
+        int lobbyZ = lobbyLocation().getBlockZ(), lobbyY=lobbyLocation().getBlockY()-1;
         for (int x = -5; x <= 5; x++) for (int z = lobbyZ-5; z <= lobbyZ+5; z++) {
-            set(x, 100, z, Material.SMOOTH_QUARTZ);
+            set(x, lobbyY, z, Material.SMOOTH_QUARTZ);
             if (Math.abs(x) == 5 || z == lobbyZ-5 || z == lobbyZ+5) {
-                set(x, 101, z, Material.GLASS);
-                set(x, 102, z, Material.GLASS);
+                set(x, lobbyY+1, z, Material.GLASS);
+                set(x, lobbyY+2, z, Material.GLASS);
             }
         }
-        for (int x : new int[]{-5, 5}) for (int z : new int[]{lobbyZ-5, lobbyZ+5}) set(x, 103, z, Material.SEA_LANTERN);
+        for (int x : new int[]{-5, 5}) for (int z : new int[]{lobbyZ-5, lobbyZ+5}) set(x, lobbyY+3, z, Material.SEA_LANTERN);
+    }
+
+    private int[] turn(int x,int z,int turns){for(int i=0;i<turns;i++){int previous=x;x=-z;z=previous;}return new int[]{x,z};}
+    private void rotatedSet(int x,int y,int z,int turns,Material material){var p=turn(x,z,turns);set(p[0],y,p[1],material);}
+    /** Crypt artwork plus wider, level courtyards and four equivalent public approaches. */
+    private void cryptMap(){
+        for(var spec:rules.getMapList("map.structures")){
+            String file=spec.get("file").toString();if(!file.matches("[a-z_]+\\.blocks\\.gz"))throw new IllegalArgumentException("Invalid structure asset");
+            int turns=((Number)spec.get("rotation")).intValue();var origin=(java.util.List<?>)spec.get("origin");
+            var transform=switch(turns){case 1->org.bukkit.block.structure.StructureRotation.CLOCKWISE_90;case 2->org.bukkit.block.structure.StructureRotation.CLOCKWISE_180;case 3->org.bukkit.block.structure.StructureRotation.COUNTERCLOCKWISE_90;default->org.bukkit.block.structure.StructureRotation.NONE;};
+            var palette=new java.util.HashMap<String,org.bukkit.block.data.BlockData>();
+            try(var in=new java.io.BufferedReader(new InputStreamReader(new java.util.zip.GZIPInputStream(Files.newInputStream(getDataFolder().toPath().resolve("structures").resolve(file))),StandardCharsets.UTF_8))){
+                String line;while((line=in.readLine())!=null){var parts=line.split(" ",4);var p=turn(Integer.parseInt(parts[0]),Integer.parseInt(parts[2]),turns);
+                    String state=parts[3];if(spec.containsKey("color"))state=state.replace("minecraft:red_","minecraft:"+spec.get("color").toString().toLowerCase(java.util.Locale.ROOT)+"_");
+                    var data=palette.computeIfAbsent(state,key->{var b=Bukkit.createBlockData(key);b.rotate(transform);return b;});
+                    world.getBlockAt(((Number)origin.get(0)).intValue()+p[0],((Number)origin.get(1)).intValue()+Integer.parseInt(parts[1]),((Number)origin.get(2)).intValue()+p[1]).setBlockData(data,false);
+                }
+            }catch(IOException e){throw new IllegalStateException("Missing Crypt asset "+file,e);}
+        }
+        // Keep all essential routes and resources at y=65. Upper artwork remains reachable.
+        for(int x=-24;x<=24;x++)for(int z=-24;z<=24;z++)if(Math.abs(x)>=19||Math.abs(z)>=19||Math.abs(x)<=3||Math.abs(z)<=3){
+            set(x,surfaceY,z,Math.abs(x)==24||Math.abs(z)==24?Material.POLISHED_ANDESITE:Material.STONE_BRICKS);for(int y=1;y<=3;y++)set(x,surfaceY+y,z,Material.AIR);
+        }
+        for(String name:rules.getConfigurationSection("map.teams").getKeys(false)){
+            String prefix="map.teams."+name+".";int turns=rules.getInt(prefix+"rotation");Material color=Material.valueOf(rules.getString(prefix+"color")+"_CONCRETE");
+            for(int x=-18;x<=18;x++)for(int z=-89;z<=-68;z++){
+                Material paving=(Math.abs(x)==18||z==-89||Math.abs(x)==2)?color:Math.floorMod(Math.floorDiv(x,3)+Math.floorDiv(z,3),2)==0?Material.STONE_BRICKS:Material.SMOOTH_STONE;
+                rotatedSet(x,surfaceY,z,turns,paving);
+                for(int y=1;y<=3;y++)rotatedSet(x,surfaceY+y,z,turns,Material.AIR);
+            }
+            // Three-block bridge mouths and roofed shops leave the central lane clear.
+            for(int z=-69;z<=-64;z++)for(int x=-1;x<=1;x++)rotatedSet(x,surfaceY,z,turns,Material.STONE_BRICKS);
+            for(int sign:new int[]{-1,1}){
+                for(int x=12;x<=17;x++)for(int z=-87;z<=-83;z++)rotatedSet(sign*x,surfaceY+4,z,turns,Material.DARK_OAK_PLANKS);
+                for(int y=1;y<=3;y++)rotatedSet(sign*17,surfaceY+y,-86,turns,Material.STONE_BRICKS);
+            }
+            // Lit forward pavilions provide cover without obstructing either exit axis.
+            for(int x:new int[]{-5,5})for(int z:new int[]{-54,-44}){
+                for(int y=1;y<=3;y++)rotatedSet(x,surfaceY+y,z,turns,Material.STONE_BRICKS);
+                rotatedSet(x,surfaceY+4,z,turns,Material.SEA_LANTERN);
+            }
+            for(int x=-7;x<=7;x++)if(Math.abs(x)>2)for(int z:new int[]{-56,-42})rotatedSet(x,surfaceY+1,z,turns,Material.MOSSY_STONE_BRICKS);
+            var foot=rules.getIntegerList(prefix+"bed_foot");bed(foot.get(0),foot.get(1),foot.get(2),Material.valueOf(rules.getString(prefix+"color")+"_BED"),BlockFace.valueOf(rules.getString(prefix+"bed_facing")));
+            for(String key:new String[]{"chest","ender_chest"}){var p=rules.getIntegerList(prefix+key);set(p.get(0),p.get(1),p.get(2),key.equals("chest")?Material.CHEST:Material.ENDER_CHEST);}
+        }
+        for(var spawner:rules.getMapList("map.spawners")){
+            var p=(java.util.List<?>)spawner.get("position");int x=(int)Math.floor(((Number)p.get(0)).doubleValue()),z=(int)Math.floor(((Number)p.get(2)).doubleValue());
+            for(int dx=-2;dx<=2;dx++)for(int dz=-2;dz<=2;dz++){
+                set(x+dx,surfaceY,z+dz,Material.STONE_BRICKS);for(int y=1;y<=3;y++)set(x+dx,surfaceY+y,z+dz,Material.AIR);
+            }
+            set(x,surfaceY,z,Material.valueOf(spawner.get("resource").toString().toUpperCase(java.util.Locale.ROOT)+"_BLOCK"));
+        }
     }
 
     private void island(int cx, int cz, int radius, Material accent) {
@@ -264,11 +320,11 @@ public final class LocalBedwarsMap extends JavaPlugin implements Listener {
         var meta=(org.bukkit.inventory.meta.BookMeta)book.getItemMeta();meta.setTitle("悬空夺床规则");meta.setAuthor("SkyDuel");
         var pages=new java.util.ArrayList<String>();
         pages.add("§l悬空夺床§r\n\nJava 1.21\n"+rules.getString("version")+"\n\n原版负责移动、碰撞、攻击冷却和物品基础使用。\n\n拆床复活、资源生成、商店与永久装备是起床战争扩展。");
-        pages.add("§l胜负与复活§r\n\n两队各一人。\n每局 "+rules.getInt("match.duration_seconds")/60+" 分钟。\n\n床还在：死亡后 "+rules.getInt("match.respawn_seconds")+" 秒复活。\n出生保护 "+rules.getInt("match.respawn_protection_seconds")+" 秒。\n\n床已毁：再次死亡淘汰。\n最后存活队获胜。\n超时双方仍在则平局。");
+        pages.add("§l胜负与复活§r\n\n"+rules.getInt("match.teams")+" 队各 "+rules.getInt("match.players_per_team")+" 人。\n每局 "+rules.getInt("match.duration_seconds")/60+" 分钟。\n\n床还在：死亡后 "+rules.getInt("match.respawn_seconds")+" 秒复活。\n出生保护 "+rules.getInt("match.respawn_protection_seconds")+" 秒。\n\n床已毁：再次死亡淘汰。\n最后存活队获胜。\n超时多队仍在则平局。");
         pages.add("§l原版物品操作§r\n\n剑按 1.21 冷却攻击。\n弓持续拉满约 1 秒。\n食物、药水持续使用约 1.6 秒。\n\n金苹果给予再生与吸收生命。\n\n喝药后的瓶子、珍珠落点与伤害、水和海绵由原版处理。");
         pages.add("§l装备与储物§r\n\n护甲升级护腿、靴子；头盔、胸甲保留队色。\n永久装备不耗耐久。\n\n镐、斧死亡降一级，最低木制；剪刀保留。\n\n普通箱可被对方打开。\n所有末影箱访问同一份个人储物。");
         pages.add("§l特殊物品§r\n\nTNT 放置后自动点燃，"+rules.getInt("mechanics.bedwars.tnt_fuse_ticks")/20+" 秒爆炸，会伤自己。\n火球可投掷、会点火。\n\n防爆玻璃和原始地图不被爆炸拆除。\n\n这些是起床战争扩展，不是原版生存默认规则。");
-        pages.add("§l地图与通路§r\n\n九座岛屿，左右对称。\n主桥留有搭建缺口。\n\n基地屋顶可沿楼梯到达。中央有上下层通道和掩体。南北四座钻石岛、两座前哨岛；中心有两个绿宝石点。\n\n原始建筑受保护。");
+        pages.add("§l地图与通路§r\n\n"+rules.getMapList("map.islands").size()+" 座岛屿。\n主桥留有搭建缺口。\n\n基地屋顶可沿楼梯到达。各岛有掩体和侧翼通路。钻石在外围，绿宝石在中心。\n\n原始建筑受保护。");
         StringBuilder resources=new StringBuilder("§l资源与升级§r\n\n");
         for(String key:rules.getConfigurationSection("resources").getKeys(false))resources.append(rules.getString("resources."+key+".label")).append("：每 ").append(rules.getInt("resources."+key+".interval_seconds")).append(" 秒\n");
         resources.append("\n己方升级商人出售团队升级；普通商店可在任一基地使用。");pages.add(resources.toString());
@@ -286,7 +342,7 @@ public final class LocalBedwarsMap extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTask(this, () -> {
             player.teleport(lobbyLocation());
             player.sendMessage(ChatColor.AQUA + "悬空夺床 · 天空港湾");
-            player.sendMessage(ChatColor.WHITE + "输入 /localbw 加入；两人开局。右键基地村民购买物品。/bw leave 离开。");
+            player.sendMessage(ChatColor.WHITE + "输入 /localbw 加入；"+(rules.getInt("match.teams")*rules.getInt("match.players_per_team"))+" 人开局。托管场地由比赛中心分配。右键村民购物。");
         });
     }
 }

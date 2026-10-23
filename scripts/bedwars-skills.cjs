@@ -35,6 +35,9 @@ function meleeChoice({distance,style,ready,safe,logits=[],strafe=1}){
  if(distance>2.65){result.forward=safe.forward;result.sprint=safe.wide&&distance>3.2;}
  else if(distance<1.65){result.back=safe.back;}
  else if(safe.wide){
+  const learned=logits.length?logits.indexOf(Math.max(...logits)):-1;
+  if(learned===10&&safe.back&&(!ready||style==='fortify')){result.back=true;return result;}
+  if([5,6,9].includes(learned)&&distance>2.15&&safe.forward)result.forward=true;
   // Keep a stable strafe direction between decisions; no per-tick random stop/jump.
   const preferred=logits[7]>logits[8]+.2?-1:logits[8]>logits[7]+.2?1:strafe;
   result.left=preferred<0&&safe.left;result.right=preferred>0&&safe.right;
@@ -104,7 +107,7 @@ function extend(Base,{rules,getMatch,logits}){
    const boxes=defenseBoxes(rules.map),[lo,hi]=[rules.map.build_min,rules.map.build_max];
    const tick=getMatch().tick,seen=this.lastSeenEnemy;
    const risk={enemy:seen?.position,seenAt:seen?.tick,now:tick,health:this.bot.health,bedAlive:this.ownBed?.()??true,valuable:this.count('diamond')>=4||this.count('emerald')>=4};
-   const route=planRoute({start:origin,goal:target,cell:get,bounds:{minX:lo[0],maxX:hi[0],minZ:lo[2],maxZ:hi[2]},penalty:p=>navigationPenalty(p,target,origin,boxes)+threatPenalty(p,risk)+((this.routeAvoid?.get(p.x+','+p.z)||0)>tick?40:0)});
+   const route=planRoute({start:origin,goal:target,cell:get,maxNodes:this.routeNodeBudget||10000,bounds:{minX:lo[0],maxX:hi[0],minZ:lo[2],maxZ:hi[2]},penalty:p=>navigationPenalty(p,target,origin,boxes)+threatPenalty(p,risk)+((this.routeAvoid?.get(p.x+','+p.z)||0)>tick?40:0)});
    if(!route)return this.walk(target,token,6000);
    const missing=route.filter(p=>p.build).length;
    if(missing>this.count('wool'))throw new Error('route_needs_blocks');

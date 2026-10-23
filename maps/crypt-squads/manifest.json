@@ -1,0 +1,40 @@
+{
+  "repository": "https://github.com/atomic-cogwheel0/act-bedwars",
+  "commit": "aad1a8e250016ef1283f823367249cc0b8f0d15b",
+  "license": "GPL-3.0-only",
+  "files": {
+    "red_base": {
+      "source_sha256": "2968a5b0cd4af38a73903c3cba346f301b181b503c2eae0eee4d74df789df095",
+      "blocks_sha256": "cce0c065e82f41c83ba31251c0433eff90d3bebb6293b992ac962d8dd855fdd4",
+      "blocks": 3479,
+      "size": [
+        21,
+        25,
+        27
+      ],
+      "source_data_version": 3700
+    },
+    "diamond": {
+      "source_sha256": "d192f8c6a39b6269d2a3090989bf80f54c948dff840bc8c3d350d7a0200c83e6",
+      "blocks_sha256": "acf5f1d91a72ca2126db4f40cefaf17491a18e9e8c87903b76b754148741e32e",
+      "blocks": 3524,
+      "size": [
+        22,
+        26,
+        19
+      ],
+      "source_data_version": 3700
+    },
+    "emerald": {
+      "source_sha256": "031a749c33a0e34c36808230eed68d52530eca0bfd2e81dd1d9689f71a96020b",
+      "blocks_sha256": "c49e56992f3e2b6c93477dce0d8f3023215c55c625f05d62a3e4272221095698",
+      "blocks": 7700,
+      "size": [
+        42,
+        31,
+        35
+      ],
+      "source_data_version": 4440
+    }
+  }
+}

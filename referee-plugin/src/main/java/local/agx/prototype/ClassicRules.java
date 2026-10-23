@@ -129,7 +129,7 @@ final class ClassicRules implements Listener {
     }
     private ItemStack armorPiece(String material,Player p){
         ItemStack item=new ItemStack(Material.valueOf(material));mark(item,permanent);
-        if(item.getItemMeta() instanceof LeatherArmorMeta meta){meta.setColor(team(p).getName().equals("Red")?Color.fromRGB(195,68,58):Color.fromRGB(65,105,190));item.setItemMeta(meta);}return item;
+        if(item.getItemMeta() instanceof LeatherArmorMeta meta){meta.setColor(switch(team(p).getName()){case "Red"->Color.fromRGB(195,68,58);case "Green"->Color.fromRGB(65,180,85);case "Yellow"->Color.fromRGB(240,205,55);default->Color.fromRGB(65,105,190);});item.setItemMeta(meta);}return item;
     }
     private void kit(Player p){
         if(!inGame(p)||team(p)==null)return;

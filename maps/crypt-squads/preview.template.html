@@ -1,0 +1,31 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Crypt · 古堡争床 4v4v4v4</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,"Microsoft YaHei",sans-serif;background:#101822;color:#e9ece8}body{max-width:1200px;margin:auto;padding:28px}h1{font-size:32px;margin:8px 0}p{color:#b1bebf;line-height:1.7}a{color:#92d3d5}.layout{display:grid;grid-template-columns:minmax(400px,1fr) 270px;gap:24px}canvas{width:100%;border:1px solid #35424b;border-radius:16px;background:#0c131c}aside{background:#1b2631;border-radius:16px;padding:20px;height:fit-content}button{padding:10px 14px;background:#293c48;border:1px solid #4d646d;color:#fff;border-radius:6px;cursor:pointer;margin:4px 4px 4px 0}label{display:block;margin:16px 0}.stat{font-size:26px;color:#d4b27e}.legend{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}.note{font-size:13px}footer{margin-top:22px;font-size:13px;color:#8e9eab}@media(max-width:800px){body{padding:14px}.layout{display:flex;flex-direction:column}aside{width:auto}h1{font-size:25px}}</style>
+<p>CRYPT / FOUR SQUADS</p><h1>古堡争床 · 4v4v4v4</h1><p>四座古堡，十三座岛屿。经前哨争夺中路，或从钻石侧岛绕进敌方基地。</p>
+<div class="layout"><canvas id="map" width="1200" height="1200" aria-label="四队古堡地图俯视布局"></canvas><aside>
+<div class="stat">233 × 233</div><p>赛区宽度 × 深度，单位：格<br>16 人 · 四队各四人<br>对向基地间距 176 格</p>
+<div class="legend"><span style="color:#ee7c6b">● 红队 / 北</span><span style="color:#82b1ed">● 蓝队 / 东</span><span style="color:#88d68d">● 绿队 / 南</span><span style="color:#ecd16c">● 黄队 / 西</span></div>
+<label><input id="routes" type="checkbox" checked> 显示推荐路线</label><label><input id="resources" type="checkbox" checked> 显示资源与床</label><label><input id="height" type="checkbox" checked> 显示建筑高度</label><button id="save">导出布局 PNG</button>
+<p id="detail">鼠标移动到岛屿查看说明。</p><p class="note">虚线是推荐通路，岛间缺口需要玩家搭桥。每队有四个独立资源拾取位置，所有主要交互点位于同一高度。中央外圈通路便于绕行与撤退。</p>
+</aside></div>
+<footer>地图建筑：<a href="https://github.com/atomic-cogwheel0/act-bedwars">atomic-cogwheel0 / act-bedwars · Crypt</a>，GPL-3.0。MCAI 扩建与适配。<a href="README.md">来源与修改说明</a> · 这是依据方块资产和布局生成的预览，非实战截图。</footer>
+<script>
+const data=/*MAP_DATA*/;
+const canvas=document.querySelector('#map'),ctx=canvas.getContext('2d'),m=data.rules.map,scale=4.65,offset=600;
+const point=(x,z)=>[offset+x*scale,offset+z*scale],colors={Red:'#de6657',Blue:'#608bd5',Green:'#65b46d',Yellow:'#d3b54e'};
+function color(block,y){let rgb=[139,142,135];
+ if(/grass|moss|leaves/.test(block))rgb=[92,130,91];else if(/sandstone/.test(block))rgb=[187,177,141];else if(/dark_oak/.test(block))rgb=[94,73,52];else if(/oak|wood|chest|barrel/.test(block))rgb=[146,111,68];else if(/deepslate|blackstone/.test(block))rgb=[75,80,86];else if(/prismarine|diamond/.test(block))rgb=[89,156,164];else if(/red_/.test(block))rgb=[186,74,62];else if(/blue_/.test(block))rgb=[65,106,176];else if(/green_|emerald/.test(block))rgb=[70,155,91];else if(/yellow_|gold/.test(block))rgb=[203,176,68];else if(/quartz|iron/.test(block))rgb=[213,218,208];else if(/lantern|glowstone/.test(block))rgb=[246,212,125];
+ const light=document.querySelector('#height').checked?Math.min(1.32,.86+(y-64)*.025):1;return `rgb(${rgb.map(v=>Math.min(255,Math.round(v*light))).join(',')})`;
+}
+function draw(){ctx.fillStyle='#0c131c';ctx.fillRect(0,0,1200,1200);ctx.strokeStyle='#192632';ctx.lineWidth=1;for(let i=-112;i<=112;i+=16){ctx.beginPath();ctx.moveTo(...point(i,-116));ctx.lineTo(...point(i,116));ctx.stroke();ctx.beginPath();ctx.moveTo(...point(-116,i));ctx.lineTo(...point(116,i));ctx.stroke();}
+ for(const [x,z,y,b]of data.top){ctx.fillStyle=color(b,y);const [u,v]=point(x,z);ctx.fillRect(u,v,scale+.25,scale+.25);}
+ if(document.querySelector('#routes').checked){ctx.strokeStyle='#d4c59b';ctx.lineWidth=2.5;ctx.setLineDash([6,9]);const nodes=Object.fromEntries(m.navigation.waypoints.map(n=>[n.id,n.position]));for(const [a,b]of m.navigation.links){ctx.beginPath();ctx.moveTo(...point(nodes[a][0],nodes[a][2]));ctx.lineTo(...point(nodes[b][0],nodes[b][2]));ctx.stroke();}ctx.setLineDash([]);}
+ if(document.querySelector('#resources').checked){for(const s of m.spawners){if(s.resource==='gold'||s.requires_forge)continue;const [x,z]=point(s.position[0],s.position[2]);ctx.fillStyle={iron:'#d9e2e9',diamond:'#69e3ea',emerald:'#5cec88'}[s.resource];ctx.strokeStyle='#10222a';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,z,s.team?4:8,0,Math.PI*2);ctx.fill();ctx.stroke();}for(const [name,t]of Object.entries(m.teams)){const [x,z]=point(t.bed[0],t.bed[2]);ctx.fillStyle=colors[name];ctx.fillRect(x-6,z-6,12,12);ctx.strokeStyle='#fff';ctx.strokeRect(x-6,z-6,12,12);}}
+ ctx.textAlign='center';ctx.font='bold 20px system-ui';for(const [name,t]of Object.entries(m.teams)){const [x,z]=point(t.base_block_x,t.base_block_z);ctx.fillStyle='#071019cc';ctx.fillRect(x-58,z-12,116,28);ctx.fillStyle=colors[name];ctx.fillText(({Red:'红队',Blue:'蓝队',Green:'绿队',Yellow:'黄队'})[name]+' · 4人',x,z+9);}
+ ctx.fillStyle='#d7e1e6';ctx.font='18px system-ui';ctx.fillText('中央城堡',600,600);ctx.fillText('N / 北',600,24);
+}
+for(const id of ['routes','resources','height'])document.querySelector('#'+id).onchange=draw;
+canvas.onmousemove=e=>{const box=canvas.getBoundingClientRect(),x=((e.clientX-box.left)/box.width*1200-offset)/scale,z=((e.clientY-box.top)/box.height*1200-offset)/scale;const island=m.islands.find(i=>Math.hypot(i.x-x,i.z-z)<i.radius);document.querySelector('#detail').textContent=island?(island.id==='center'?'中央城堡 · 四个绿宝石点与可绕行的外圈':island.id.endsWith('_diamond')?'钻石侧岛 · 相邻两队共同争夺':island.id.endsWith('_outpost')?'前哨岛 · 中路与侧翼的转向点':'古堡基地 · 守床、购买、团队升级与资源补给'):'岛间虚空 · 需要搭建桥梁';};
+document.querySelector('#save').onclick=()=>{const a=document.createElement('a');a.download='crypt-squads-layout.png';a.href=canvas.toDataURL();a.click();};draw();
+</script></html>

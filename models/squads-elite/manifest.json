@@ -1,0 +1,1772 @@
+{
+  "created_at": "2026-10-23T10:57:15.605163+00:00",
+  "method": "behavior_cloning_on_recorded_minecraft_observations",
+  "architecture": [
+    31,
+    512,
+    512,
+    64,
+    11
+  ],
+  "dataset_sha256": "42b2b7f9c6eaaff94029de0bc274f6c72c477db535998e09eae6d1af2c5e3881",
+  "source_episodes": 40,
+  "samples": 4938,
+  "training_samples": 3940,
+  "validation_samples": 998,
+  "validation_split": "episode_id % 5 == 0",
+  "teacher": "published distance, facing, cooldown and grounded-state policy",
+  "source_sha256": "b7aaa7e275b97131809d0f94a9cc34b4a7c81a26942b9ca4be90606a1d7eee54",
+  "agents": {
+    "RubyGuard": {
+      "style": "fortify",
+      "profile": {
+        "id": "RubyGuard",
+        "display_name": "赤岩盾卫",
+        "team": "Red",
+        "role": "defender",
+        "style": "fortify",
+        "specialty": "铁甲护床，靠近床前拦截",
+        "bridge_width": 3,
+        "prefer_bow": false,
+        "economic_upgrades": false,
+        "retreat_health": 0.42,
+        "approach_distance": 2.85,
+        "retreat_distance": 2,
+        "press_distance": 2.1,
+        "critical_cooldown": 0.8,
+        "strafe_sign": -1,
+        "strafe_switch": true,
+        "combat_radius": 8,
+        "guard_radius": 20,
+        "seed": 202610230
+      },
+      "parameters": 312587,
+      "parameter_bytes": 1250348,
+      "json_bytes": 964,
+      "json_sha256": "f7a35b20521f74dfd821fe9692bf5e0a0cf8c67676e2cf876bf58f5769005769",
+      "weights_sha256": "bb132a1a718ccd20f96197f2326c72acb71b1bdbd4588fb6848eab5ed60062be",
+      "before_training": {
+        "accuracy": 0.002004008016032064,
+        "cross_entropy": 2.360541343688965
+      },
+      "validation": {
+        "accuracy": 0.968937875751503,
+        "cross_entropy": 0.09090651571750641
+      },
+      "best_epoch": 99,
+      "optimizer_steps": 1600,
+      "history": [
+        {
+          "model": "RubyGuard",
+          "epoch": 1,
+          "accuracy": 0.872745490981964,
+          "cross_entropy": 0.49662572145462036
+        },
+        {
+          "model": "RubyGuard",
+          "epoch": 11,
+          "accuracy": 0.9228456913827655,
+          "cross_entropy": 0.23722656071186066
+        },
+        {
+          "model": "RubyGuard",
+          "epoch": 21,
+          "accuracy": 0.9308617234468938,
+          "cross_entropy": 0.17799857258796692
+        },
+        {
+          "model": "RubyGuard",
+          "epoch": 31,
+          "accuracy": 0.9428857715430862,
+          "cross_entropy": 0.14766651391983032
+        },
+        {
+          "model": "RubyGuard",
+          "epoch": 41,
+          "accuracy": 0.9468937875751503,
+          "cross_entropy": 0.13584928214550018
+        },
+        {
+          "model": "RubyGuard",
+          "epoch": 51,
+          "accuracy": 0.9468937875751503,
+          "cross_entropy": 0.13679951429367065
+        },
+        {
+          "model": "RubyGuard",
+          "epoch": 61,
+          "accuracy": 0.9488977955911824,
+          "cross_entropy": 0.1257680207490921
+        },
+        {
+          "model": "RubyGuard",
+          "epoch": 71,
+          "accuracy": 0.9559118236472945,
+          "cross_entropy": 0.10557858645915985
+        },
+        {
+          "model": "RubyGuard",
+          "epoch": 81,
+          "accuracy": 0.9579158316633266,
+          "cross_entropy": 0.10452726483345032
+        },
+        {
+          "model": "RubyGuard",
+          "epoch": 91,
+          "accuracy": 0.9649298597194389,
+          "cross_entropy": 0.09594260901212692
+        },
+        {
+          "model": "RubyGuard",
+          "epoch": 100,
+          "accuracy": 0.9529058116232465,
+          "cross_entropy": 0.11888483166694641
+        }
+      ],
+      "original_json_sha256": "bc741b52b2bd9710866791dd507a856e1d121be6f7c929c5af9393a9e5d5b3e8",
+      "parameter_encoding": "f32-le"
+    },
+    "ForgeSmith": {
+      "style": "fortify",
+      "profile": {
+        "id": "ForgeSmith",
+        "display_name": "熔炉匠师",
+        "team": "Red",
+        "role": "collector",
+        "style": "fortify",
+        "specialty": "优先经济升级，稳定回运钻石",
+        "bridge_width": 3,
+        "prefer_bow": false,
+        "economic_upgrades": true,
+        "retreat_health": 0.35,
+        "approach_distance": 2.8,
+        "retreat_distance": 1.9,
+        "press_distance": 2.18,
+        "critical_cooldown": 0.8400000000000001,
+        "strafe_sign": 1,
+        "strafe_switch": false,
+        "combat_radius": 9,
+        "guard_radius": 21,
+        "seed": 202610333
+      },
+      "parameters": 312587,
+      "parameter_bytes": 1250348,
+      "json_bytes": 989,
+      "json_sha256": "6077dd89ab285dace7c53d38489935a4b0ab6f52b58777f8bc53932df0bd0453",
+      "weights_sha256": "d7a6a5f2cc8b3444e2d0b8daa6cec375ccf72a1c491d62ed17a2ce736acfa990",
+      "before_training": {
+        "accuracy": 0,
+        "cross_entropy": 2.788820266723633
+      },
+      "validation": {
+        "accuracy": 0.9729458917835672,
+        "cross_entropy": 0.06499245762825012
+      },
+      "best_epoch": 97,
+      "optimizer_steps": 1600,
+      "history": [
+        {
+          "model": "ForgeSmith",
+          "epoch": 1,
+          "accuracy": 0.8937875751503006,
+          "cross_entropy": 0.47042033076286316
+        },
+        {
+          "model": "ForgeSmith",
+          "epoch": 11,
+          "accuracy": 0.9228456913827655,
+          "cross_entropy": 0.22448134422302246
+        },
+        {
+          "model": "ForgeSmith",
+          "epoch": 21,
+          "accuracy": 0.9519038076152304,
+          "cross_entropy": 0.1515694111585617
+        },
+        {
+          "model": "ForgeSmith",
+          "epoch": 31,
+          "accuracy": 0.9619238476953907,
+          "cross_entropy": 0.11615531891584396
+        },
+        {
+          "model": "ForgeSmith",
+          "epoch": 41,
+          "accuracy": 0.9629258517034068,
+          "cross_entropy": 0.09861423075199127
+        },
+        {
+          "model": "ForgeSmith",
+          "epoch": 51,
+          "accuracy": 0.9649298597194389,
+          "cross_entropy": 0.09229977428913116
+        },
+        {
+          "model": "ForgeSmith",
+          "epoch": 61,
+          "accuracy": 0.9629258517034068,
+          "cross_entropy": 0.09001515805721283
+        },
+        {
+          "model": "ForgeSmith",
+          "epoch": 71,
+          "accuracy": 0.9709418837675351,
+          "cross_entropy": 0.08056624233722687
+        },
+        {
+          "model": "ForgeSmith",
+          "epoch": 81,
+          "accuracy": 0.9729458917835672,
+          "cross_entropy": 0.07398378103971481
+        },
+        {
+          "model": "ForgeSmith",
+          "epoch": 91,
+          "accuracy": 0.968937875751503,
+          "cross_entropy": 0.07096347957849503
+        },
+        {
+          "model": "ForgeSmith",
+          "epoch": 100,
+          "accuracy": 0.9609218436873748,
+          "cross_entropy": 0.07891286164522171
+        }
+      ],
+      "original_json_sha256": "63d4b82f1dd655f1698750e51d98af479c9f262ebb126e8199f8dc1b7ff9f3d0",
+      "parameter_encoding": "f32-le"
+    },
+    "CrimsonBlade": {
+      "style": "rush",
+      "profile": {
+        "id": "CrimsonBlade",
+        "display_name": "烈刃先锋",
+        "team": "Red",
+        "role": "attacker",
+        "style": "rush",
+        "specialty": "主动压近，优先拆除敌床",
+        "bridge_width": 3,
+        "prefer_bow": false,
+        "economic_upgrades": false,
+        "retreat_health": 0.24,
+        "approach_distance": 3.05,
+        "retreat_distance": 1.6,
+        "press_distance": 2.2600000000000002,
+        "critical_cooldown": 0.88,
+        "strafe_sign": -1,
+        "strafe_switch": false,
+        "combat_radius": 10,
+        "guard_radius": 22,
+        "seed": 202610436
+      },
+      "parameters": 312587,
+      "parameter_bytes": 1250348,
+      "json_bytes": 987,
+      "json_sha256": "f739391a3ec7389522d36aee8a9f1ade3851d31a9020b9ca4acfa695b6edd491",
+      "weights_sha256": "b13729ef0d2c89d7c17a14362105392f01ab5b7526db77282ed731f702b516f0",
+      "before_training": {
+        "accuracy": 0.00501002004008016,
+        "cross_entropy": 2.4712841510772705
+      },
+      "validation": {
+        "accuracy": 0.9859719438877755,
+        "cross_entropy": 0.04199511557817459
+      },
+      "best_epoch": 100,
+      "optimizer_steps": 1600,
+      "history": [
+        {
+          "model": "CrimsonBlade",
+          "epoch": 1,
+          "accuracy": 0.8627254509018036,
+          "cross_entropy": 0.49245065450668335
+        },
+        {
+          "model": "CrimsonBlade",
+          "epoch": 11,
+          "accuracy": 0.9278557114228457,
+          "cross_entropy": 0.2041972279548645
+        },
+        {
+          "model": "CrimsonBlade",
+          "epoch": 21,
+          "accuracy": 0.9529058116232465,
+          "cross_entropy": 0.15306545794010162
+        },
+        {
+          "model": "CrimsonBlade",
+          "epoch": 31,
+          "accuracy": 0.9498997995991983,
+          "cross_entropy": 0.11032242327928543
+        },
+        {
+          "model": "CrimsonBlade",
+          "epoch": 41,
+          "accuracy": 0.9679358717434869,
+          "cross_entropy": 0.0797499269247055
+        },
+        {
+          "model": "CrimsonBlade",
+          "epoch": 51,
+          "accuracy": 0.9769539078156313,
+          "cross_entropy": 0.0657254308462143
+        },
+        {
+          "model": "CrimsonBlade",
+          "epoch": 61,
+          "accuracy": 0.9819639278557114,
+          "cross_entropy": 0.0607336051762104
+        },
+        {
+          "model": "CrimsonBlade",
+          "epoch": 71,
+          "accuracy": 0.9769539078156313,
+          "cross_entropy": 0.05104490742087364
+        },
+        {
+          "model": "CrimsonBlade",
+          "epoch": 81,
+          "accuracy": 0.9649298597194389,
+          "cross_entropy": 0.07590886950492859
+        },
+        {
+          "model": "CrimsonBlade",
+          "epoch": 91,
+          "accuracy": 0.9819639278557114,
+          "cross_entropy": 0.04563956707715988
+        },
+        {
+          "model": "CrimsonBlade",
+          "epoch": 100,
+          "accuracy": 0.9859719438877755,
+          "cross_entropy": 0.04199511557817459
+        }
+      ],
+      "original_json_sha256": "6a05626f9f6d7631af9a390b66865219a177b6f47b431fcafde230ba69b707c9",
+      "parameter_encoding": "f32-le"
+    },
+    "EmberWing": {
+      "style": "rush",
+      "profile": {
+        "id": "EmberWing",
+        "display_name": "赤羽游骑",
+        "team": "Red",
+        "role": "support",
+        "style": "rush",
+        "specialty": "跟随先锋，近距离支援",
+        "bridge_width": 2,
+        "prefer_bow": false,
+        "economic_upgrades": false,
+        "retreat_health": 0.32,
+        "approach_distance": 2.95,
+        "retreat_distance": 1.75,
+        "press_distance": 2.34,
+        "critical_cooldown": 0.8,
+        "strafe_sign": 1,
+        "strafe_switch": true,
+        "combat_radius": 8,
+        "guard_radius": 23,
+        "seed": 202610539
+      },
+      "parameters": 312587,
+      "parameter_bytes": 1250348,
+      "json_bytes": 960,
+      "json_sha256": "b80f7618c53960659dac2b35c7ef0290179e3e5bfb4cd0bd839b09f801bbf863",
+      "weights_sha256": "9ebd426f9533f435d6b803979397d34c2cd1b9b88e794fee5d59aa60e0bfc546",
+      "before_training": {
+        "accuracy": 0.00501002004008016,
+        "cross_entropy": 2.7125730514526367
+      },
+      "validation": {
+        "accuracy": 0.9749498997995992,
+        "cross_entropy": 0.06387444585561752
+      },
+      "best_epoch": 97,
+      "optimizer_steps": 1600,
+      "history": [
+        {
+          "model": "EmberWing",
+          "epoch": 1,
+          "accuracy": 0.8657314629258517,
+          "cross_entropy": 0.5438253879547119
+        },
+        {
+          "model": "EmberWing",
+          "epoch": 11,
+          "accuracy": 0.8947895791583166,
+          "cross_entropy": 0.28855085372924805
+        },
+        {
+          "model": "EmberWing",
+          "epoch": 21,
+          "accuracy": 0.938877755511022,
+          "cross_entropy": 0.17994320392608643
+        },
+        {
+          "model": "EmberWing",
+          "epoch": 31,
+          "accuracy": 0.9579158316633266,
+          "cross_entropy": 0.12228279560804367
+        },
+        {
+          "model": "EmberWing",
+          "epoch": 41,
+          "accuracy": 0.9589178356713427,
+          "cross_entropy": 0.10363870114088058
+        },
+        {
+          "model": "EmberWing",
+          "epoch": 51,
+          "accuracy": 0.9559118236472945,
+          "cross_entropy": 0.10746224969625473
+        },
+        {
+          "model": "EmberWing",
+          "epoch": 61,
+          "accuracy": 0.9709418837675351,
+          "cross_entropy": 0.07968548685312271
+        },
+        {
+          "model": "EmberWing",
+          "epoch": 71,
+          "accuracy": 0.9749498997995992,
+          "cross_entropy": 0.07757475227117538
+        },
+        {
+          "model": "EmberWing",
+          "epoch": 81,
+          "accuracy": 0.9438877755511023,
+          "cross_entropy": 0.11905767768621445
+        },
+        {
+          "model": "EmberWing",
+          "epoch": 91,
+          "accuracy": 0.9679358717434869,
+          "cross_entropy": 0.07653117924928665
+        },
+        {
+          "model": "EmberWing",
+          "epoch": 100,
+          "accuracy": 0.9629258517034068,
+          "cross_entropy": 0.08554549515247345
+        }
+      ],
+      "original_json_sha256": "721eee5d70fb3b01e8a711f12d6d13a28110df7908af758d50702ffec8d7a8fc",
+      "parameter_encoding": "f32-le"
+    },
+    "FrostShield": {
+      "style": "fortify",
+      "profile": {
+        "id": "FrostShield",
+        "display_name": "霜盾守望",
+        "team": "Blue",
+        "role": "defender",
+        "style": "fortify",
+        "specialty": "床前弓箭防守，保守走位",
+        "bridge_width": 3,
+        "prefer_bow": true,
+        "economic_upgrades": false,
+        "retreat_health": 0.45,
+        "approach_distance": 2.75,
+        "retreat_distance": 2.1,
+        "press_distance": 2.1,
+        "critical_cooldown": 0.8400000000000001,
+        "strafe_sign": -1,
+        "strafe_switch": false,
+        "combat_radius": 9,
+        "guard_radius": 20,
+        "seed": 202610642
+      },
+      "parameters": 312587,
+      "parameter_bytes": 1250348,
+      "json_bytes": 986,
+      "json_sha256": "4966674686c01e2f7e19577375a03aa28d10f005c7524df47d8335e4fa746dce",
+      "weights_sha256": "edfdac8c09fb12ea10f53209e9e723ecb7e7f75d5d023d7041a5fd5a67e58c72",
+      "before_training": {
+        "accuracy": 0.5841683366733467,
+        "cross_entropy": 2.0498549938201904
+      },
+      "validation": {
+        "accuracy": 0.966933867735471,
+        "cross_entropy": 0.07635193318128586
+      },
+      "best_epoch": 94,
+      "optimizer_steps": 1600,
+      "history": [
+        {
+          "model": "FrostShield",
+          "epoch": 1,
+          "accuracy": 0.8887775551102205,
+          "cross_entropy": 0.44618332386016846
+        },
+        {
+          "model": "FrostShield",
+          "epoch": 11,
+          "accuracy": 0.935871743486974,
+          "cross_entropy": 0.1874247044324875
+        },
+        {
+          "model": "FrostShield",
+          "epoch": 21,
+          "accuracy": 0.9559118236472945,
+          "cross_entropy": 0.13653387129306793
+        },
+        {
+          "model": "FrostShield",
+          "epoch": 31,
+          "accuracy": 0.9569138276553106,
+          "cross_entropy": 0.11440229415893555
+        },
+        {
+          "model": "FrostShield",
+          "epoch": 41,
+          "accuracy": 0.9619238476953907,
+          "cross_entropy": 0.10447070747613907
+        },
+        {
+          "model": "FrostShield",
+          "epoch": 51,
+          "accuracy": 0.9629258517034068,
+          "cross_entropy": 0.10343414545059204
+        },
+        {
+          "model": "FrostShield",
+          "epoch": 61,
+          "accuracy": 0.9659318637274549,
+          "cross_entropy": 0.08724325895309448
+        },
+        {
+          "model": "FrostShield",
+          "epoch": 71,
+          "accuracy": 0.9649298597194389,
+          "cross_entropy": 0.08749377727508545
+        },
+        {
+          "model": "FrostShield",
+          "epoch": 81,
+          "accuracy": 0.9589178356713427,
+          "cross_entropy": 0.08741994202136993
+        },
+        {
+          "model": "FrostShield",
+          "epoch": 91,
+          "accuracy": 0.966933867735471,
+          "cross_entropy": 0.08122352510690689
+        },
+        {
+          "model": "FrostShield",
+          "epoch": 100,
+          "accuracy": 0.9659318637274549,
+          "cross_entropy": 0.0788993164896965
+        }
+      ],
+      "original_json_sha256": "efcf25683ec8731b4338ed92335aa49381032b134ec98e694e2679a7da80daaa",
+      "parameter_encoding": "f32-le"
+    },
+    "BlueArchitect": {
+      "style": "fortify",
+      "profile": {
+        "id": "BlueArchitect",
+        "display_name": "蓝图工程师",
+        "team": "Blue",
+        "role": "collector",
+        "style": "fortify",
+        "specialty": "节省搭桥方块，先提高队伍护甲",
+        "bridge_width": 2,
+        "prefer_bow": false,
+        "economic_upgrades": false,
+        "retreat_health": 0.4,
+        "approach_distance": 2.85,
+        "retreat_distance": 1.95,
+        "press_distance": 2.18,
+        "critical_cooldown": 0.88,
+        "strafe_sign": 1,
+        "strafe_switch": false,
+        "combat_radius": 10,
+        "guard_radius": 21,
+        "seed": 202610745
+      },
+      "parameters": 312587,
+      "parameter_bytes": 1250348,
+      "json_bytes": 991,
+      "json_sha256": "b53e1c5949bd3b525a9aa69e66da0ec4cbbf05fc22e7ab0ab220c57667befce2",
+      "weights_sha256": "569c2f0b1fcd4d6ad0808c4d5f269855a88a130abaa0bc541fd759a96c069b24",
+      "before_training": {
+        "accuracy": 0.017034068136272545,
+        "cross_entropy": 2.5783474445343018
+      },
+      "validation": {
+        "accuracy": 0.9739478957915831,
+        "cross_entropy": 0.08300788700580597
+      },
+      "best_epoch": 94,
+      "optimizer_steps": 1600,
+      "history": [
+        {
+          "model": "BlueArchitect",
+          "epoch": 1,
+          "accuracy": 0.8847695390781564,
+          "cross_entropy": 0.47557443380355835
+        },
+        {
+          "model": "BlueArchitect",
+          "epoch": 11,
+          "accuracy": 0.9148296593186372,
+          "cross_entropy": 0.27718108892440796
+        },
+        {
+          "model": "BlueArchitect",
+          "epoch": 21,
+          "accuracy": 0.93687374749499,
+          "cross_entropy": 0.19575436413288116
+        },
+        {
+          "model": "BlueArchitect",
+          "epoch": 31,
+          "accuracy": 0.9428857715430862,
+          "cross_entropy": 0.144165500998497
+        },
+        {
+          "model": "BlueArchitect",
+          "epoch": 41,
+          "accuracy": 0.9498997995991983,
+          "cross_entropy": 0.13005316257476807
+        },
+        {
+          "model": "BlueArchitect",
+          "epoch": 51,
+          "accuracy": 0.9559118236472945,
+          "cross_entropy": 0.11526001244783401
+        },
+        {
+          "model": "BlueArchitect",
+          "epoch": 61,
+          "accuracy": 0.9609218436873748,
+          "cross_entropy": 0.10652273893356323
+        },
+        {
+          "model": "BlueArchitect",
+          "epoch": 71,
+          "accuracy": 0.966933867735471,
+          "cross_entropy": 0.09538979828357697
+        },
+        {
+          "model": "BlueArchitect",
+          "epoch": 81,
+          "accuracy": 0.9629258517034068,
+          "cross_entropy": 0.09684909135103226
+        },
+        {
+          "model": "BlueArchitect",
+          "epoch": 91,
+          "accuracy": 0.966933867735471,
+          "cross_entropy": 0.08839676529169083
+        },
+        {
+          "model": "BlueArchitect",
+          "epoch": 100,
+          "accuracy": 0.9729458917835672,
+          "cross_entropy": 0.08336170017719269
+        }
+      ],
+      "original_json_sha256": "117a6d3959ad6c63d80a0e3d021c8ad4e251461103568893b458290b0f77f929",
+      "parameter_encoding": "f32-le"
+    },
+    "TideBreaker": {
+      "style": "rush",
+      "profile": {
+        "id": "TideBreaker",
+        "display_name": "潮锋突击",
+        "team": "Blue",
+        "role": "attacker",
+        "style": "rush",
+        "specialty": "快速贴近，持续转换进攻目标",
+        "bridge_width": 2,
+        "prefer_bow": false,
+        "economic_upgrades": false,
+        "retreat_health": 0.26,
+        "approach_distance": 3,
+        "retreat_distance": 1.7,
+        "press_distance": 2.2600000000000002,
+        "critical_cooldown": 0.8,
+        "strafe_sign": -1,
+        "strafe_switch": true,
+        "combat_radius": 8,
+        "guard_radius": 22,
+        "seed": 202610848
+      },
+      "parameters": 312587,
+      "parameter_bytes": 1250348,
+      "json_bytes": 986,
+      "json_sha256": "3cf77a8c85d64ffbdc273ed586ea9ab9400a749d55e3770bc950e3a65fae326e",
+      "weights_sha256": "76f36c7856e25307fcec100369eed4ce136a4fa707a2a600ab55a011f1ff78ce",
+      "before_training": {
+        "accuracy": 0.3897795591182365,
+        "cross_entropy": 2.21482515335083
+      },
+      "validation": {
+        "accuracy": 0.9799599198396793,
+        "cross_entropy": 0.057214923202991486
+      },
+      "best_epoch": 97,
+      "optimizer_steps": 1600,
+      "history": [
+        {
+          "model": "TideBreaker",
+          "epoch": 1,
+          "accuracy": 0.8657314629258517,
+          "cross_entropy": 0.5443452596664429
+        },
+        {
+          "model": "TideBreaker",
+          "epoch": 11,
+          "accuracy": 0.9178356713426854,
+          "cross_entropy": 0.2715480625629425
+        },
+        {
+          "model": "TideBreaker",
+          "epoch": 21,
+          "accuracy": 0.9509018036072144,
+          "cross_entropy": 0.14915119111537933
+        },
+        {
+          "model": "TideBreaker",
+          "epoch": 31,
+          "accuracy": 0.9549098196392786,
+          "cross_entropy": 0.11986535787582397
+        },
+        {
+          "model": "TideBreaker",
+          "epoch": 41,
+          "accuracy": 0.969939879759519,
+          "cross_entropy": 0.08901455253362656
+        },
+        {
+          "model": "TideBreaker",
+          "epoch": 51,
+          "accuracy": 0.9769539078156313,
+          "cross_entropy": 0.08233156055212021
+        },
+        {
+          "model": "TideBreaker",
+          "epoch": 61,
+          "accuracy": 0.9729458917835672,
+          "cross_entropy": 0.07473060488700867
+        },
+        {
+          "model": "TideBreaker",
+          "epoch": 71,
+          "accuracy": 0.969939879759519,
+          "cross_entropy": 0.07574114948511124
+        },
+        {
+          "model": "TideBreaker",
+          "epoch": 81,
+          "accuracy": 0.9729458917835672,
+          "cross_entropy": 0.06804485619068146
+        },
+        {
+          "model": "TideBreaker",
+          "epoch": 91,
+          "accuracy": 0.968937875751503,
+          "cross_entropy": 0.06714773178100586
+        },
+        {
+          "model": "TideBreaker",
+          "epoch": 100,
+          "accuracy": 0.9849699398797596,
+          "cross_entropy": 0.05844014137983322
+        }
+      ],
+      "original_json_sha256": "1aecb920dd019cda295c417c53fd07a9e4584c46d1c5dae9996a4aa7b56831c4",
+      "parameter_encoding": "f32-le"
+    },
+    "IceArcher": {
+      "style": "fortify",
+      "profile": {
+        "id": "IceArcher",
+        "display_name": "冰弦射手",
+        "team": "Blue",
+        "role": "support",
+        "style": "fortify",
+        "specialty": "优先弓箭，远程支援队友",
+        "bridge_width": 3,
+        "prefer_bow": true,
+        "economic_upgrades": false,
+        "retreat_health": 0.43,
+        "approach_distance": 2.7,
+        "retreat_distance": 2.05,
+        "press_distance": 2.34,
+        "critical_cooldown": 0.8400000000000001,
+        "strafe_sign": 1,
+        "strafe_switch": false,
+        "combat_radius": 9,
+        "guard_radius": 23,
+        "seed": 202610951
+      },
+      "parameters": 312587,
+      "parameter_bytes": 1250348,
+      "json_bytes": 981,
+      "json_sha256": "ee9bb8713e4f7a67a438c6b8947d959d321f086887b0357541f66b540cd056fd",
+      "weights_sha256": "f52f1e88e6bc3cec47a36a1e8ea7c0837b7b94e30f9c8dabdd0fea51d4c78336",
+      "before_training": {
+        "accuracy": 0.031062124248496994,
+        "cross_entropy": 2.2345011234283447
+      },
+      "validation": {
+        "accuracy": 0.9709418837675351,
+        "cross_entropy": 0.07099952548742294
+      },
+      "best_epoch": 96,
+      "optimizer_steps": 1600,
+      "history": [
+        {
+          "model": "IceArcher",
+          "epoch": 1,
+          "accuracy": 0.8887775551102205,
+          "cross_entropy": 0.42619502544403076
+        },
+        {
+          "model": "IceArcher",
+          "epoch": 11,
+          "accuracy": 0.9398797595190381,
+          "cross_entropy": 0.20236970484256744
+        },
+        {
+          "model": "IceArcher",
+          "epoch": 21,
+          "accuracy": 0.9569138276553106,
+          "cross_entropy": 0.13379013538360596
+        },
+        {
+          "model": "IceArcher",
+          "epoch": 31,
+          "accuracy": 0.9478957915831663,
+          "cross_entropy": 0.14646434783935547
+        },
+        {
+          "model": "IceArcher",
+          "epoch": 41,
+          "accuracy": 0.9649298597194389,
+          "cross_entropy": 0.1000533178448677
+        },
+        {
+          "model": "IceArcher",
+          "epoch": 51,
+          "accuracy": 0.9639278557114228,
+          "cross_entropy": 0.09616649150848389
+        },
+        {
+          "model": "IceArcher",
+          "epoch": 61,
+          "accuracy": 0.9629258517034068,
+          "cross_entropy": 0.09800639003515244
+        },
+        {
+          "model": "IceArcher",
+          "epoch": 71,
+          "accuracy": 0.9639278557114228,
+          "cross_entropy": 0.09294448792934418
+        },
+        {
+          "model": "IceArcher",
+          "epoch": 81,
+          "accuracy": 0.9659318637274549,
+          "cross_entropy": 0.08007615059614182
+        },
+        {
+          "model": "IceArcher",
+          "epoch": 91,
+          "accuracy": 0.966933867735471,
+          "cross_entropy": 0.07593169063329697
+        },
+        {
+          "model": "IceArcher",
+          "epoch": 100,
+          "accuracy": 0.9639278557114228,
+          "cross_entropy": 0.08032432943582535
+        }
+      ],
+      "original_json_sha256": "6446cfbd78819306ecdb484b75bea91467388f5f250cde9f1d4cd700e35a028b",
+      "parameter_encoding": "f32-le"
+    },
+    "GroveWall": {
+      "style": "fortify",
+      "profile": {
+        "id": "GroveWall",
+        "display_name": "森壁卫士",
+        "team": "Green",
+        "role": "defender",
+        "style": "fortify",
+        "specialty": "重视治疗，保护床前通路",
+        "bridge_width": 3,
+        "prefer_bow": false,
+        "economic_upgrades": false,
+        "retreat_health": 0.48,
+        "approach_distance": 2.8,
+        "retreat_distance": 2,
+        "press_distance": 2.1,
+        "critical_cooldown": 0.88,
+        "strafe_sign": -1,
+        "strafe_switch": false,
+        "combat_radius": 10,
+        "guard_radius": 20,
+        "seed": 202611054
+      },
+      "parameters": 312587,
+      "parameter_bytes": 1250348,
+      "json_bytes": 968,
+      "json_sha256": "47688155fa967a6a4053e4046b55b0694bd4eca148fd8894b8a4da0dbbecefbd",
+      "weights_sha256": "3dfc588dc555cba670a2d1bace4d2abc036f74bdc15cc1003d8a12f151110721",
+      "before_training": {
+        "accuracy": 0.028056112224448898,
+        "cross_entropy": 2.272937536239624
+      },
+      "validation": {
+        "accuracy": 0.9749498997995992,
+        "cross_entropy": 0.0738639310002327
+      },
+      "best_epoch": 96,
+      "optimizer_steps": 1600,
+      "history": [
+        {
+          "model": "GroveWall",
+          "epoch": 1,
+          "accuracy": 0.8807615230460922,
+          "cross_entropy": 0.45639002323150635
+        },
+        {
+          "model": "GroveWall",
+          "epoch": 11,
+          "accuracy": 0.9288577154308617,
+          "cross_entropy": 0.23163053393363953
+        },
+        {
+          "model": "GroveWall",
+          "epoch": 21,
+          "accuracy": 0.935871743486974,
+          "cross_entropy": 0.16940470039844513
+        },
+        {
+          "model": "GroveWall",
+          "epoch": 31,
+          "accuracy": 0.9579158316633266,
+          "cross_entropy": 0.11473117023706436
+        },
+        {
+          "model": "GroveWall",
+          "epoch": 41,
+          "accuracy": 0.9679358717434869,
+          "cross_entropy": 0.09785956144332886
+        },
+        {
+          "model": "GroveWall",
+          "epoch": 51,
+          "accuracy": 0.9629258517034068,
+          "cross_entropy": 0.10172951966524124
+        },
+        {
+          "model": "GroveWall",
+          "epoch": 61,
+          "accuracy": 0.9589178356713427,
+          "cross_entropy": 0.10482535511255264
+        },
+        {
+          "model": "GroveWall",
+          "epoch": 71,
+          "accuracy": 0.9649298597194389,
+          "cross_entropy": 0.0905579924583435
+        },
+        {
+          "model": "GroveWall",
+          "epoch": 81,
+          "accuracy": 0.9609218436873748,
+          "cross_entropy": 0.09104594588279724
+        },
+        {
+          "model": "GroveWall",
+          "epoch": 91,
+          "accuracy": 0.9749498997995992,
+          "cross_entropy": 0.07722979784011841
+        },
+        {
+          "model": "GroveWall",
+          "epoch": 100,
+          "accuracy": 0.969939879759519,
+          "cross_entropy": 0.07991951704025269
+        }
+      ],
+      "original_json_sha256": "12a066e8c12024502dc3fbb5e00b251db81f042edb1fb0a1cc2613e0d83c1122",
+      "parameter_encoding": "f32-le"
+    },
+    "JadeProspector": {
+      "style": "fortify",
+      "profile": {
+        "id": "JadeProspector",
+        "display_name": "翠金采集者",
+        "team": "Green",
+        "role": "collector",
+        "style": "fortify",
+        "specialty": "经济投入优先，支撑全队装备",
+        "bridge_width": 3,
+        "prefer_bow": false,
+        "economic_upgrades": true,
+        "retreat_health": 0.38,
+        "approach_distance": 2.9,
+        "retreat_distance": 1.9,
+        "press_distance": 2.18,
+        "critical_cooldown": 0.8,
+        "strafe_sign": 1,
+        "strafe_switch": true,
+        "combat_radius": 8,
+        "guard_radius": 21,
+        "seed": 202611157
+      },
+      "parameters": 312587,
+      "parameter_bytes": 1250348,
+      "json_bytes": 986,
+      "json_sha256": "82990e0e49265ffba2dcdab345b43b5be2d6efb6fa5e3712554c362dd0946cb2",
+      "weights_sha256": "b22f41e7ba2306bae65251a77fe9d992cef230b7aa5f5495462a7d982b6d4e09",
+      "before_training": {
+        "accuracy": 0.02905811623246493,
+        "cross_entropy": 2.269052743911743
+      },
+      "validation": {
+        "accuracy": 0.9609218436873748,
+        "cross_entropy": 0.10143393278121948
+      },
+      "best_epoch": 100,
+      "optimizer_steps": 1600,
+      "history": [
+        {
+          "model": "JadeProspector",
+          "epoch": 1,
+          "accuracy": 0.872745490981964,
+          "cross_entropy": 0.5198044776916504
+        },
+        {
+          "model": "JadeProspector",
+          "epoch": 11,
+          "accuracy": 0.906813627254509,
+          "cross_entropy": 0.27938294410705566
+        },
+        {
+          "model": "JadeProspector",
+          "epoch": 21,
+          "accuracy": 0.9178356713426854,
+          "cross_entropy": 0.21951036155223846
+        },
+        {
+          "model": "JadeProspector",
+          "epoch": 31,
+          "accuracy": 0.9218436873747495,
+          "cross_entropy": 0.20025748014450073
+        },
+        {
+          "model": "JadeProspector",
+          "epoch": 41,
+          "accuracy": 0.9418837675350702,
+          "cross_entropy": 0.14496196806430817
+        },
+        {
+          "model": "JadeProspector",
+          "epoch": 51,
+          "accuracy": 0.9559118236472945,
+          "cross_entropy": 0.12545442581176758
+        },
+        {
+          "model": "JadeProspector",
+          "epoch": 61,
+          "accuracy": 0.9478957915831663,
+          "cross_entropy": 0.1229691281914711
+        },
+        {
+          "model": "JadeProspector",
+          "epoch": 71,
+          "accuracy": 0.9488977955911824,
+          "cross_entropy": 0.1294832080602646
+        },
+        {
+          "model": "JadeProspector",
+          "epoch": 81,
+          "accuracy": 0.9529058116232465,
+          "cross_entropy": 0.11393467336893082
+        },
+        {
+          "model": "JadeProspector",
+          "epoch": 91,
+          "accuracy": 0.9599198396793587,
+          "cross_entropy": 0.10596711933612823
+        },
+        {
+          "model": "JadeProspector",
+          "epoch": 100,
+          "accuracy": 0.9609218436873748,
+          "cross_entropy": 0.10143393278121948
+        }
+      ],
+      "original_json_sha256": "38a971eeb6549de1ad46bfb6260da23aa1d048c5bcdb47bc4566681e8f386dc8",
+      "parameter_encoding": "f32-le"
+    },
+    "ThornDuelist": {
+      "style": "fortify",
+      "profile": {
+        "id": "ThornDuelist",
+        "display_name": "荆棘斗士",
+        "team": "Green",
+        "role": "attacker",
+        "style": "fortify",
+        "specialty": "保持攻击距离，稳健推进",
+        "bridge_width": 3,
+        "prefer_bow": false,
+        "economic_upgrades": false,
+        "retreat_health": 0.34,
+        "approach_distance": 2.75,
+        "retreat_distance": 1.95,
+        "press_distance": 2.2600000000000002,
+        "critical_cooldown": 0.8400000000000001,
+        "strafe_sign": -1,
+        "strafe_switch": false,
+        "combat_radius": 9,
+        "guard_radius": 22,
+        "seed": 202611260
+      },
+      "parameters": 312587,
+      "parameter_bytes": 1250348,
+      "json_bytes": 1006,
+      "json_sha256": "3fa50585e13949d5466a9cf1fa6d1bbdcb1a7d1ca893f59cdc9541cf48bec0e9",
+      "weights_sha256": "84ffd19c2ef96999638101c1fcfdea44c77d5b81e6221695e74fb7615846f1e2",
+      "before_training": {
+        "accuracy": 0.06012024048096192,
+        "cross_entropy": 2.591148614883423
+      },
+      "validation": {
+        "accuracy": 0.9759519038076152,
+        "cross_entropy": 0.06737878918647766
+      },
+      "best_epoch": 95,
+      "optimizer_steps": 1600,
+      "history": [
+        {
+          "model": "ThornDuelist",
+          "epoch": 1,
+          "accuracy": 0.9018036072144289,
+          "cross_entropy": 0.4003838896751404
+        },
+        {
+          "model": "ThornDuelist",
+          "epoch": 11,
+          "accuracy": 0.935871743486974,
+          "cross_entropy": 0.19954384863376617
+        },
+        {
+          "model": "ThornDuelist",
+          "epoch": 21,
+          "accuracy": 0.9619238476953907,
+          "cross_entropy": 0.14363566040992737
+        },
+        {
+          "model": "ThornDuelist",
+          "epoch": 31,
+          "accuracy": 0.9619238476953907,
+          "cross_entropy": 0.12516778707504272
+        },
+        {
+          "model": "ThornDuelist",
+          "epoch": 41,
+          "accuracy": 0.9609218436873748,
+          "cross_entropy": 0.11729153245687485
+        },
+        {
+          "model": "ThornDuelist",
+          "epoch": 51,
+          "accuracy": 0.9639278557114228,
+          "cross_entropy": 0.09292139112949371
+        },
+        {
+          "model": "ThornDuelist",
+          "epoch": 61,
+          "accuracy": 0.969939879759519,
+          "cross_entropy": 0.08860911428928375
+        },
+        {
+          "model": "ThornDuelist",
+          "epoch": 71,
+          "accuracy": 0.9749498997995992,
+          "cross_entropy": 0.07735742628574371
+        },
+        {
+          "model": "ThornDuelist",
+          "epoch": 81,
+          "accuracy": 0.9739478957915831,
+          "cross_entropy": 0.0800994262099266
+        },
+        {
+          "model": "ThornDuelist",
+          "epoch": 91,
+          "accuracy": 0.9729458917835672,
+          "cross_entropy": 0.07971164584159851
+        },
+        {
+          "model": "ThornDuelist",
+          "epoch": 100,
+          "accuracy": 0.9739478957915831,
+          "cross_entropy": 0.07181771844625473
+        }
+      ],
+      "original_json_sha256": "6235e5b417a39863c218aef6d7b06bc988c642aa39b1f3e0c330152909093faf",
+      "parameter_encoding": "f32-le"
+    },
+    "BreezeScout": {
+      "style": "rush",
+      "profile": {
+        "id": "BreezeScout",
+        "display_name": "青风斥候",
+        "team": "Green",
+        "role": "support",
+        "style": "rush",
+        "specialty": "轻装铺路，快速集结",
+        "bridge_width": 2,
+        "prefer_bow": false,
+        "economic_upgrades": false,
+        "retreat_health": 0.29,
+        "approach_distance": 3.1,
+        "retreat_distance": 1.65,
+        "press_distance": 2.34,
+        "critical_cooldown": 0.88,
+        "strafe_sign": 1,
+        "strafe_switch": false,
+        "combat_radius": 10,
+        "guard_radius": 23,
+        "seed": 202611363
+      },
+      "parameters": 312587,
+      "parameter_bytes": 1250348,
+      "json_bytes": 965,
+      "json_sha256": "92a60a7a9a2fde679c68c48908099c793c6235a1d41bb6cd69c00120abe78315",
+      "weights_sha256": "84dac43bb35ff64ce79d63e575e287616c70fc1f8ab80e0b4a638e09d3f84c85",
+      "before_training": {
+        "accuracy": 0.04008016032064128,
+        "cross_entropy": 2.399780511856079
+      },
+      "validation": {
+        "accuracy": 0.9879759519038076,
+        "cross_entropy": 0.043436430394649506
+      },
+      "best_epoch": 98,
+      "optimizer_steps": 1600,
+      "history": [
+        {
+          "model": "BreezeScout",
+          "epoch": 1,
+          "accuracy": 0.8416833667334669,
+          "cross_entropy": 0.5519555807113647
+        },
+        {
+          "model": "BreezeScout",
+          "epoch": 11,
+          "accuracy": 0.9038076152304609,
+          "cross_entropy": 0.2415742725133896
+        },
+        {
+          "model": "BreezeScout",
+          "epoch": 21,
+          "accuracy": 0.9278557114228457,
+          "cross_entropy": 0.1762470304965973
+        },
+        {
+          "model": "BreezeScout",
+          "epoch": 31,
+          "accuracy": 0.9529058116232465,
+          "cross_entropy": 0.12417041510343552
+        },
+        {
+          "model": "BreezeScout",
+          "epoch": 41,
+          "accuracy": 0.9769539078156313,
+          "cross_entropy": 0.08491797745227814
+        },
+        {
+          "model": "BreezeScout",
+          "epoch": 51,
+          "accuracy": 0.966933867735471,
+          "cross_entropy": 0.07665161788463593
+        },
+        {
+          "model": "BreezeScout",
+          "epoch": 61,
+          "accuracy": 0.9759519038076152,
+          "cross_entropy": 0.06474209576845169
+        },
+        {
+          "model": "BreezeScout",
+          "epoch": 71,
+          "accuracy": 0.9619238476953907,
+          "cross_entropy": 0.07271261513233185
+        },
+        {
+          "model": "BreezeScout",
+          "epoch": 81,
+          "accuracy": 0.9829659318637275,
+          "cross_entropy": 0.052952975034713745
+        },
+        {
+          "model": "BreezeScout",
+          "epoch": 91,
+          "accuracy": 0.9839679358717435,
+          "cross_entropy": 0.04852255433797836
+        },
+        {
+          "model": "BreezeScout",
+          "epoch": 100,
+          "accuracy": 0.9779559118236473,
+          "cross_entropy": 0.0533403605222702
+        }
+      ],
+      "original_json_sha256": "ecef3962e54ad215ae9411a7ac5673b920e4988ca9bcb7d6f12bce8dceb7a72e",
+      "parameter_encoding": "f32-le"
+    },
+    "GoldenKeep": {
+      "style": "fortify",
+      "profile": {
+        "id": "GoldenKeep",
+        "display_name": "金城守护",
+        "team": "Yellow",
+        "role": "defender",
+        "style": "fortify",
+        "specialty": "宽路守床，及时撤退治疗",
+        "bridge_width": 3,
+        "prefer_bow": false,
+        "economic_upgrades": false,
+        "retreat_health": 0.46,
+        "approach_distance": 2.8,
+        "retreat_distance": 2.15,
+        "press_distance": 2.1,
+        "critical_cooldown": 0.8,
+        "strafe_sign": -1,
+        "strafe_switch": true,
+        "combat_radius": 8,
+        "guard_radius": 20,
+        "seed": 202611466
+      },
+      "parameters": 312587,
+      "parameter_bytes": 1250348,
+      "json_bytes": 971,
+      "json_sha256": "1d82d672a843bdfe8bcda6fca3df37a2ba64720bc35237d04f8ea7962df81ce4",
+      "weights_sha256": "3ce719e6714612529454f097b60e7b25c106c1b9d577fbeb97963208c76ae747",
+      "before_training": {
+        "accuracy": 0.008016032064128256,
+        "cross_entropy": 2.3770549297332764
+      },
+      "validation": {
+        "accuracy": 0.9739478957915831,
+        "cross_entropy": 0.0817972794175148
+      },
+      "best_epoch": 100,
+      "optimizer_steps": 1600,
+      "history": [
+        {
+          "model": "GoldenKeep",
+          "epoch": 1,
+          "accuracy": 0.8807615230460922,
+          "cross_entropy": 0.4409184455871582
+        },
+        {
+          "model": "GoldenKeep",
+          "epoch": 11,
+          "accuracy": 0.9348697394789579,
+          "cross_entropy": 0.21086128056049347
+        },
+        {
+          "model": "GoldenKeep",
+          "epoch": 21,
+          "accuracy": 0.9539078156312625,
+          "cross_entropy": 0.14929619431495667
+        },
+        {
+          "model": "GoldenKeep",
+          "epoch": 31,
+          "accuracy": 0.9498997995991983,
+          "cross_entropy": 0.13753968477249146
+        },
+        {
+          "model": "GoldenKeep",
+          "epoch": 41,
+          "accuracy": 0.9629258517034068,
+          "cross_entropy": 0.11428408324718475
+        },
+        {
+          "model": "GoldenKeep",
+          "epoch": 51,
+          "accuracy": 0.9629258517034068,
+          "cross_entropy": 0.1089077889919281
+        },
+        {
+          "model": "GoldenKeep",
+          "epoch": 61,
+          "accuracy": 0.9599198396793587,
+          "cross_entropy": 0.10239265114068985
+        },
+        {
+          "model": "GoldenKeep",
+          "epoch": 71,
+          "accuracy": 0.9579158316633266,
+          "cross_entropy": 0.11504866927862167
+        },
+        {
+          "model": "GoldenKeep",
+          "epoch": 81,
+          "accuracy": 0.9649298597194389,
+          "cross_entropy": 0.09092646837234497
+        },
+        {
+          "model": "GoldenKeep",
+          "epoch": 91,
+          "accuracy": 0.966933867735471,
+          "cross_entropy": 0.09023390710353851
+        },
+        {
+          "model": "GoldenKeep",
+          "epoch": 100,
+          "accuracy": 0.9739478957915831,
+          "cross_entropy": 0.0817972794175148
+        }
+      ],
+      "original_json_sha256": "c8cdb82f84d45cdc2f5baeb9b670a5cd35acad0050000d2774ae2b1b709c07c1",
+      "parameter_encoding": "f32-le"
+    },
+    "DuneBuilder": {
+      "style": "fortify",
+      "profile": {
+        "id": "DuneBuilder",
+        "display_name": "沙匠工兵",
+        "team": "Yellow",
+        "role": "collector",
+        "style": "fortify",
+        "specialty": "护甲升级优先，快速资源回运",
+        "bridge_width": 2,
+        "prefer_bow": false,
+        "economic_upgrades": false,
+        "retreat_health": 0.36,
+        "approach_distance": 2.9,
+        "retreat_distance": 1.85,
+        "press_distance": 2.18,
+        "critical_cooldown": 0.8400000000000001,
+        "strafe_sign": 1,
+        "strafe_switch": false,
+        "combat_radius": 9,
+        "guard_radius": 21,
+        "seed": 202611569
+      },
+      "parameters": 312587,
+      "parameter_bytes": 1250348,
+      "json_bytes": 996,
+      "json_sha256": "d972a0f6a130d28b140a73cbbc150523acdf4a1da5838347f647923093726ad7",
+      "weights_sha256": "e4846762f8b5fb922efb1c6f5fdb4c92e0fbd0c3951cd2b8cb2bcf013aed24fb",
+      "before_training": {
+        "accuracy": 0,
+        "cross_entropy": 2.521557331085205
+      },
+      "validation": {
+        "accuracy": 0.9769539078156313,
+        "cross_entropy": 0.0694461390376091
+      },
+      "best_epoch": 88,
+      "optimizer_steps": 1600,
+      "history": [
+        {
+          "model": "DuneBuilder",
+          "epoch": 1,
+          "accuracy": 0.872745490981964,
+          "cross_entropy": 0.5159271359443665
+        },
+        {
+          "model": "DuneBuilder",
+          "epoch": 11,
+          "accuracy": 0.9158316633266533,
+          "cross_entropy": 0.23939098417758942
+        },
+        {
+          "model": "DuneBuilder",
+          "epoch": 21,
+          "accuracy": 0.935871743486974,
+          "cross_entropy": 0.17465905845165253
+        },
+        {
+          "model": "DuneBuilder",
+          "epoch": 31,
+          "accuracy": 0.9488977955911824,
+          "cross_entropy": 0.14936339855194092
+        },
+        {
+          "model": "DuneBuilder",
+          "epoch": 41,
+          "accuracy": 0.9539078156312625,
+          "cross_entropy": 0.11146583408117294
+        },
+        {
+          "model": "DuneBuilder",
+          "epoch": 51,
+          "accuracy": 0.9589178356713427,
+          "cross_entropy": 0.09789712727069855
+        },
+        {
+          "model": "DuneBuilder",
+          "epoch": 61,
+          "accuracy": 0.9659318637274549,
+          "cross_entropy": 0.09452634304761887
+        },
+        {
+          "model": "DuneBuilder",
+          "epoch": 71,
+          "accuracy": 0.9679358717434869,
+          "cross_entropy": 0.08399492502212524
+        },
+        {
+          "model": "DuneBuilder",
+          "epoch": 81,
+          "accuracy": 0.9659318637274549,
+          "cross_entropy": 0.08334030956029892
+        },
+        {
+          "model": "DuneBuilder",
+          "epoch": 91,
+          "accuracy": 0.9739478957915831,
+          "cross_entropy": 0.07348112016916275
+        },
+        {
+          "model": "DuneBuilder",
+          "epoch": 100,
+          "accuracy": 0.9649298597194389,
+          "cross_entropy": 0.07754532247781754
+        }
+      ],
+      "original_json_sha256": "85ea609d119e74f950fec213b679a6da4465bf0e8954065a1d5c0fa12c180b1c",
+      "parameter_encoding": "f32-le"
+    },
+    "SunChaser": {
+      "style": "rush",
+      "profile": {
+        "id": "SunChaser",
+        "display_name": "逐日猎手",
+        "team": "Yellow",
+        "role": "attacker",
+        "style": "rush",
+        "specialty": "积极追击，压迫近身对手",
+        "bridge_width": 2,
+        "prefer_bow": false,
+        "economic_upgrades": false,
+        "retreat_health": 0.22,
+        "approach_distance": 3.1,
+        "retreat_distance": 1.55,
+        "press_distance": 2.2600000000000002,
+        "critical_cooldown": 0.88,
+        "strafe_sign": -1,
+        "strafe_switch": false,
+        "combat_radius": 10,
+        "guard_radius": 22,
+        "seed": 202611672
+      },
+      "parameters": 312587,
+      "parameter_bytes": 1250348,
+      "json_bytes": 984,
+      "json_sha256": "dcf19573f7e90756b0e4ee525837ef65aeabbe2f09084ddea2419d464fd53225",
+      "weights_sha256": "e1490f52f7ac791b190c6c931381390c5d1ac8cf7a23d0fc4a34f4e242f297ce",
+      "before_training": {
+        "accuracy": 0.001002004008016032,
+        "cross_entropy": 2.4202446937561035
+      },
+      "validation": {
+        "accuracy": 0.9879759519038076,
+        "cross_entropy": 0.0428137481212616
+      },
+      "best_epoch": 92,
+      "optimizer_steps": 1600,
+      "history": [
+        {
+          "model": "SunChaser",
+          "epoch": 1,
+          "accuracy": 0.8486973947895792,
+          "cross_entropy": 0.5483100414276123
+        },
+        {
+          "model": "SunChaser",
+          "epoch": 11,
+          "accuracy": 0.905811623246493,
+          "cross_entropy": 0.25079408288002014
+        },
+        {
+          "model": "SunChaser",
+          "epoch": 21,
+          "accuracy": 0.938877755511022,
+          "cross_entropy": 0.1584024876356125
+        },
+        {
+          "model": "SunChaser",
+          "epoch": 31,
+          "accuracy": 0.9639278557114228,
+          "cross_entropy": 0.11291121691465378
+        },
+        {
+          "model": "SunChaser",
+          "epoch": 41,
+          "accuracy": 0.969939879759519,
+          "cross_entropy": 0.08334067463874817
+        },
+        {
+          "model": "SunChaser",
+          "epoch": 51,
+          "accuracy": 0.9779559118236473,
+          "cross_entropy": 0.07166660577058792
+        },
+        {
+          "model": "SunChaser",
+          "epoch": 61,
+          "accuracy": 0.9719438877755511,
+          "cross_entropy": 0.07072599977254868
+        },
+        {
+          "model": "SunChaser",
+          "epoch": 71,
+          "accuracy": 0.9849699398797596,
+          "cross_entropy": 0.051926542073488235
+        },
+        {
+          "model": "SunChaser",
+          "epoch": 81,
+          "accuracy": 0.968937875751503,
+          "cross_entropy": 0.07030656933784485
+        },
+        {
+          "model": "SunChaser",
+          "epoch": 91,
+          "accuracy": 0.9849699398797596,
+          "cross_entropy": 0.04707758501172066
+        },
+        {
+          "model": "SunChaser",
+          "epoch": 100,
+          "accuracy": 0.9859719438877755,
+          "cross_entropy": 0.04910039156675339
+        }
+      ],
+      "original_json_sha256": "c8cbf1c5b15fd22ff5cd92cb4d8fe499dca07f9917aa9942423da95535d31257",
+      "parameter_encoding": "f32-le"
+    },
+    "LightRanger": {
+      "style": "fortify",
+      "profile": {
+        "id": "LightRanger",
+        "display_name": "流光游侠",
+        "team": "Yellow",
+        "role": "support",
+        "style": "fortify",
+        "specialty": "弓箭支援与机动集结",
+        "bridge_width": 2,
+        "prefer_bow": true,
+        "economic_upgrades": false,
+        "retreat_health": 0.4,
+        "approach_distance": 2.75,
+        "retreat_distance": 2.05,
+        "press_distance": 2.34,
+        "critical_cooldown": 0.8,
+        "strafe_sign": 1,
+        "strafe_switch": true,
+        "combat_radius": 8,
+        "guard_radius": 23,
+        "seed": 202611775
+      },
+      "parameters": 312587,
+      "parameter_bytes": 1250348,
+      "json_bytes": 965,
+      "json_sha256": "cd09bfd3a8e05ae92013275f12f61d1f1a2938670739cfa8128e825ce97be3d4",
+      "weights_sha256": "532210beb072b1dbf58189e867d2d59860af6e9c84fe49e6d90d9a133ec24b0a",
+      "before_training": {
+        "accuracy": 0.2575150300601202,
+        "cross_entropy": 2.1239328384399414
+      },
+      "validation": {
+        "accuracy": 0.9679358717434869,
+        "cross_entropy": 0.09204839915037155
+      },
+      "best_epoch": 99,
+      "optimizer_steps": 1600,
+      "history": [
+        {
+          "model": "LightRanger",
+          "epoch": 1,
+          "accuracy": 0.9018036072144289,
+          "cross_entropy": 0.4118057191371918
+        },
+        {
+          "model": "LightRanger",
+          "epoch": 11,
+          "accuracy": 0.9218436873747495,
+          "cross_entropy": 0.24912111461162567
+        },
+        {
+          "model": "LightRanger",
+          "epoch": 21,
+          "accuracy": 0.9609218436873748,
+          "cross_entropy": 0.14781300723552704
+        },
+        {
+          "model": "LightRanger",
+          "epoch": 31,
+          "accuracy": 0.9549098196392786,
+          "cross_entropy": 0.14423100650310516
+        },
+        {
+          "model": "LightRanger",
+          "epoch": 41,
+          "accuracy": 0.9589178356713427,
+          "cross_entropy": 0.12703126668930054
+        },
+        {
+          "model": "LightRanger",
+          "epoch": 51,
+          "accuracy": 0.9659318637274549,
+          "cross_entropy": 0.11205178499221802
+        },
+        {
+          "model": "LightRanger",
+          "epoch": 61,
+          "accuracy": 0.9539078156312625,
+          "cross_entropy": 0.11912822723388672
+        },
+        {
+          "model": "LightRanger",
+          "epoch": 71,
+          "accuracy": 0.966933867735471,
+          "cross_entropy": 0.10779538750648499
+        },
+        {
+          "model": "LightRanger",
+          "epoch": 81,
+          "accuracy": 0.9639278557114228,
+          "cross_entropy": 0.10471320897340775
+        },
+        {
+          "model": "LightRanger",
+          "epoch": 91,
+          "accuracy": 0.9639278557114228,
+          "cross_entropy": 0.1056501567363739
+        },
+        {
+          "model": "LightRanger",
+          "epoch": 100,
+          "accuracy": 0.968937875751503,
+          "cross_entropy": 0.09511223435401917
+        }
+      ],
+      "original_json_sha256": "38dbf640b6bb041bab74d8a2f47410b3a4ed746eb9b9adb82e490862d4e354ed",
+      "parameter_encoding": "f32-le"
+    }
+  },
+  "complete": true,
+  "limitations": [
+    "Teacher agreement is not a win-rate measurement.",
+    "Team planning and safe movement are separate public controller logic."
+  ],
+  "elapsed_seconds": 260.39100000000326,
+  "parameter_encoding": "f32-le"
+}

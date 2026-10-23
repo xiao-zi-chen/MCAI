@@ -15,3 +15,8 @@
 Agones 调度配置示例依据官方 Counters and Lists 文档改写，使用 Apache-2.0，许可文本位于 `deploy/agones/LICENSE`。它是设计模板，当前运行系统未引入 Agones 依赖。
 
 本地调度锁定 BullMQ 5.81.5（MIT，taskforcesh/bullmq）与 ioredis 5.11.1（MIT，redis/ioredis），版本和完整依赖见 `local-scheduler/package-lock.json`。Redis 由运行者提供，服务器程序不随仓库分发；本机复用了已有 Windows Redis 5.0.14.1，BullMQ 推荐的 Redis 版本为 6.2 以上。
+
+
+## Crypt 四队地图
+
+使用 [atomic-cogwheel0/act-bedwars](https://github.com/atomic-cogwheel0/act-bedwars) 的 Crypt 方块结构，固定提交 `aad1a8e250016ef1283f823367249cc0b8f0d15b`。`maps/crypt-squads/` 中的原始 NBT 及派生地图资产遵循该目录的 GPL-3.0 许可，保留作者署名、原始源文件、转换脚本和哈希，不按本仓库 MIT 许可重新授权。具体修改见该目录 README。

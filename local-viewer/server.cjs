@@ -20,6 +20,7 @@ const { WorldView } = viewerRequire('prismarine-viewer/viewer/lib/worldView');
 const mineflayer = require('../scripts/minecraft-client.cjs');
 const { Vec3 } = require('../bot-controller/node_modules/vec3');
 const { ReplayWorld } = require('./replay-world.cjs');
+const MapLoading=require('./map-loading.js');
 
 const webPort = Number(process.env.BEDWARS_VIEW_PORT || 3007);
 const cameraName=process.env.SKYDUEL_CAMERA_NAME||'MapCamera';
@@ -29,7 +30,9 @@ const gamePort = Number(process.env.BEDWARS_PORT || 25567);
 const projectRoot = path.resolve(__dirname,'..');
 const serverRoot=path.resolve(projectRoot,process.env.SKYDUEL_SERVER_ROOT||'runs/bedwars-local');
 const replayDir = path.join(serverRoot,'plugins/SkyDuelReferee/replays');
-const localRules = JSON.parse(fs.readFileSync(path.join(projectRoot,'competition/rules.json'),'utf8'));
+const replayStore=new (require('./replay-store.cjs').ReplayStore)(replayDir,{reportsDirectory:path.resolve(projectRoot,process.env.SKYDUEL_SCHEDULER_ROOT||'runs/scheduler')});
+const rulesPath=path.resolve(projectRoot,process.env.SKYDUEL_RULES_FILE||'competition/rules.json');
+const localRules = JSON.parse(fs.readFileSync(rulesPath,'utf8'));
 const replayWorld = new ReplayWorld({viewerRequire, directory:path.join(serverRoot,'replay-maps'), rules:localRules});
 let refereeState = {phase:'waiting'};
 function connectReferee() {
@@ -50,13 +53,13 @@ bundle = bundle.replace('u.camera.position.set(t.x,t.y+20,t.z+20)', '(h.target.s
 bundle = bundle.replace('path:window.location.pathname+"socket.io"', 'path:window.location.pathname+"socket.io",query:{replay:new URLSearchParams(window.location.search).get("replay")||""}');
 bundle = bundle.replace(/(\w+)\.position\.y\+=(\w+)\.height\+\.6/, '$1.position.y+=$2.height+.6;$1.scale.set(3.4,.68,1)');
 app.get('/', (_req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.get('/rules-source',(_req,res)=>res.type('text/plain').sendFile(path.join(projectRoot,'competition/RULES.zh-CN.md')));
+app.get('/rules-source',(_req,res)=>{const source=path.join(path.dirname(rulesPath),'RULES.zh-CN.md');res.type('text/plain').sendFile(fs.existsSync(source)?source:path.join(projectRoot,'competition/RULES.zh-CN.md'));});
 app.get('/rules', (_req,res)=>res.sendFile(path.join(__dirname,'rules.html')));
-for(const file of ['effects.js','spectator-camera.js','replay.js','replay-timeline.js','player-motion.js','spectator-actors.js','world-objects.js','native-items.js','native-poses.js']) app.get('/'+file, (_req,res)=>res.sendFile(path.join(__dirname,file)));
+for(const file of ['effects.js','spectator-camera.js','replay.js','replay-timeline.js','player-motion.js','spectator-actors.js','world-objects.js','native-items.js','native-poses.js','map-loading.js','replay-codec.js','paged-replay.js','actor-roster.js','arena-ui.css']) app.get('/'+file, (_req,res)=>res.sendFile(path.join(__dirname,file)));
 app.get('/api/native-items',(_req,res)=>res.sendFile(path.join(projectRoot,'runs/native-assets-1.21/items.json')));
 app.use('/native-assets',express.static(path.join(projectRoot,'downloads/minecraft-assets-1.21/assets/minecraft')));
 app.get('/favicon.ico', (_req,res)=>res.status(204).end());
-app.get('/api/rules', (_req,res)=>res.sendFile(path.join(projectRoot,'competition/rules.json')));
+app.get('/api/rules', (_req,res)=>res.sendFile(rulesPath));
 app.get('/actions',(_req,res)=>res.sendFile(path.join(__dirname,'actions.html')));
 app.get('/evidence/:kind', (req,res)=>{if(!['eat','drink','bow'].includes(req.params.kind))return res.sendStatus(404);res.sendFile(path.join(projectRoot,'runs/showcase-v5/official-client-'+req.params.kind+'.png'));});
 app.get('/api/action-reference',(_req,res)=>{
@@ -79,6 +82,36 @@ app.get('/api/replays', (_req,res)=>{
   }
   res.json(list);
 });
+app.get('/api/replays/:id/meta', (req,res,next)=>{
+ try{const id=req.params.id,meta=replayStore.ready(id);if(meta)return asset(req,res,next,'replay-meta-'+id+'-'+meta.web_format+'-'+meta.source_mtime_ms,'json',async()=>JSON.stringify(meta));
+  const state=replayStore.progress(id);if(state.error)return res.status(500).json({error:state.error});
+  replayStore.prepare(id).catch(error=>console.error('Replay indexing:',id,error.message));res.status(202).json(replayStore.progress(id));
+ }catch(error){res.status(404).json({error:error.message});}
+});
+// Prepare the latest finished recording before a viewer clicks it. Builds are
+// serialized by ReplayStore so multiple spectators cannot multiply memory use.
+let warmingReplay=false;
+async function warmLatestReplay(){
+ if(warmingReplay)return;warmingReplay=true;
+ try{
+  const directory=path.join(replayDir,'results');
+  if(!fs.existsSync(directory))return;
+  const files=(await fs.promises.readdir(directory)).filter(f=>/^[a-f0-9-]{36}\.json$/.test(f));
+  const newest=(await Promise.all(files.map(async file=>({file,mtime:(await fs.promises.stat(path.join(directory,file))).mtimeMs})))).sort((a,b)=>b.mtime-a.mtime);
+  for(const {file}of newest){
+   const summary=JSON.parse(await fs.promises.readFile(path.join(directory,file),'utf8'));if(summary.status!=='complete')continue;
+   await replayStore.prepare(summary.match_id);break;
+  }
+ }catch(e){console.error('Replay preparation:',e.message);}finally{warmingReplay=false;}
+}
+setInterval(warmLatestReplay,15000).unref();
+app.get('/api/replays/:id/chunks/:index', (req,res)=>{
+ try{if(!/^\d+$/.test(req.params.index))return res.sendStatus(400);const file=replayStore.chunk(req.params.id,Number(req.params.index));
+  res.type('application/json');res.set('Cache-Control','private, max-age=86400, immutable');res.vary('Accept-Encoding');
+  if(req.acceptsEncodings('gzip'))res.set('Content-Encoding','gzip').sendFile(file);
+  else fs.createReadStream(file).pipe(require('node:zlib').createGunzip()).pipe(res);
+ }catch(error){res.status(404).json({error:error.message});}
+});
 app.get('/api/replays/:id', (req,res)=>{
   if(!/^[a-f0-9-]{36}$/.test(req.params.id))return res.sendStatus(400);
   const file=path.join(replayDir,req.params.id+'.json');if(!fs.existsSync(file))return res.sendStatus(404);res.sendFile(file);
@@ -88,24 +121,40 @@ app.get('/scene/worker.js',(req,res,next)=>asset(req,res,next,'worker','js',()=>
 app.get('/scene/blocksStates/:version.json',(req,res,next)=>{const v=req.params.version;if(!/^\d+\.\d+(?:\.\d+)?$/.test(v))return res.sendStatus(400);asset(req,res,next,'states-'+v,'json',()=>fs.promises.readFile(path.join(assets,'blocksStates',v+'.json')));});
 app.use('/scene', express.static(assets));
 
-const bot = mineflayer.createBot({host:'127.0.0.1',port:gamePort,username:cameraName,auth:'offline',version:'1.21',viewDistance:'far'});
+const requiredColumns=MapLoading.requiredChunks(localRules.map);
+const bot = mineflayer.createBot({host:'127.0.0.1',port:gamePort,username:cameraName,auth:'offline',version:'1.21',viewDistance:MapLoading.viewDistance(localRules.map)});
 bot.physicsEnabled = false;
 let ready = false;
+let setupError='';
+function mapProgress(){const loaded=new Set(requiredColumns.filter(key=>{const [x,z]=key.split(',').map(Number);return Boolean(bot.world?.getColumn(x/16,z/16));}));return MapLoading.progress(requiredColumns,loaded);}
 const messages = [];
 bot.on('messagestr', text => { messages.push(text); if (messages.length > 12) messages.shift(); });
-bot.once('spawn', () => {
+bot.once('spawn', async () => {
   bot.physicsEnabled = false;
   ready = false;
   console.log('Spectator connected:',cameraName,worldName);
   const python = process.env.SKYDUEL_PYTHON||path.join(projectRoot,process.platform==='win32'?'.venv/Scripts/python.exe':'.venv/bin/python');
   const admin = path.join(__dirname, '../scripts/bedwars-rcon.py');
-  execFile(python, [admin, 'gamemode', 'spectator', cameraName], error => {
-    if (error) { console.error('Could not configure spectator:', error.message); return; }
-    execFile(python, [admin, 'execute', 'in', 'minecraft:'+worldName, 'run', 'tp', cameraName, '0', '90', '0', '0', '45'], error => {
-      if (error) console.error('Could not position spectator:', error.message);
-      else setTimeout(()=>ready=true,500);
-    });
-  });
+  const run=require('node:util').promisify(execFile);
+  try{
+    if(arenaId){
+      const {stdout}=await run(python,[admin,'skyduel','spectate',arenaId,cameraName]);const result=JSON.parse(stdout.trim());
+      if(!result.ok||result.arena_id!==arenaId||result.world!==worldName)throw Error(result.error||'Spectator world identity mismatch');
+    }else{
+      await run(python,[admin,'gamemode','spectator',cameraName]);
+      const props=fs.readFileSync(path.join(serverRoot,'server.properties'),'utf8'),primary=/^level-name=(.*)$/m.exec(props)?.[1]?.trim();
+      const dimension=process.env.SKYDUEL_WORLD_KEY||(worldName===primary?'minecraft:overworld':'minecraft:'+worldName);
+      const {stdout}=await run(python,[admin,'execute','in',dimension,'run','tp',cameraName,'0.5',String(localRules.map.surface_y+26),'0.5','0','45']);
+      if(!/Teleported/i.test(stdout))throw Error('Spectator teleport failed: '+stdout.trim());
+    }
+    const deadline=Date.now()+60000;
+    while(Date.now()<deadline){
+      const progress=mapProgress(),center=new Vec3(.5,localRules.map.surface_y+26,.5);
+      if(bot.entity.position.distanceTo(center)<2&&progress.loaded===progress.total){ready=true;console.log('Complete spectator map:',progress.total,'columns');return;}
+      await new Promise(resolve=>setTimeout(resolve,250));
+    }
+    throw Error('Spectator map did not finish loading');
+  }catch(error){setupError=error.message;console.error('Could not configure spectator:',setupError);}
 });
 bot.on('end', reason => { ready = false; console.log('Spectator disconnected:', reason);if(arenaId){io.close();server.close(()=>process.exit(0));} });
 bot.on('error', error => { console.error(error.message); });
@@ -113,10 +162,10 @@ bot.on('error', error => { console.error(error.message); });
 app.get('/status', (_req, res) => {
   const bed = team => { if(!ready||!bot.world)return null;const b = bot.blockAt(new Vec3(...localRules.map.teams[team].bed)); return b ? b.name.endsWith('_bed') : null; };
   const players = Object.values(bot.entities || {}).filter(e => e.type === 'player' && e.username && e.username !== bot.username).map(e => ({name:e.username,x:e.position.x,y:e.position.y,z:e.position.z}));
-  let demo=null;try{const liveFile=arenaId&&refereeState.match_id?path.join(projectRoot,'runs/scheduler/matches',refereeState.match_id,'live.json'):path.join(projectRoot,'runs/showcase-live.json');demo=JSON.parse(fs.readFileSync(liveFile,'utf8'));if(Date.now()-Date.parse(demo.updated_at)>10000)demo=null}catch{}
-  res.json({connected:ready,arena_id:arenaId,managed:Boolean(arenaId),players,beds:{red:bed('Red'),blue:bed('Blue')},messages,referee:refereeState,demo,gameAddress:`127.0.0.1:${gamePort}`});
+  let demo=null;try{const liveFile=arenaId&&refereeState.match_id?path.join(process.env.SKYDUEL_SCHEDULER_ROOT||path.join(projectRoot,'runs/scheduler'),'matches',refereeState.match_id,'live.json'):path.join(projectRoot,'runs/showcase-live.json');demo=JSON.parse(fs.readFileSync(liveFile,'utf8'));if(Date.now()-Date.parse(demo.updated_at)>10000)demo=null}catch{}
+  res.json({connected:ready,arena_id:arenaId,managed:Boolean(arenaId),map_loading:mapProgress(),map_columns:requiredColumns,setup_error:setupError,replay_map_ready:Boolean(replayWorld.read(localRules)),players,beds:Object.fromEntries(Object.keys(localRules.map.teams).map(t=>[t.toLowerCase(),bed(t)])),title:localRules.title,attribution:localRules.map.attribution||'',messages,referee:refereeState,demo,gameAddress:`127.0.0.1:${gamePort}`});
 });
-io.on('connection', socket => {
+io.on('connection', async socket => {
   if (socket.handshake.query.replay) {
     try {
       const id=socket.handshake.query.replay;
@@ -127,7 +176,8 @@ io.on('connection', socket => {
     } catch(error) { socket.emit('replayError',error.message); }
     return;
   }
-  if (!ready) { socket.disconnect(); return; }
+  const deadline=Date.now()+60000;while(!ready&&socket.connected&&Date.now()<deadline)await new Promise(resolve=>setTimeout(resolve,250));
+  if(!socket.connected)return;if(!ready){socket.emit('replayError',setupError||'地图仍在加载，请稍后重试');return;}
   socket.join('live');
   // 1.21 and 1.21.1 share block states; the upstream fallback otherwise picks 1.21.4.
   socket.emit('version', '1.21.1');
@@ -171,4 +221,4 @@ setInterval(()=>{if(ready&&bot.world)replayWorld.capture(bot,refereeState);},100
 server.listen(webPort, '127.0.0.1', () => console.log(`Local spectator: http://127.0.0.1:${webPort}`));
 process.on('SIGINT', () => { bot.quit(); io.close(); server.close(() => process.exit(0)); });
 
-if(process.env.SKYDUEL_VIEWER_IDLE_MS){let lastView=Date.now();setInterval(()=>{if(io.engine.clientsCount)lastView=Date.now();else if(Date.now()-lastView>Number(process.env.SKYDUEL_VIEWER_IDLE_MS)){bot.quit();io.close();server.close(()=>process.exit(0));}},10000).unref();}
+if(Number(process.env.SKYDUEL_VIEWER_IDLE_MS)>0){let lastView=Date.now();setInterval(()=>{if(io.engine.clientsCount)lastView=Date.now();else if(Date.now()-lastView>Number(process.env.SKYDUEL_VIEWER_IDLE_MS)){bot.quit();io.close();server.close(()=>process.exit(0));}},10000).unref();}

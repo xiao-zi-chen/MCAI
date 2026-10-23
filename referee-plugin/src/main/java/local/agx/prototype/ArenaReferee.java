@@ -62,9 +62,10 @@ final class ArenaReferee implements Listener {
     private ClassicRules classic;
     private Map<?,?> ruleDocument;
     private int maxFrames=9100;
+    private int maxEvents=50000;
     private double projectileRadiusX=64,projectileRadiusZ=64;
     private boolean recordingTruncated;
-    private boolean testRun;
+    private boolean testRun,testControlsPaused;
     private final Map<String,Long> respawnUntil=new HashMap<>();
     private final Map<String,Long> swingTicks=new HashMap<>(),damageTicks=new HashMap<>(),useStarted=new HashMap<>();
     private final Map<String,List<Integer>> digging=new HashMap<>();
@@ -74,18 +75,20 @@ final class ArenaReferee implements Listener {
         this.plugin=plugin;this.arenaId=arenaId;this.arenaName=arenaName;this.worldName=worldName;this.observerPort=observerPort;this.managed=managed;
         this.lease=new ArenaLease(plugin,this);
         try {
-            byte[] bytes = plugin.getResource("competition-rules.json").readAllBytes();
+            byte[] bytes = plugin.ruleBytes();
             rulesHash = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
             ruleDocument = gson.fromJson(new String(bytes, StandardCharsets.UTF_8), Map.class);
             rulesVersion = ruleDocument.get("version").toString();
             var settings=YamlConfiguration.loadConfiguration(new StringReader(new String(bytes,StandardCharsets.UTF_8)));
             maxFrames=settings.getInt("match.duration_seconds")*10+100;
+            maxEvents=settings.getInt("recording.max_events",Math.max(50000,lease.requiredPlayers*15000));
             var lo=settings.getIntegerList("map.build_min");var hi=settings.getIntegerList("map.build_max");
             projectileRadiusX=Math.max(Math.abs(lo.get(0)),Math.abs(hi.get(0)))+16;
             projectileRadiusZ=Math.max(Math.abs(lo.get(2)),Math.abs(hi.get(2)))+16;
             for(String team:settings.getConfigurationSection("map.teams").getKeys(false)){
                 var b=settings.getIntegerList("map.teams."+team+".bed");int sign=Integer.signum(settings.getInt("map.teams."+team+".base_block_x"));
-                bedPositions.add(new int[]{b.get(0),b.get(1),b.get(2)});bedPositions.add(new int[]{b.get(0)-sign,b.get(1),b.get(2)});
+                var foot=settings.getIntegerList("map.teams."+team+".bed_foot");
+                bedPositions.add(new int[]{b.get(0),b.get(1),b.get(2)});bedPositions.add(foot.size()==3?new int[]{foot.get(0),foot.get(1),foot.get(2)}:new int[]{b.get(0)-sign,b.get(1),b.get(2)});
             }
             classic=new ClassicRules(plugin,this,settings);
             listener = new ServerSocket(); listener.bind(new InetSocketAddress("127.0.0.1", observerPort));
@@ -136,7 +139,21 @@ final class ArenaReferee implements Listener {
         }
     }
     @EventHandler public void rebuilt(BedwarsPostRebuildingEvent e){if(e.getGame().getName().equals(arenaName))lease.resetObserved=true;}
-    void reserved(){matchId="";recorded=false;recorder=null;frameCount=0;firstFrame=null;lastFrame=null;framePlayers.clear();events.clear();current="{\"phase\":\"waiting\"}";}
+    @EventHandler(priority=EventPriority.HIGHEST,ignoreCancelled=true) public void checkRoster(BedwarsGameStartEvent e){
+        if(!e.getGame().getName().equals(arenaName)||!managed)return;
+        var actual=e.getGame().getConnectedPlayers().stream().map(Player::getName).collect(java.util.stream.Collectors.toSet());
+        if(!lease.launched||!actual.equals(new HashSet<>(lease.players))){e.setCancelled(true);return;}
+        // Assign from the reservation before teleporting. Joining order cannot shuffle squads.
+        if(lease.playersPerTeam>1){
+            var concrete=(org.screamingsandals.bedwars.game.Game)e.getGame();
+            for(Player player:concrete.getConnectedPlayers()){
+                String team=lease.teamOf(player.getName());
+                concrete.selectTeam(org.screamingsandals.bedwars.Main.getPlayerGameProfile(player),team,true,true,true);
+            }
+            for(Player player:concrete.getConnectedPlayers())if(concrete.getTeamOfPlayer(player)==null||!concrete.getTeamOfPlayer(player).getName().equals(lease.teamOf(player.getName())))e.setCancelled(true);
+        }
+    }
+    void reserved(){matchId="";recorded=false;testRun=false;testControlsPaused=false;recorder=null;frameCount=0;firstFrame=null;lastFrame=null;framePlayers.clear();events.clear();current="{\"phase\":\"waiting\"}";}
     private Map<String,Object> state() {
         List<Map<String,Object>> players = new ArrayList<>();
         List<Map<String,Object>> teams = new ArrayList<>();
@@ -145,7 +162,9 @@ final class ArenaReferee implements Listener {
             Map<String,Object> row=new LinkedHashMap<>(Map.of("name", player.getName(), "team", team == null ? "" : team.getName(),
                 "pos", List.of(p.getX(),p.getY(),p.getZ()), "yaw", p.getYaw(), "pitch", p.getPitch(),
                 "hp", player.getHealth(), "mode", player.getGameMode().name()));
-            row.put("respawn_seconds",player.getGameMode()==GameMode.SPECTATOR&&team!=null&&team.isTargetBlockExists()?Math.max(0,(respawnUntil.getOrDefault(player.getName(),tick)-tick)/20.0):0);
+            boolean pendingRespawn=player.getGameMode()==GameMode.SPECTATOR&&respawnUntil.containsKey(player.getName());
+            row.put("respawn_pending",pendingRespawn);
+            row.put("respawn_seconds",pendingRespawn?Math.max(0,(respawnUntil.get(player.getName())-tick)/20.0):0);
             row.put("held_item",player.getInventory().getItemInMainHand().getType().name());
             row.put("held_stack",itemState(player.getInventory().getItemInMainHand()));
             row.put("offhand_stack",itemState(player.getInventory().getItemInOffHand()));
@@ -175,7 +194,7 @@ final class ArenaReferee implements Listener {
         s.put("arena_id",arenaId);s.put("arena_name",arenaName);s.put("match_id",matchId);s.put("rules_version",rulesVersion);s.put("rules_sha256",rulesHash);s.put("sample_hz",10);
         s.put("phase", game.getStatus().name().toLowerCase());s.put("tick",tick);s.put("players",players);s.put("teams",teams);
         s.put("winner",winner);s.put("reason",reason);s.put("events",new ArrayList<>(events.subList(Math.max(0,events.size()-12),events.size())));
-        s.put("test_run",testRun);s.put("snapshot_seq",++snapshotSequence);s.put("world_objects",worldObjects);
+        s.put("test_run",testRun);s.put("test_controls_paused",testControlsPaused);s.put("snapshot_seq",++snapshotSequence);s.put("world_objects",worldObjects);
         s.put("classic",classic.snapshot());
         s.put("projectiles",game.getGameWorld().getNearbyEntities(new Location(game.getGameWorld(),.5,65,.5),projectileRadiusX,64,projectileRadiusZ).stream().filter(e->e instanceof org.bukkit.entity.Projectile||e instanceof org.bukkit.entity.TNTPrimed).limit(64).map(e->{
             Map<String,Object> projectile=new LinkedHashMap<>();projectile.put("id",e.getEntityId());projectile.put("kind",e.getType().name());projectile.put("pos",List.of(e.getLocation().getX(),e.getLocation().getY(),e.getLocation().getZ()));
@@ -227,11 +246,37 @@ final class ArenaReferee implements Listener {
         return fatigue==null?6:6+(1+fatigue.getAmplifier())*2;
     }
     private void event(String type, Map<String,Object> data) {
-        if (events.size() >= 50000) {recordingTruncated=true;return;}
+        if (events.size() >= maxEvents) {recordingTruncated=true;return;}
         Map<String,Object> row = new LinkedHashMap<>(data); row.put("tick",tick);row.put("type",type);events.add(row);
     }
     void record(String type,Map<String,Object> data){event(type,data);}
     void markTest(){testRun=true;}
+    // Private verification commands are fenced by ArenaLease and always produce unscored test replays.
+    void validation(String op,com.google.gson.JsonObject request){
+        if(game==null||game.getStatus()!=GameStatus.RUNNING||!testRun)throw new IllegalStateException("Test match is not running");
+        if(op.equals("validation_hold")){
+            if(game.getConnectedPlayers().stream().anyMatch(p->p.getGameMode()!=GameMode.SURVIVAL))throw new IllegalStateException("All test players must be alive before controlled eliminations");
+            testControlsPaused=true;
+            var teams=(Map<?,?>)((Map<?,?>)ruleDocument.get("map")).get("teams");
+            for(Player player:game.getConnectedPlayers()){
+                var team=game.getTeamOfPlayer(player);
+                var spawn=(List<?>)((Map<?,?>)teams.get(team.getName())).get("spawn");
+                player.teleport(new Location(game.getGameWorld(),((Number)spawn.get(0)).doubleValue(),((Number)spawn.get(1)).doubleValue(),((Number)spawn.get(2)).doubleValue()));
+                player.setVelocity(new org.bukkit.util.Vector());player.setFireTicks(0);player.setHealth(Math.min(20,player.getMaxHealth()));
+            }
+        }else if(op.equals("validation_beds_gone")){
+            if(!testControlsPaused)throw new IllegalStateException("Hold test agents first");
+            classic.testPhase("beds_gone");
+        }else if(op.equals("validation_kill")||op.equals("validation_death")){
+            if(!testControlsPaused)throw new IllegalStateException("Hold test agents first");
+            String name=request.get("player").getAsString();
+            if(!lease.players.contains(name))throw new IllegalArgumentException("Player is not in this reservation");
+            Player player=Bukkit.getPlayerExact(name);
+            if(player==null||!game.getConnectedPlayers().contains(player)||player.getGameMode()!=GameMode.SURVIVAL)throw new IllegalStateException("Test player is not alive in this arena");
+            if(op.equals("validation_kill")&&game.getTeamOfPlayer(player).isTargetBlockExists())throw new IllegalStateException("Remove beds before final-death verification");
+            player.setHealth(0);
+        }else throw new IllegalArgumentException("Unknown validation operation");
+    }
     void abortMatch(){
         game=resolveGame();
         if(game==null)return;
@@ -239,6 +284,9 @@ final class ArenaReferee implements Listener {
         if(recorded||matchId.isEmpty())return;
         if(game.getStatus()==GameStatus.WAITING)lease.resetObserved=true;
         winner="";reason="operator_stopped";event("aborted",Map.of("reason",reason));saveMatch("aborted");
+        stopAndRestart();
+    }
+    private void stopAndRestart(){
         game.stop();
         Game stopped=game;
         new org.bukkit.scheduler.BukkitRunnable(){int attempts;public void run(){
@@ -251,7 +299,7 @@ final class ArenaReferee implements Listener {
     }
     @EventHandler public void started(BedwarsGameStartedEvent e) {
         if (!e.getGame().getName().equals(arenaName)) return;
-        game=e.getGame();matchId=lease.taskId.isEmpty()?UUID.randomUUID().toString():lease.taskId;tick=0;winner="";reason="";recorded=false;recordingTruncated=false;testRun=false;frameCount=0;firstFrame=null;lastFrame=null;framePlayers.clear();events.clear();respawnUntil.clear();
+        game=e.getGame();matchId=lease.taskId.isEmpty()?UUID.randomUUID().toString():lease.taskId;tick=0;winner="";reason="";recorded=false;recordingTruncated=false;testRun=lease.testRun;testControlsPaused=false;frameCount=0;firstFrame=null;lastFrame=null;framePlayers.clear();events.clear();respawnUntil.clear();
         swingTicks.clear();damageTicks.clear();useStarted.clear();digging.clear();
         recorder=new ReplayRecorder(plugin.getDataFolder().toPath().resolve("replays").resolve(matchId+".json"),50,4);
         lease.started(matchId);
@@ -260,6 +308,7 @@ final class ArenaReferee implements Listener {
     @EventHandler(priority=EventPriority.MONITOR) public void left(BedwarsPlayerLeaveEvent e){
         if(managed&&e.getGame()==game&&!recorded&&!matchId.isEmpty()&&game.getStatus()==GameStatus.RUNNING){
             winner="";reason="participant_disconnected";event("aborted",Map.of("reason",reason));saveMatch("aborted");
+            Bukkit.getScheduler().runTask(plugin,this::stopAndRestart);
         }
     }
     @EventHandler public void ending(BedwarsGameEndingEvent e) {
@@ -279,12 +328,19 @@ final class ArenaReferee implements Listener {
         else saveMatch("complete");
     }
     @EventHandler public void bed(BedwarsTargetBlockDestroyedEvent e) {
-        if(e.getGame()==game) event("bed_destroyed",Map.of("team",e.getTeam().getName(),"player",e.getPlayer()==null?"":e.getPlayer().getName()));
+        if(e.getGame()!=game)return;
+        event("bed_destroyed",Map.of("team",e.getTeam().getName(),"player",e.getPlayer()==null?"":e.getPlayer().getName()));
+        // Eligibility is earned at death; losing the bed preserves an already queued respawn.
     }
     @EventHandler public void death(BedwarsPlayerKilledEvent e) {
-        if (e.getGame()==game) {respawnUntil.put(e.getPlayer().getName(),tick+100);event("death",Map.of("player",e.getPlayer().getName(),"killer",e.getKiller()==null?"":e.getKiller().getName()));}
+        if(e.getGame()!=game)return;
+        String name=e.getPlayer().getName();RunningTeam team=game.getTeamOfPlayer(e.getPlayer());boolean canRespawn=team!=null&&team.isTargetBlockExists();
+        if(canRespawn)respawnUntil.put(name,tick+100);else respawnUntil.remove(name);
+        event("death",Map.of("player",name,"team",team==null?lease.teamOf(name):team.getName(),"final",!canRespawn,"killer",e.getKiller()==null?"":e.getKiller().getName()));
     }
-    @EventHandler public void respawn(BedwarsPlayerRespawnedIngameEvent e){if(e.getGame()==game){respawnUntil.remove(e.getPlayer().getName());event("respawn",Map.of("player",e.getPlayer().getName(),"team",e.getTeam().getName()));}}
+    @EventHandler public void respawn(BedwarsPlayerRespawnedIngameEvent e){if(e.getGame()==game){
+        respawnUntil.remove(e.getPlayer().getName());event("respawn",Map.of("player",e.getPlayer().getName(),"team",e.getTeam().getName()));
+    }}
     @EventHandler(priority=EventPriority.MONITOR,ignoreCancelled=true) public void explosion(EntityExplodeEvent e){
         if(game!=null&&game.getStatus()==GameStatus.RUNNING&&e.getLocation().getWorld().equals(game.getGameWorld()))event("explosion",Map.of("pos",List.of(e.getLocation().getX(),e.getLocation().getY(),e.getLocation().getZ()),"blocks",e.blockList().stream().map(b->List.of(b.getX(),b.getY(),b.getZ())).toList()));
     }

@@ -31,8 +31,9 @@ except OSError:
     pass
 sys.path.insert(0, str(ROOT / "competition"))
 from build_rules import build, load_rules, server_configs
-build()
-rules = load_rules()
+rules_file=ROOT/(scheduler.get('rules_file','competition/rules.json') if scheduler else 'competition/rules.json')
+build(rules_file)
+rules = load_rules(rules_file)
 
 
 def write_once(relative, content):
@@ -46,6 +47,25 @@ def write_once(relative, content):
 shutil.copy2(ROOT / "downloads/paper-1.21.jar", SERVER / "paper.jar")
 shutil.copy2(ROOT / "bedwars-map-plugin/build/libs/local-bedwars-map-0.2.0.jar", SERVER / "plugins/LocalBedwarsMap.jar")
 shutil.copy2(ROOT / "referee-plugin/build/libs/skyduel-referee-0.1.0.jar", SERVER / "plugins/SkyDuelReferee.jar")
+bedwars_jar=ROOT/'downloads/BedWars-0.2.44.jar'
+if not bedwars_jar.exists():
+    bedwars_jar=ROOT/'runs/bedwars-local/plugins/BedWars-0.2.44.jar'
+if bedwars_jar.resolve()!=(SERVER/'plugins'/bedwars_jar.name).resolve():
+    shutil.copy2(bedwars_jar,SERVER/'plugins'/bedwars_jar.name)
+for plugin in ['LocalBedwarsMap','SkyDuelReferee']:
+    target=SERVER/'plugins'/plugin/'competition-rules.json';target.parent.mkdir(parents=True,exist_ok=True)
+    if target.exists():
+        saved=SERVER/'config-backups'/datetime.now().strftime('%Y%m%d-%H%M%S')/target.relative_to(SERVER)
+        saved.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(target,saved)
+    shutil.copy2(rules_file,target)
+if rules['map'].get('asset_directory'):
+    import hashlib
+    assets=ROOT/rules['map']['asset_directory'];manifest=json.loads((assets/'manifest.json').read_text(encoding='utf-8'))
+    target=SERVER/'plugins/LocalBedwarsMap/structures';target.mkdir(exist_ok=True)
+    for name,spec in manifest['files'].items():
+        source=assets/(name+'.blocks.gz')
+        if hashlib.sha256(source.read_bytes()).hexdigest()!=spec['blocks_sha256']:raise SystemExit('Map checksum mismatch: '+name)
+        shutil.copy2(source,target/source.name)
 write_once("eula.txt", "eula=false\n")
 write_once("server.properties", """server-ip=127.0.0.1
 server-port=25567
@@ -76,7 +96,9 @@ if args.apply_rules or values.get('level-name')=='bedwars':
     values.update({'level-name':rules['map']['world'],'view-distance':str(max(6,(max(abs(rules['map']['build_min'][0]),abs(rules['map']['build_max'][0]))+15)//16+1))})
 if scheduler:
     values.update({'server-port':str(game_port),'rcon.port':str(scheduler.get('rcon_port',25578))})
-values['max-players']=str(max(8,args.arenas*3+2))
+values['max-players']=str(max(8,args.arenas*(rules['match']['teams']*rules['match']['players_per_team']+1)+2))
+if rules['match']['players_per_team']>1:
+    values['view-distance']='8';values['simulation-distance']='4'
 values.setdefault('enable-rcon','true');values.setdefault('rcon.port','25578');values.setdefault('rcon.password',secrets.token_hex(24))
 properties.write_text(''.join(f'{k}={v}\n' for k,v in values.items()),encoding='utf-8')
 write_once("plugins/bStats/config.yml", "enabled: false\n")

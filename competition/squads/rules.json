@@ -1,0 +1,2024 @@
+{
+  "id": "crypt-squads",
+  "version": "crypt-squads-0.9.1",
+  "status": "local-playtest",
+  "title": "古堡争床 · 4v4v4v4",
+  "responsibility": {
+    "organizer": [
+      "map",
+      "rules",
+      "referee",
+      "submission_contract",
+      "match_runtime",
+      "replays"
+    ],
+    "participant": [
+      "strategy",
+      "optional_training",
+      "local_validation"
+    ]
+  },
+  "engine": {
+    "minecraft": "1.21",
+    "paper_build": 130,
+    "bedwars_plugin": "0.2.44",
+    "nominal_tps": 20
+  },
+  "match": {
+    "arena_name": "CryptSquads",
+    "teams": 4,
+    "players_per_team": 4,
+    "countdown_seconds": 12,
+    "duration_seconds": 900,
+    "post_game_seconds": 8,
+    "respawn_seconds": 5,
+    "respawn_protection_seconds": 3,
+    "initial_health": 20,
+    "initial_items": [
+      "wooden_sword;1"
+    ],
+    "hunger": false,
+    "natural_regeneration": false,
+    "keep_inventory_on_death": false,
+    "winner": "last_non_eliminated_team",
+    "timeout": "draw",
+    "simultaneous_elimination": "draw",
+    "series": {
+      "games_per_group": 1,
+      "rotate_teams": false,
+      "win_points": 3,
+      "draw_points": 1,
+      "loss_points": 0
+    },
+    "permanent_armor": true,
+    "tools_downgrade_on_death": true
+  },
+  "map": {
+    "id": "crypt-squads-1",
+    "world": "crypt-squads-v1",
+    "surface_y": 64,
+    "build_min": [
+      -116,
+      0,
+      -116
+    ],
+    "build_max": [
+      116,
+      100,
+      116
+    ],
+    "symmetry": "quarter_turn_about_0.5",
+    "source": "act-bedwars / Crypt; enlarged and adapted for MCAI",
+    "attribution": "Crypt by atomic-cogwheel0 · GPL-3.0 · modified by MCAI",
+    "source_url": "https://github.com/atomic-cogwheel0/act-bedwars",
+    "description": "233×233 格赛区；四座扩建古堡基地、四座前哨、四座钻石岛及中央城堡。四队目标点与主路线按 90 度旋转对称；中心原作建筑保留非对称细节，外围环路与四个资源点等距。",
+    "islands": [
+      {
+        "id": "red",
+        "x": 0,
+        "z": -88,
+        "radius": 23,
+        "accent": "RED_TERRACOTTA"
+      },
+      {
+        "id": "red_outpost",
+        "x": 0,
+        "z": -49,
+        "radius": 10,
+        "accent": "STONE_BRICKS"
+      },
+      {
+        "id": "red_diamond",
+        "x": 52,
+        "z": -52,
+        "radius": 13,
+        "accent": "PRISMARINE"
+      },
+      {
+        "id": "blue",
+        "x": 88,
+        "z": 0,
+        "radius": 23,
+        "accent": "BLUE_TERRACOTTA"
+      },
+      {
+        "id": "blue_outpost",
+        "x": 49,
+        "z": 0,
+        "radius": 10,
+        "accent": "STONE_BRICKS"
+      },
+      {
+        "id": "blue_diamond",
+        "x": 52,
+        "z": 52,
+        "radius": 13,
+        "accent": "PRISMARINE"
+      },
+      {
+        "id": "green",
+        "x": 0,
+        "z": 88,
+        "radius": 23,
+        "accent": "GREEN_TERRACOTTA"
+      },
+      {
+        "id": "green_outpost",
+        "x": 0,
+        "z": 49,
+        "radius": 10,
+        "accent": "STONE_BRICKS"
+      },
+      {
+        "id": "green_diamond",
+        "x": -52,
+        "z": 52,
+        "radius": 13,
+        "accent": "PRISMARINE"
+      },
+      {
+        "id": "yellow",
+        "x": -88,
+        "z": 0,
+        "radius": 23,
+        "accent": "YELLOW_TERRACOTTA"
+      },
+      {
+        "id": "yellow_outpost",
+        "x": -49,
+        "z": 0,
+        "radius": 10,
+        "accent": "STONE_BRICKS"
+      },
+      {
+        "id": "yellow_diamond",
+        "x": -52,
+        "z": -52,
+        "radius": 13,
+        "accent": "PRISMARINE"
+      },
+      {
+        "id": "center",
+        "x": 0,
+        "z": 0,
+        "radius": 34,
+        "accent": "SMOOTH_STONE"
+      }
+    ],
+    "teams": {
+      "Red": {
+        "color": "RED",
+        "rotation": 0,
+        "base_block_x": 0,
+        "base_block_z": -88,
+        "bed": [
+          0,
+          65,
+          -73
+        ],
+        "bed_foot": [
+          0,
+          65,
+          -74
+        ],
+        "bed_facing": "SOUTH",
+        "spawn": [
+          0.5,
+          65,
+          -84.5,
+          0,
+          0
+        ],
+        "shop": [
+          -14.5,
+          65,
+          -84.5,
+          0,
+          0
+        ],
+        "upgrade_shop": [
+          14.5,
+          65,
+          -84.5,
+          0,
+          0
+        ],
+        "shop_approach": [
+          -14.5,
+          65,
+          -82.5
+        ],
+        "upgrade_approach": [
+          14.5,
+          65,
+          -82.5
+        ],
+        "chest": [
+          -17,
+          65,
+          -78
+        ],
+        "ender_chest": [
+          17,
+          65,
+          -78
+        ],
+        "approach": [
+          0.5,
+          65,
+          -69.5
+        ],
+        "home": [
+          0.5,
+          65,
+          -80.5
+        ],
+        "defense_stand": [
+          3.5,
+          65,
+          -73.5
+        ]
+      },
+      "Blue": {
+        "color": "BLUE",
+        "rotation": 1,
+        "base_block_x": 88,
+        "base_block_z": 0,
+        "bed": [
+          73,
+          65,
+          0
+        ],
+        "bed_foot": [
+          74,
+          65,
+          0
+        ],
+        "bed_facing": "WEST",
+        "spawn": [
+          85.5,
+          65,
+          0.5,
+          90,
+          0
+        ],
+        "shop": [
+          85.5,
+          65,
+          -14.5,
+          0,
+          0
+        ],
+        "upgrade_shop": [
+          85.5,
+          65,
+          14.5,
+          0,
+          0
+        ],
+        "shop_approach": [
+          83.5,
+          65,
+          -14.5
+        ],
+        "upgrade_approach": [
+          83.5,
+          65,
+          14.5
+        ],
+        "chest": [
+          78,
+          65,
+          -17
+        ],
+        "ender_chest": [
+          78,
+          65,
+          17
+        ],
+        "approach": [
+          70.5,
+          65,
+          0.5
+        ],
+        "home": [
+          81.5,
+          65,
+          0.5
+        ],
+        "defense_stand": [
+          74.5,
+          65,
+          3.5
+        ]
+      },
+      "Green": {
+        "color": "GREEN",
+        "rotation": 2,
+        "base_block_x": 0,
+        "base_block_z": 88,
+        "bed": [
+          0,
+          65,
+          73
+        ],
+        "bed_foot": [
+          0,
+          65,
+          74
+        ],
+        "bed_facing": "NORTH",
+        "spawn": [
+          0.5,
+          65,
+          85.5,
+          180,
+          0
+        ],
+        "shop": [
+          15.5,
+          65,
+          85.5,
+          0,
+          0
+        ],
+        "upgrade_shop": [
+          -13.5,
+          65,
+          85.5,
+          0,
+          0
+        ],
+        "shop_approach": [
+          15.5,
+          65,
+          83.5
+        ],
+        "upgrade_approach": [
+          -13.5,
+          65,
+          83.5
+        ],
+        "chest": [
+          17,
+          65,
+          78
+        ],
+        "ender_chest": [
+          -17,
+          65,
+          78
+        ],
+        "approach": [
+          0.5,
+          65,
+          70.5
+        ],
+        "home": [
+          0.5,
+          65,
+          81.5
+        ],
+        "defense_stand": [
+          -2.5,
+          65,
+          74.5
+        ]
+      },
+      "Yellow": {
+        "color": "YELLOW",
+        "rotation": 3,
+        "base_block_x": -88,
+        "base_block_z": 0,
+        "bed": [
+          -73,
+          65,
+          0
+        ],
+        "bed_foot": [
+          -74,
+          65,
+          0
+        ],
+        "bed_facing": "EAST",
+        "spawn": [
+          -84.5,
+          65,
+          0.5,
+          270,
+          0
+        ],
+        "shop": [
+          -84.5,
+          65,
+          15.5,
+          0,
+          0
+        ],
+        "upgrade_shop": [
+          -84.5,
+          65,
+          -13.5,
+          0,
+          0
+        ],
+        "shop_approach": [
+          -82.5,
+          65,
+          15.5
+        ],
+        "upgrade_approach": [
+          -82.5,
+          65,
+          -13.5
+        ],
+        "chest": [
+          -78,
+          65,
+          17
+        ],
+        "ender_chest": [
+          -78,
+          65,
+          -17
+        ],
+        "approach": [
+          -69.5,
+          65,
+          0.5
+        ],
+        "home": [
+          -80.5,
+          65,
+          0.5
+        ],
+        "defense_stand": [
+          -73.5,
+          65,
+          -2.5
+        ]
+      }
+    },
+    "spawners": [
+      {
+        "position": [
+          -11.5,
+          65.2,
+          -79.5
+        ],
+        "resource": "iron",
+        "team": "Red",
+        "cap": 32,
+        "lane": 0,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          -11.5,
+          65.2,
+          -79.5
+        ],
+        "resource": "gold",
+        "team": "Red",
+        "cap": 8,
+        "lane": 0,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          -3.5,
+          65.2,
+          -79.5
+        ],
+        "resource": "iron",
+        "team": "Red",
+        "cap": 32,
+        "lane": 1,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          -3.5,
+          65.2,
+          -79.5
+        ],
+        "resource": "gold",
+        "team": "Red",
+        "cap": 8,
+        "lane": 1,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          4.5,
+          65.2,
+          -79.5
+        ],
+        "resource": "iron",
+        "team": "Red",
+        "cap": 32,
+        "lane": 2,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          4.5,
+          65.2,
+          -79.5
+        ],
+        "resource": "gold",
+        "team": "Red",
+        "cap": 8,
+        "lane": 2,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          12.5,
+          65.2,
+          -79.5
+        ],
+        "resource": "iron",
+        "team": "Red",
+        "cap": 32,
+        "lane": 3,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          12.5,
+          65.2,
+          -79.5
+        ],
+        "resource": "gold",
+        "team": "Red",
+        "cap": 8,
+        "lane": 3,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          0.5,
+          65.2,
+          -81.5
+        ],
+        "resource": "emerald",
+        "team": "Red",
+        "cap": 4,
+        "requires_forge": 3,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          52.5,
+          65.2,
+          -51.5
+        ],
+        "resource": "diamond",
+        "team": null,
+        "cap": 8
+      },
+      {
+        "position": [
+          0.5,
+          65.2,
+          -21.5
+        ],
+        "resource": "emerald",
+        "team": null,
+        "cap": 8
+      },
+      {
+        "position": [
+          80.5,
+          65.2,
+          -11.5
+        ],
+        "resource": "iron",
+        "team": "Blue",
+        "cap": 32,
+        "lane": 0,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          80.5,
+          65.2,
+          -11.5
+        ],
+        "resource": "gold",
+        "team": "Blue",
+        "cap": 8,
+        "lane": 0,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          80.5,
+          65.2,
+          -3.5
+        ],
+        "resource": "iron",
+        "team": "Blue",
+        "cap": 32,
+        "lane": 1,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          80.5,
+          65.2,
+          -3.5
+        ],
+        "resource": "gold",
+        "team": "Blue",
+        "cap": 8,
+        "lane": 1,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          80.5,
+          65.2,
+          4.5
+        ],
+        "resource": "iron",
+        "team": "Blue",
+        "cap": 32,
+        "lane": 2,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          80.5,
+          65.2,
+          4.5
+        ],
+        "resource": "gold",
+        "team": "Blue",
+        "cap": 8,
+        "lane": 2,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          80.5,
+          65.2,
+          12.5
+        ],
+        "resource": "iron",
+        "team": "Blue",
+        "cap": 32,
+        "lane": 3,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          80.5,
+          65.2,
+          12.5
+        ],
+        "resource": "gold",
+        "team": "Blue",
+        "cap": 8,
+        "lane": 3,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          82.5,
+          65.2,
+          0.5
+        ],
+        "resource": "emerald",
+        "team": "Blue",
+        "cap": 4,
+        "requires_forge": 3,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          52.5,
+          65.2,
+          52.5
+        ],
+        "resource": "diamond",
+        "team": null,
+        "cap": 8
+      },
+      {
+        "position": [
+          22.5,
+          65.2,
+          0.5
+        ],
+        "resource": "emerald",
+        "team": null,
+        "cap": 8
+      },
+      {
+        "position": [
+          12.5,
+          65.2,
+          80.5
+        ],
+        "resource": "iron",
+        "team": "Green",
+        "cap": 32,
+        "lane": 0,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          12.5,
+          65.2,
+          80.5
+        ],
+        "resource": "gold",
+        "team": "Green",
+        "cap": 8,
+        "lane": 0,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          4.5,
+          65.2,
+          80.5
+        ],
+        "resource": "iron",
+        "team": "Green",
+        "cap": 32,
+        "lane": 1,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          4.5,
+          65.2,
+          80.5
+        ],
+        "resource": "gold",
+        "team": "Green",
+        "cap": 8,
+        "lane": 1,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          -3.5,
+          65.2,
+          80.5
+        ],
+        "resource": "iron",
+        "team": "Green",
+        "cap": 32,
+        "lane": 2,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          -3.5,
+          65.2,
+          80.5
+        ],
+        "resource": "gold",
+        "team": "Green",
+        "cap": 8,
+        "lane": 2,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          -11.5,
+          65.2,
+          80.5
+        ],
+        "resource": "iron",
+        "team": "Green",
+        "cap": 32,
+        "lane": 3,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          -11.5,
+          65.2,
+          80.5
+        ],
+        "resource": "gold",
+        "team": "Green",
+        "cap": 8,
+        "lane": 3,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          0.5,
+          65.2,
+          82.5
+        ],
+        "resource": "emerald",
+        "team": "Green",
+        "cap": 4,
+        "requires_forge": 3,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          -51.5,
+          65.2,
+          52.5
+        ],
+        "resource": "diamond",
+        "team": null,
+        "cap": 8
+      },
+      {
+        "position": [
+          0.5,
+          65.2,
+          22.5
+        ],
+        "resource": "emerald",
+        "team": null,
+        "cap": 8
+      },
+      {
+        "position": [
+          -79.5,
+          65.2,
+          12.5
+        ],
+        "resource": "iron",
+        "team": "Yellow",
+        "cap": 32,
+        "lane": 0,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          -79.5,
+          65.2,
+          12.5
+        ],
+        "resource": "gold",
+        "team": "Yellow",
+        "cap": 8,
+        "lane": 0,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          -79.5,
+          65.2,
+          4.5
+        ],
+        "resource": "iron",
+        "team": "Yellow",
+        "cap": 32,
+        "lane": 1,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          -79.5,
+          65.2,
+          4.5
+        ],
+        "resource": "gold",
+        "team": "Yellow",
+        "cap": 8,
+        "lane": 1,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          -79.5,
+          65.2,
+          -3.5
+        ],
+        "resource": "iron",
+        "team": "Yellow",
+        "cap": 32,
+        "lane": 2,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          -79.5,
+          65.2,
+          -3.5
+        ],
+        "resource": "gold",
+        "team": "Yellow",
+        "cap": 8,
+        "lane": 2,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          -79.5,
+          65.2,
+          -11.5
+        ],
+        "resource": "iron",
+        "team": "Yellow",
+        "cap": 32,
+        "lane": 3,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          -79.5,
+          65.2,
+          -11.5
+        ],
+        "resource": "gold",
+        "team": "Yellow",
+        "cap": 8,
+        "lane": 3,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          -81.5,
+          65.2,
+          0.5
+        ],
+        "resource": "emerald",
+        "team": "Yellow",
+        "cap": 4,
+        "requires_forge": 3,
+        "hologram_enabled": false
+      },
+      {
+        "position": [
+          -51.5,
+          65.2,
+          -51.5
+        ],
+        "resource": "diamond",
+        "team": null,
+        "cap": 8
+      },
+      {
+        "position": [
+          -21.5,
+          65.2,
+          0.5
+        ],
+        "resource": "emerald",
+        "team": null,
+        "cap": 8
+      }
+    ],
+    "structures": [
+      {
+        "file": "red_base.blocks.gz",
+        "origin": [
+          -10,
+          60,
+          -107
+        ],
+        "rotation": 0,
+        "color": "RED"
+      },
+      {
+        "file": "diamond.blocks.gz",
+        "origin": [
+          41,
+          51,
+          -61
+        ],
+        "rotation": 0
+      },
+      {
+        "file": "red_base.blocks.gz",
+        "origin": [
+          107,
+          60,
+          -10
+        ],
+        "rotation": 1,
+        "color": "BLUE"
+      },
+      {
+        "file": "diamond.blocks.gz",
+        "origin": [
+          61,
+          51,
+          41
+        ],
+        "rotation": 1
+      },
+      {
+        "file": "red_base.blocks.gz",
+        "origin": [
+          10,
+          60,
+          107
+        ],
+        "rotation": 2,
+        "color": "GREEN"
+      },
+      {
+        "file": "diamond.blocks.gz",
+        "origin": [
+          -41,
+          51,
+          61
+        ],
+        "rotation": 2
+      },
+      {
+        "file": "red_base.blocks.gz",
+        "origin": [
+          -107,
+          60,
+          10
+        ],
+        "rotation": 3,
+        "color": "YELLOW"
+      },
+      {
+        "file": "diamond.blocks.gz",
+        "origin": [
+          -61,
+          51,
+          -41
+        ],
+        "rotation": 3
+      },
+      {
+        "file": "emerald.blocks.gz",
+        "origin": [
+          -21,
+          56,
+          -17
+        ],
+        "rotation": 0
+      }
+    ],
+    "landings": [],
+    "tactical_positions": [],
+    "features": [
+      "crypt_castles",
+      "four_courtyards",
+      "four_forge_lanes",
+      "wide_bridge_mouths",
+      "four_outposts",
+      "diamond_flanks",
+      "central_ring"
+    ],
+    "lobby_spawn": [
+      0.5,
+      111,
+      118.5,
+      180,
+      20
+    ],
+    "lobby_min": [
+      -8,
+      109,
+      110
+    ],
+    "lobby_max": [
+      8,
+      116,
+      126
+    ],
+    "spectator_spawn": [
+      0.5,
+      96,
+      0.5,
+      0,
+      35
+    ],
+    "navigation": {
+      "waypoints": [
+        {
+          "id": "red",
+          "position": [
+            0.5,
+            65,
+            -69.5
+          ]
+        },
+        {
+          "id": "red_outpost",
+          "position": [
+            0.5,
+            65,
+            -48.5
+          ]
+        },
+        {
+          "id": "red_diamond",
+          "position": [
+            52.5,
+            65,
+            -51.5
+          ]
+        },
+        {
+          "id": "red_center",
+          "position": [
+            0.5,
+            65,
+            -21.5
+          ]
+        },
+        {
+          "id": "blue",
+          "position": [
+            70.5,
+            65,
+            0.5
+          ]
+        },
+        {
+          "id": "blue_outpost",
+          "position": [
+            49.5,
+            65,
+            0.5
+          ]
+        },
+        {
+          "id": "blue_diamond",
+          "position": [
+            52.5,
+            65,
+            52.5
+          ]
+        },
+        {
+          "id": "blue_center",
+          "position": [
+            22.5,
+            65,
+            0.5
+          ]
+        },
+        {
+          "id": "green",
+          "position": [
+            0.5,
+            65,
+            70.5
+          ]
+        },
+        {
+          "id": "green_outpost",
+          "position": [
+            0.5,
+            65,
+            49.5
+          ]
+        },
+        {
+          "id": "green_diamond",
+          "position": [
+            -51.5,
+            65,
+            52.5
+          ]
+        },
+        {
+          "id": "green_center",
+          "position": [
+            0.5,
+            65,
+            22.5
+          ]
+        },
+        {
+          "id": "yellow",
+          "position": [
+            -69.5,
+            65,
+            0.5
+          ]
+        },
+        {
+          "id": "yellow_outpost",
+          "position": [
+            -48.5,
+            65,
+            0.5
+          ]
+        },
+        {
+          "id": "yellow_diamond",
+          "position": [
+            -51.5,
+            65,
+            -51.5
+          ]
+        },
+        {
+          "id": "yellow_center",
+          "position": [
+            -21.5,
+            65,
+            0.5
+          ]
+        },
+        {
+          "id": "red_ring",
+          "position": [
+            22.5,
+            65,
+            -21.5
+          ]
+        },
+        {
+          "id": "blue_ring",
+          "position": [
+            22.5,
+            65,
+            22.5
+          ]
+        },
+        {
+          "id": "green_ring",
+          "position": [
+            -21.5,
+            65,
+            22.5
+          ]
+        },
+        {
+          "id": "yellow_ring",
+          "position": [
+            -21.5,
+            65,
+            -21.5
+          ]
+        }
+      ],
+      "links": [
+        [
+          "red",
+          "red_outpost"
+        ],
+        [
+          "red_outpost",
+          "red_center"
+        ],
+        [
+          "red_outpost",
+          "red_diamond"
+        ],
+        [
+          "red_diamond",
+          "blue_outpost"
+        ],
+        [
+          "blue",
+          "blue_outpost"
+        ],
+        [
+          "blue_outpost",
+          "blue_center"
+        ],
+        [
+          "blue_outpost",
+          "blue_diamond"
+        ],
+        [
+          "blue_diamond",
+          "green_outpost"
+        ],
+        [
+          "green",
+          "green_outpost"
+        ],
+        [
+          "green_outpost",
+          "green_center"
+        ],
+        [
+          "green_outpost",
+          "green_diamond"
+        ],
+        [
+          "green_diamond",
+          "yellow_outpost"
+        ],
+        [
+          "yellow",
+          "yellow_outpost"
+        ],
+        [
+          "yellow_outpost",
+          "yellow_center"
+        ],
+        [
+          "yellow_outpost",
+          "yellow_diamond"
+        ],
+        [
+          "yellow_diamond",
+          "red_outpost"
+        ],
+        [
+          "red_center",
+          "red_ring"
+        ],
+        [
+          "red_ring",
+          "blue_center"
+        ],
+        [
+          "blue_center",
+          "blue_ring"
+        ],
+        [
+          "blue_ring",
+          "green_center"
+        ],
+        [
+          "green_center",
+          "green_ring"
+        ],
+        [
+          "green_ring",
+          "yellow_center"
+        ],
+        [
+          "yellow_center",
+          "yellow_ring"
+        ],
+        [
+          "yellow_ring",
+          "red_center"
+        ]
+      ]
+    },
+    "asset_directory": "maps/crypt-squads"
+  },
+  "resources": {
+    "iron": {
+      "label": "铁",
+      "material": "IRON_INGOT",
+      "interval_seconds": 1,
+      "color": "WHITE"
+    },
+    "gold": {
+      "label": "金",
+      "material": "GOLD_INGOT",
+      "interval_seconds": 6,
+      "color": "GOLD"
+    },
+    "diamond": {
+      "label": "钻石",
+      "material": "DIAMOND",
+      "interval_seconds": 15,
+      "color": "AQUA"
+    },
+    "emerald": {
+      "label": "绿宝石",
+      "material": "EMERALD",
+      "interval_seconds": 20,
+      "color": "GREEN"
+    }
+  },
+  "shop": [
+    {
+      "id": "wool",
+      "label": "队伍羊毛",
+      "material": "white_wool",
+      "amount": 16,
+      "price": 4,
+      "currency": "iron"
+    },
+    {
+      "id": "end_stone",
+      "label": "末地石",
+      "material": "end_stone",
+      "amount": 12,
+      "price": 24,
+      "currency": "iron"
+    },
+    {
+      "id": "oak_planks",
+      "label": "橡木木板",
+      "material": "oak_planks",
+      "amount": 16,
+      "price": 4,
+      "currency": "gold"
+    },
+    {
+      "id": "stone_sword",
+      "label": "石剑",
+      "material": "stone_sword",
+      "amount": 1,
+      "price": 10,
+      "currency": "iron"
+    },
+    {
+      "id": "iron_sword",
+      "label": "铁剑",
+      "material": "iron_sword",
+      "amount": 1,
+      "price": 7,
+      "currency": "gold"
+    },
+    {
+      "id": "wooden_pickaxe",
+      "label": "木镐",
+      "material": "wooden_pickaxe",
+      "amount": 1,
+      "price": 10,
+      "currency": "iron",
+      "properties": [
+        {
+          "name": "SkyDuelTool",
+          "tool": "pickaxe",
+          "tier": "1",
+          "price": 10,
+          "currency": "iron"
+        }
+      ]
+    },
+    {
+      "id": "diamond_pickaxe",
+      "label": "钻石镐",
+      "material": "diamond_pickaxe",
+      "amount": 1,
+      "price": 3,
+      "currency": "emerald",
+      "properties": [
+        {
+          "name": "SkyDuelTool",
+          "tool": "pickaxe",
+          "tier": "4",
+          "price": 3,
+          "currency": "emerald"
+        }
+      ]
+    },
+    {
+      "id": "shears",
+      "label": "剪刀",
+      "material": "shears",
+      "amount": 1,
+      "price": 20,
+      "currency": "iron",
+      "properties": [
+        {
+          "name": "SkyDuelTool",
+          "tool": "shears",
+          "tier": "1",
+          "price": 20,
+          "currency": "iron"
+        }
+      ]
+    },
+    {
+      "id": "golden_apple",
+      "label": "金苹果",
+      "material": "golden_apple",
+      "amount": 1,
+      "price": 3,
+      "currency": "gold"
+    },
+    {
+      "id": "diamond_sword",
+      "label": "钻石剑",
+      "material": "diamond_sword",
+      "amount": 1,
+      "price": 4,
+      "currency": "emerald"
+    },
+    {
+      "id": "obsidian",
+      "label": "黑曜石",
+      "material": "obsidian",
+      "amount": 4,
+      "price": 4,
+      "currency": "emerald"
+    },
+    {
+      "id": "glass",
+      "label": "防爆玻璃",
+      "material": "white_stained_glass",
+      "amount": 4,
+      "price": 12,
+      "currency": "iron"
+    },
+    {
+      "id": "ladder",
+      "label": "梯子",
+      "material": "ladder",
+      "amount": 16,
+      "price": 4,
+      "currency": "iron"
+    },
+    {
+      "id": "iron_pickaxe",
+      "label": "铁镐",
+      "material": "iron_pickaxe",
+      "amount": 1,
+      "price": 6,
+      "currency": "gold",
+      "properties": [
+        {
+          "name": "SkyDuelTool",
+          "tool": "pickaxe",
+          "tier": "3",
+          "price": 6,
+          "currency": "gold"
+        }
+      ]
+    },
+    {
+      "id": "wooden_axe",
+      "label": "木斧",
+      "material": "wooden_axe",
+      "amount": 1,
+      "price": 10,
+      "currency": "iron",
+      "properties": [
+        {
+          "name": "SkyDuelTool",
+          "tool": "axe",
+          "tier": "1",
+          "price": 10,
+          "currency": "iron"
+        }
+      ]
+    },
+    {
+      "id": "iron_axe",
+      "label": "铁斧",
+      "material": "iron_axe",
+      "amount": 1,
+      "price": 6,
+      "currency": "gold",
+      "properties": [
+        {
+          "name": "SkyDuelTool",
+          "tool": "axe",
+          "tier": "3",
+          "price": 6,
+          "currency": "gold"
+        }
+      ]
+    },
+    {
+      "id": "bow",
+      "label": "弓",
+      "material": "bow",
+      "amount": 1,
+      "price": 12,
+      "currency": "gold"
+    },
+    {
+      "id": "arrow",
+      "label": "箭",
+      "material": "arrow",
+      "amount": 8,
+      "price": 2,
+      "currency": "gold"
+    },
+    {
+      "id": "chainmail_armor",
+      "label": "锁链护腿与靴子（永久）",
+      "material": "chainmail_boots",
+      "amount": 1,
+      "price": 40,
+      "currency": "iron",
+      "properties": [
+        {
+          "name": "SkyDuelArmor",
+          "tier": "chainmail",
+          "price": 40,
+          "currency": "iron"
+        }
+      ]
+    },
+    {
+      "id": "iron_armor",
+      "label": "铁护腿与靴子（永久）",
+      "material": "iron_boots",
+      "amount": 1,
+      "price": 12,
+      "currency": "gold",
+      "properties": [
+        {
+          "name": "SkyDuelArmor",
+          "tier": "iron",
+          "price": 12,
+          "currency": "gold"
+        }
+      ]
+    },
+    {
+      "id": "diamond_armor",
+      "label": "钻石护腿与靴子（永久）",
+      "material": "diamond_boots",
+      "amount": 1,
+      "price": 6,
+      "currency": "emerald",
+      "properties": [
+        {
+          "name": "SkyDuelArmor",
+          "tier": "diamond",
+          "price": 6,
+          "currency": "emerald"
+        }
+      ]
+    },
+    {
+      "id": "tnt",
+      "label": "自动点燃 TNT",
+      "material": "tnt",
+      "amount": 1,
+      "price": 4,
+      "currency": "gold",
+      "properties": [
+        {
+          "name": "AutoIgniteableTnt",
+          "explosion-time": 4,
+          "damage-placer": true,
+          "damage": 4.0
+        }
+      ]
+    },
+    {
+      "id": "fireball",
+      "label": "火球",
+      "material": "fire_charge",
+      "amount": 1,
+      "price": 40,
+      "currency": "iron",
+      "properties": [
+        {
+          "name": "ThrowableFireball",
+          "damage": 3.0,
+          "incendiary": true,
+          "damage-thrower": true
+        }
+      ]
+    },
+    {
+      "id": "ender_pearl",
+      "label": "末影珍珠",
+      "material": "ender_pearl",
+      "amount": 1,
+      "price": 4,
+      "currency": "emerald"
+    },
+    {
+      "id": "water_bucket",
+      "label": "水桶",
+      "material": "water_bucket",
+      "amount": 1,
+      "price": 3,
+      "currency": "gold"
+    },
+    {
+      "id": "speed_potion",
+      "label": "迅捷药水",
+      "material": "potion",
+      "amount": 1,
+      "price": 1,
+      "currency": "emerald",
+      "stack": {
+        "potion-type": "swiftness",
+        "display-name": "迅捷药水"
+      },
+      "properties": [
+        {
+          "name": "SkyDuelPotion",
+          "effect": "SPEED",
+          "duration": 45,
+          "amplifier": 1
+        }
+      ],
+      "duration_seconds": 45
+    },
+    {
+      "id": "jump_potion",
+      "label": "跳跃药水",
+      "material": "potion",
+      "amount": 1,
+      "price": 1,
+      "currency": "emerald",
+      "stack": {
+        "potion-type": "leaping",
+        "display-name": "跳跃药水"
+      },
+      "properties": [
+        {
+          "name": "SkyDuelPotion",
+          "effect": "JUMP_BOOST",
+          "duration": 45,
+          "amplifier": 4
+        }
+      ],
+      "duration_seconds": 45
+    },
+    {
+      "id": "invisibility_potion",
+      "label": "隐身药水",
+      "material": "potion",
+      "amount": 1,
+      "price": 2,
+      "currency": "emerald",
+      "stack": {
+        "potion-type": "invisibility",
+        "display-name": "隐身药水"
+      },
+      "properties": [
+        {
+          "name": "SkyDuelPotion",
+          "effect": "INVISIBILITY",
+          "duration": 30,
+          "amplifier": 0
+        }
+      ],
+      "duration_seconds": 30
+    },
+    {
+      "id": "knockback_stick",
+      "label": "击退棒 I",
+      "material": "stick",
+      "amount": 1,
+      "price": 5,
+      "currency": "gold",
+      "stack": {
+        "display-name": "击退棒 I",
+        "enchants": {
+          "knockback": 1
+        }
+      }
+    },
+    {
+      "id": "power_bow",
+      "label": "力量弓 I",
+      "material": "bow",
+      "amount": 1,
+      "price": 24,
+      "currency": "gold",
+      "stack": {
+        "display-name": "力量弓 I",
+        "enchants": {
+          "power": 1
+        }
+      }
+    },
+    {
+      "id": "punch_bow",
+      "label": "力量 I / 冲击 I 弓",
+      "material": "bow",
+      "amount": 1,
+      "price": 6,
+      "currency": "emerald",
+      "stack": {
+        "display-name": "冲击弓 I",
+        "enchants": {
+          "power": 1,
+          "punch": 1
+        }
+      }
+    },
+    {
+      "id": "sponge",
+      "label": "海绵",
+      "material": "sponge",
+      "amount": 4,
+      "price": 3,
+      "currency": "gold"
+    },
+    {
+      "id": "stone_pickaxe",
+      "label": "石镐",
+      "material": "stone_pickaxe",
+      "amount": 1,
+      "price": 20,
+      "currency": "iron",
+      "properties": [
+        {
+          "name": "SkyDuelTool",
+          "tool": "pickaxe",
+          "tier": "2",
+          "price": 20,
+          "currency": "iron"
+        }
+      ]
+    },
+    {
+      "id": "stone_axe",
+      "label": "石斧",
+      "material": "stone_axe",
+      "amount": 1,
+      "price": 20,
+      "currency": "iron",
+      "properties": [
+        {
+          "name": "SkyDuelTool",
+          "tool": "axe",
+          "tier": "2",
+          "price": 20,
+          "currency": "iron"
+        }
+      ]
+    },
+    {
+      "id": "diamond_axe",
+      "label": "钻石斧",
+      "material": "diamond_axe",
+      "amount": 1,
+      "price": 3,
+      "currency": "emerald",
+      "properties": [
+        {
+          "name": "SkyDuelTool",
+          "tool": "axe",
+          "tier": "4",
+          "price": 3,
+          "currency": "emerald"
+        }
+      ]
+    }
+  ],
+  "submission": {
+    "file": "agent.js",
+    "entry": "act(o)",
+    "strategy_api": "skyduel-strategy-0.2",
+    "integration_status": "specified_not_connected_to_minecraft_or_agx",
+    "source_bytes": 4194304,
+    "heap_bytes": 134217728,
+    "stack_bytes": 1048576,
+    "init_wall_ms": 2000,
+    "act_wall_ms": 20,
+    "match_cpu_ms": 30000,
+    "observation_bytes": 1048576,
+    "action_bytes": 4096,
+    "decision_interval_ticks": 4,
+    "visibility_radius_blocks": 16,
+    "line_of_sight_required": true,
+    "training_on_platform": false,
+    "external_network": false,
+    "budget_status": "candidate_limits_pending_full_runner_benchmark",
+    "orders": [
+      "wait",
+      "move",
+      "bridge",
+      "place",
+      "mine",
+      "buy",
+      "attack",
+      "equip",
+      "use",
+      "look",
+      "upgrade",
+      "deposit",
+      "withdraw"
+    ],
+    "audible_events": {
+      "range_blocks": 16,
+      "source": "Minecraft sound packets received by the agent",
+      "enemy_identity": false
+    }
+  },
+  "team_upgrades": [
+    {
+      "id": "sharpness",
+      "label": "锋利武器",
+      "icon": "IRON_SWORD",
+      "costs": [
+        4
+      ],
+      "currency": "diamond"
+    },
+    {
+      "id": "protection",
+      "label": "护甲保护",
+      "icon": "IRON_CHESTPLATE",
+      "costs": [
+        2,
+        4,
+        8,
+        16
+      ],
+      "currency": "diamond"
+    },
+    {
+      "id": "haste",
+      "label": "急迫采掘",
+      "icon": "GOLDEN_PICKAXE",
+      "costs": [
+        2,
+        4
+      ],
+      "currency": "diamond"
+    },
+    {
+      "id": "forge",
+      "label": "资源熔炉",
+      "icon": "FURNACE",
+      "costs": [
+        2,
+        4,
+        6,
+        8
+      ],
+      "currency": "diamond"
+    },
+    {
+      "id": "heal_pool",
+      "label": "基地治疗池",
+      "icon": "BEACON",
+      "costs": [
+        1
+      ],
+      "currency": "diamond"
+    },
+    {
+      "id": "trap",
+      "label": "警报与失明陷阱",
+      "icon": "TRIPWIRE_HOOK",
+      "costs": [
+        1,
+        2,
+        4
+      ],
+      "currency": "diamond"
+    }
+  ],
+  "phases": [
+    {
+      "at_seconds": 120,
+      "type": "diamond_level",
+      "level": 2
+    },
+    {
+      "at_seconds": 240,
+      "type": "emerald_level",
+      "level": 2
+    },
+    {
+      "at_seconds": 360,
+      "type": "diamond_level",
+      "level": 3
+    },
+    {
+      "at_seconds": 480,
+      "type": "beds_gone"
+    },
+    {
+      "at_seconds": 600,
+      "type": "sudden_death"
+    }
+  ],
+  "mechanics": {
+    "baseline": "Minecraft Java 1.21",
+    "native": {
+      "combat": "Java 1.21 attack speed, charge, critical hits and armor calculations",
+      "food_use_ticks": 32,
+      "drink_use_ticks": 32,
+      "bow_full_draw_ticks": 20,
+      "pearl_cooldown_ticks": 20,
+      "pearl_damage": 5,
+      "golden_apple_effects": [
+        {
+          "effect": "regeneration",
+          "level": 2,
+          "seconds": 5
+        },
+        {
+          "effect": "absorption",
+          "level": 1,
+          "seconds": 120
+        }
+      ]
+    },
+    "bedwars": {
+      "hunger": false,
+      "natural_regeneration": false,
+      "crafting": false,
+      "friendly_fire": false,
+      "permanent_gear_unbreakable": true,
+      "enemy_item_shop_allowed": true,
+      "team_upgrade_shop_own_team_only": true,
+      "world_blocks_protected": true,
+      "tnt_fuse_ticks": 80,
+      "tnt_explosion_power": 4,
+      "tnt_hurts_placer": true,
+      "fireball_explosion_power": 3,
+      "fireball_incendiary": true,
+      "fireball_hurts_thrower": true
+    },
+    "spectator": {
+      "sample_hz": 10,
+      "official_asset_version": "1.21",
+      "client_view": "unmodified Java client; spectator only",
+      "web_view": "record-based reconstruction using official item models"
+    }
+  }
+}

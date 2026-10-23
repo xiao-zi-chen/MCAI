@@ -1,0 +1,10 @@
+{
+  "rules_version": "crypt-squads-0.9.1",
+  "files": {
+    "squads\\rules.json": "535313b01dbd784b9c4d3da45a38e5fee32808e5268ded09f383f74b0f9875e7",
+    "squads\\action.schema.json": "1cf0ebb83af2800889533e79c188b550ff67e1ac7df8ff8105fc62da4a86e897",
+    "squads\\generated\\arena.yml": "b18c94f184855ea6305e86ee5611a827b10795580f42f0180b8a3408b081ecd8",
+    "squads\\generated\\shop.yml": "642ea935708b72def29baadffe3d144e419475eff62193ec5c8fc19cd1da432a",
+    "squads\\generated\\settings.yml": "fe3c305b9f8b3c08d47f0c97a10dbbbb50b51ccce4cdef116db9ef1552dd7cc1"
+  }
+}

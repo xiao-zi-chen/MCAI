@@ -21,6 +21,11 @@ public final class SkyDuelReferee extends JavaPlugin {
     private long measuredAt;
     private volatile boolean stopping;
     final String bootId=UUID.randomUUID().toString();
+    byte[] ruleBytes() throws IOException {
+        var local=getDataFolder().toPath().resolve("competition-rules.json");
+        if(java.nio.file.Files.exists(local))return java.nio.file.Files.readAllBytes(local);
+        try(var input=getResource("competition-rules.json")){return input.readAllBytes();}
+    }
     @Override public void onEnable(){
         getConfig().addDefault("observer-port",25600);getConfig().addDefault("control-port",25610);
         getConfig().options().copyDefaults(true);saveConfig();
@@ -38,6 +43,22 @@ public final class SkyDuelReferee extends JavaPlugin {
             if(sender instanceof Player)return true;
             var first=arenas.values().iterator().next();
             if(args.length>0&&args[0].equals("status")){sender.sendMessage(gson.toJson(status()));return true;}
+            if(args.length==3&&args[0].equals("spectate")){
+                try{
+                    var arena=arenas.get(args[1]);var camera=Bukkit.getPlayerExact(args[2]);
+                    if(arena==null||camera==null||!(camera.getName().startsWith("Camera_")||camera.getName().equals("MapCamera")))throw new IllegalArgumentException("Unknown arena or spectator account");
+                    for(var other:arenas.values()){var game=other.resolveGame();if(game!=null&&game.getConnectedPlayers().contains(camera))throw new IllegalArgumentException("A participant cannot be moved as a spectator");}
+                    var world=Bukkit.getWorld(arena.worldName);if(world==null)throw new IllegalStateException("Arena world is not loaded");
+                    var map=JsonParser.parseString(new String(ruleBytes(),StandardCharsets.UTF_8)).getAsJsonObject().getAsJsonObject("map");
+                    var low=map.getAsJsonArray("build_min");var high=map.getAsJsonArray("build_max");
+                    double x=Math.max(Math.abs(low.get(0).getAsDouble()),Math.abs(high.get(0).getAsDouble())),z=Math.max(Math.abs(low.get(2).getAsDouble()),Math.abs(high.get(2).getAsDouble()));
+                    int distance=Math.max(6,(int)Math.ceil(Math.hypot(x,z)/16)+2);if(distance>16)throw new IllegalArgumentException("Map exceeds configured spectator coverage limit");
+                    camera.setGameMode(GameMode.SPECTATOR);camera.setViewDistance(distance);camera.setSendViewDistance(distance);camera.setSimulationDistance(2);
+                    if(!camera.teleport(new Location(world,.5,map.get("surface_y").getAsDouble()+26,.5,0,45)))throw new IllegalStateException("Spectator teleport was rejected");
+                    sender.sendMessage(gson.toJson(Map.of("ok",true,"arena_id",arena.arenaId,"world",world.getName(),"world_key",world.getKey().toString(),"view_distance",distance)));
+                }catch(Exception error){sender.sendMessage(gson.toJson(Map.of("ok",false,"error",Objects.toString(error.getMessage(),"Spectator setup failed"))));}
+                return true;
+            }
             if(args.length>0&&args[0].equals("abort")){arenas.values().forEach(ArenaReferee::abortMatch);sender.sendMessage("Local matches aborted and saved");return true;}
             if(args.length>0&&args[0].equals("lock")){getConfig().set("debug-controls",false);saveConfig();return true;}
             if(args.length>0&&args[0].equals("test")){getConfig().set("debug-controls",true);first.markTest();return true;}

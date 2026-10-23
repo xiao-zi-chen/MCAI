@@ -28,4 +28,19 @@ function waypoints(map,start,target){
  const route=[];let id=last.id;while(id){route.unshift(nodes.find(n=>n.id===id).p);id=previous.get(id);}
  return [...route.filter(p=>p.distanceTo(start)>2&&p.distanceTo(target)>2),target];
 }
-module.exports={forMap,waypoints};
+// Keep each search within its node budget, including links across a wide void.
+// Planning a whole expensive bridge can exhaust A* before reaching the island.
+function boundedLegs(start,points,maxLength=16){
+ if(!Number.isFinite(maxLength)||maxLength<1)throw Error('Invalid route leg length');
+ const result=[];let previous=start;
+ for(const target of points){
+  const from=previous,parts=Math.max(1,Math.ceil(from.distanceTo(target)/maxLength));
+  for(let i=1;i<=parts;i++){
+   const p=i===parts?target:new Vec3(Math.floor(from.x+(target.x-from.x)*i/parts)+.5,target.y,Math.floor(from.z+(target.z-from.z)*i/parts)+.5);
+   if(!result.length||result.at(-1).distanceTo(p)>.1)result.push(p);
+  }
+  previous=target;
+ }
+ return result;
+}
+module.exports={forMap,waypoints,boundedLegs};

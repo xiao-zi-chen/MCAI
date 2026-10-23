@@ -1,0 +1,39 @@
+{
+  "namespace": "crypt-squads-local",
+  "rules_file": "competition/squads/rules.json",
+  "redis_port": 26380,
+  "game_port": 25570,
+  "rcon_port": 25581,
+  "control_port": 25820,
+  "web_port": 3029,
+  "server_root": "runs/crypt-squads",
+  "scheduler_root": "runs/scheduler-squads",
+  "max_active": 1,
+  "min_free_mb": 1024,
+  "admission_reserve_mb": 1024,
+  "max_mspt": 35,
+  "join_timeout_ms": 180000,
+  "match_timeout_ms": 1200000,
+  "reset_timeout_ms": 180000,
+  "poll_ms": 1000,
+  "arenas": [
+    {
+      "id": "squads-1",
+      "name": "CryptSquads",
+      "world": "crypt-squads-v1",
+      "observer_port": 25821,
+      "viewer_port": 3028
+    }
+  ],
+  "model_directory": "models/squads-elite",
+  "min_model_parameter_bytes": 1048576,
+  "model_profiles_file": "models/squads-elite/profiles.json",
+  "distinct_models": 16,
+  "auto_viewer": true,
+  "viewer_idle_ms": 0,
+  "admission_interval_ms": 15000,
+  "admission_stable_ms": 5000,
+  "max_tick_p95_ms": 50,
+  "min_admission_tps": 19,
+  "agent_view_distance": 4
+}

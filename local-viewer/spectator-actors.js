@@ -1,7 +1,8 @@
 // Read-only avatars driven by recorded movement, server swings, equipment and use state.
 // Texture assets are supplied by the existing local Prismarine viewer installation.
 class SpectatorActors {
- constructor(iframe){this.iframe=iframe;this.view=null;this.models=new Map();this.textures=new Map();this.buffer=[];this.travel=new Map();this.markers=[];this.npcs=[];this.map=null;}
+ constructor(iframe){this.iframe=iframe;this.view=null;this.models=new Map();this.textures=new Map();this.buffer=[];this.travel=new Map();this.markers=[];this.npcs=[];this.map=null;this.aliases=new Map();}
+ setProfiles(agents){this.aliases=new Map((agents||[]).map(a=>[a.name,a.display_name||a.name]));}
  texture(url){
   if(this.textures.has(url))return this.textures.get(url);
   const T=this.T,texture=new T.TextureLoader().load(url);texture.magFilter=T.NearestFilter;texture.minFilter=T.NearestFilter;texture.flipY=false;this.textures.set(url,texture);return texture;
@@ -30,11 +31,11 @@ class SpectatorActors {
   skin.push(this.part(joint('rightArm',[-5,22,0]),[4,12,4],[-1,-4,0],[40,16],tex));
   skin.push(this.part(joint('leftLeg',[1.9,12,0]),[4,12,4],[0,-6,0],[16,48],tex));
   skin.push(this.part(joint('rightLeg',[-1.9,12,0]),[4,12,4],[0,-6,0],[0,16],tex));
-  const label=this.textSprite(p.name,p.team==='Red'?'#ffb0a6':'#a1ceff');label.position.set(0,2.28,0);root.add(label);
+  const display=this.aliases?.get(p.name)||p.name,label=this.textSprite(display,({Red:'#ffb0a6',Blue:'#a1ceff',Green:'#91e8a4',Yellow:'#ffe08a'}[p.team]||'#ffffff'));label.position.set(0,2.28,0);root.add(label);
   const health=new T.Mesh(new T.PlaneGeometry(.85,.055),new T.MeshBasicMaterial({color:0x7beba6,side:T.DoubleSide}));health.position.set(0,2.02,0);root.add(health);
   const absorption=new T.Mesh(new T.PlaneGeometry(.85,.04),new T.MeshBasicMaterial({color:0xf5ce57,side:T.DoubleSide}));absorption.position.set(0,2.1,0);root.add(absorption);
   const held=new T.Group();held.position.set(-s,-10*s,-2*s);held.rotation.set(Math.PI/2,Math.PI,0,'XYZ');held.scale.set(.9375,-.9375,.9375);rig.rightArm.add(held);
-  const a={root,rig,skin,label,health,absorption,held,gear:[],armorKey:'',itemKey:'',team:p.team};this.view.viewer.scene.add(root);this.models.set(p.name,a);return a;
+  const a={root,rig,skin,label,health,absorption,held,gear:[],armorKey:'',itemKey:'',team:p.team,labelName:display};this.view.viewer.scene.add(root);this.models.set(p.name,a);return a;
  }
  disposeObject(root){if(root.userData.nativeItem){root.parent?.remove(root);return;}root.traverse(o=>{o.geometry?.dispose();if(o.material)for(const m of Array.isArray(o.material)?o.material:[o.material])m.dispose();});root.parent?.remove(root);}
  armor(a,p){
@@ -43,7 +44,7 @@ class SpectatorActors {
   const add=(slot,bone,size,center,uv,inflate,layer=1)=>{
    const item=(p.armor||[])[slot];if(!item||item==='AIR')return;
    const kind=item.split('_')[0].toLowerCase(),name=kind==='golden'?'gold':kind;
-   const tint=kind==='leather'?(p.armor_stacks?.[slot]?.tint??(p.team==='Red'?0xc3443a:0x4169be)):0xffffff;
+   const tint=kind==='leather'?(p.armor_stacks?.[slot]?.tint??(({Red:0xc3443a,Blue:0x4169be,Green:0x41b455,Yellow:0xf0cd37}[p.team]||0xffffff))):0xffffff;
    const mesh=this.part(a.rig[bone],size,center,uv,'/native-assets/textures/models/armor/'+name+'_layer_'+layer+'.png',inflate,tint,32);if(p.armor_stacks?.[slot]?.enchanted){const shine=this.native.glint(mesh);if(shine)mesh.add(shine);}a.gear.push(mesh);
   };
   add(3,'head',[8,8,8],[0,4,0],[0,0],1);
@@ -100,7 +101,8 @@ class SpectatorActors {
   for(const p of players){
    if(p.mode!=='SURVIVAL'||p.pos[1]>=(this.map?.build_max?.[1]??90)+2)continue;present.add(p.name);
    const a=this.models.get(p.name)||this.create(p),pose=NativePoses.pose(p,tick);
-   if(a.team!==p.team){this.disposeObject(a.label);a.label=this.textSprite(p.name,p.team==='Red'?'#ffb0a6':'#a1ceff');a.root.add(a.label);a.team=p.team;}
+   const display=this.aliases?.get(p.name)||p.name;
+   if(a.team!==p.team||a.labelName!==display){this.disposeObject(a.label);a.label=this.textSprite(display,({Red:'#ffb0a6',Blue:'#a1ceff',Green:'#91e8a4',Yellow:'#ffe08a'}[p.team]||'#ffffff'));a.root.add(a.label);a.team=p.team;a.labelName=display;}
    a.root.visible=true;a.root.position.set(...p.pos);a.root.rotation.y=Math.PI-p.yaw*Math.PI/180;
    this.armor(a,p);this.item(a,p);
    const r=a.rig;r.head.rotation.x=pose.head;
@@ -125,7 +127,7 @@ class SpectatorActors {
    this.foodParticles(a,p,tick,pose.action);
   }
   for(const [name,a]of this.models)if(!present.has(name))a.root.visible=false;
-  const fighting=players.some((p,i)=>p.mode==='SURVIVAL'&&players.some((q,j)=>i!==j&&q.mode==='SURVIVAL'&&Math.hypot(...p.pos.map((v,k)=>v-q.pos[k]))<6));
+  const fighting=players.some((p,i)=>p.mode==='SURVIVAL'&&players.some((q,j)=>i!==j&&p.team!==q.team&&q.mode==='SURVIVAL'&&Math.hypot(...p.pos.map((v,k)=>v-q.pos[k]))<6));
   for(const marker of this.markers)marker.visible=!fighting&&marker.position.distanceTo(this.view.viewer.camera.position)<24;
   this.renderHand(players,tick);
  }

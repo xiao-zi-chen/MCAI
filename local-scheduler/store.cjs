@@ -3,10 +3,12 @@ const LUA={
  add:`local e=cjson.decode(ARGV[1]);if redis.call('HEXISTS',KEYS[1],e.id)==1 then return redis.error_reply('Entrant already exists') end
  e.state='waiting';e.completed=0;redis.call('HSET',KEYS[1],e.id,cjson.encode(e));redis.call('RPUSH',KEYS[2],e.id);return e.id`,
  allocate:`if redis.call('HEXISTS',KEYS[3],ARGV[1])==1 then return nil end
- local pair={};while #pair<2 do local id=redis.call('LPOP',KEYS[2]);if not id then break end
+ local teams=cjson.decode(ARGV[5]);local size=tonumber(ARGV[6]);local required=#teams*size
+ local pair={};while #pair<required do local id=redis.call('LPOP',KEYS[2]);if not id then break end
  local raw=redis.call('HGET',KEYS[1],id);if raw then local e=cjson.decode(raw);if e.state=='waiting' and not e.withdraw then table.insert(pair,e) end end end
- if #pair<2 then if #pair==1 then redis.call('LPUSH',KEYS[2],pair[1].id) end;return nil end
- local m={id=ARGV[2],token=ARGV[3],arena_id=ARGV[1],players=pair,state='reserved',created_at=tonumber(ARGV[4])}
+ if #pair<required then for i=#pair,1,-1 do redis.call('LPUSH',KEYS[2],pair[i].id) end;return nil end
+ for i,e in ipairs(pair) do e.team=teams[math.floor((i-1)/size)+1];e.slot=(i-1)%size end
+ local m={id=ARGV[2],token=ARGV[3],arena_id=ARGV[1],players=pair,players_per_team=size,state='reserved',created_at=tonumber(ARGV[4])}
  for _,e in ipairs(pair) do e.state='reserved';e.match_id=m.id;redis.call('HSET',KEYS[1],e.id,cjson.encode(e)) end
  redis.call('HSET',KEYS[3],ARGV[1],m.id);redis.call('HSET',KEYS[4],m.id,cjson.encode(m));return cjson.encode(m)`,
  result:`local raw=redis.call('HGET',KEYS[1],ARGV[1]);if not raw then return redis.error_reply('Unknown match') end
@@ -14,7 +16,8 @@ const LUA={
  if redis.call('HSETNX',KEYS[2],ARGV[1],ARGV[3])==0 then return 0 end
  local r=cjson.decode(ARGV[3]);for _,e in ipairs(m.players) do
  redis.call('HINCRBY',KEYS[3],e.id..':played',1)
- if r.status=='complete' and r.winner_id==e.id then redis.call('HINCRBY',KEYS[3],e.id..':wins',1) end end
+ local won=r.winner_id==e.id;for _,id in ipairs(r.winner_ids or {}) do if id==e.id then won=true end end
+ if r.status=='complete' and won then redis.call('HINCRBY',KEYS[3],e.id..':wins',1) end end
  return 1`,
  release:`local raw=redis.call('HGET',KEYS[1],ARGV[1]);if not raw then return redis.error_reply('Unknown match') end
  local m=cjson.decode(raw);if m.token~=ARGV[2] then return redis.error_reply('Stale match token') end
@@ -34,12 +37,12 @@ const LUA={
  if m.state=='settled' then return 0 end;m.state=ARGV[3];m.updated_at=tonumber(ARGV[4]);m.detail=ARGV[5];redis.call('HSET',KEYS[1],m.id,cjson.encode(m));return 1`
 };
 class Store{
- constructor(redis,prefix='skyduel-local'){if(!/^[a-zA-Z0-9_-]+$/.test(prefix))throw Error('Invalid namespace');this.redis=redis;this.prefix=prefix;}
+ constructor(redis,prefix='skyduel-local',format={teams:['Red','Blue'],players_per_team:1},models=['EmberAI','BastionAI']){if(!/^[a-zA-Z0-9_-]+$/.test(prefix))throw Error('Invalid namespace');if(!Array.isArray(format.teams)||format.teams.length<2||new Set(format.teams).size!==format.teams.length||!Number.isInteger(format.players_per_team)||format.players_per_team<1||format.teams.length*format.players_per_team>64)throw Error('Invalid match format');if(!Array.isArray(models)||!models.length||new Set(models).size!==models.length||models.some(m=>!/^[-A-Za-z0-9_]{1,48}$/.test(m)))throw Error('Invalid local model allowlist');this.models=new Set(models);this.redis=redis;this.prefix=prefix;this.format=format;}
  k(name){return `${this.prefix}:${name}`;}
  eval(name,keys,args){return this.redis.eval(LUA[name],keys.length,...keys.map(k=>this.k(k)),...args);}
- async add(e){if(!/^[A-Za-z0-9_]{3,16}$/.test(e.id)||!['EmberAI','BastionAI'].includes(e.model)||!['rush','fortify'].includes(e.style)||!Number.isInteger(e.rounds)||e.rounds<1||e.rounds>100)throw Error('Invalid local test entrant');
+ async add(e){if(!/^[A-Za-z0-9_]{3,16}$/.test(e.id)||!this.models.has(e.model)||!['rush','fortify'].includes(e.style)||!Number.isInteger(e.rounds)||e.rounds<1||e.rounds>100)throw Error('Invalid local test entrant');
  const value={...e,name:e.id,seed:Number(e.seed)||1,joined_at:Date.now()};await this.eval('add',['entrants','waiting'],[JSON.stringify(value)]);return value;}
- async allocate(arena){const raw=await this.eval('allocate',['entrants','waiting','slots','matches'],[arena,crypto.randomUUID(),crypto.randomUUID(),Date.now()]);return raw?JSON.parse(raw):null;}
+ async allocate(arena){const raw=await this.eval('allocate',['entrants','waiting','slots','matches'],[arena,crypto.randomUUID(),crypto.randomUUID(),Date.now(),JSON.stringify(this.format.teams),this.format.players_per_team]);return raw?JSON.parse(raw):null;}
  async active(arena){const id=await this.redis.hget(this.k('slots'),arena);return id?this.match(id):null;}
  async match(id){const raw=await this.redis.hget(this.k('matches'),id);return raw?JSON.parse(raw):null;}
  async setState(m,state,detail=''){return this.eval('state',['matches'],[m.id,m.token,state,Date.now(),detail]);}

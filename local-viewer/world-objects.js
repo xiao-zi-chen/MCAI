@@ -8,7 +8,7 @@ function bedStates(frame,map){
  for(const [name,t]of Object.entries(map?.teams||{})){
   if(!frame.teams?.find(x=>x.name===name)?.bed)continue;
   const sign=Math.sign(t.base_block_x),p=t.bed;
-  for(const [part,x]of [['head',p[0]],['foot',p[0]-sign]])result.push({pos:[x,p[1],p[2]],part,color:t.color.toLowerCase(),facing:sign>0?'east':'west'});
+  for(const [part,pos]of [['head',p],['foot',t.bed_foot||[p[0]-sign,p[1],p[2]]]])result.push({pos,part,color:t.color.toLowerCase(),facing:t.bed_facing?.toLowerCase()||(sign>0?'east':'west')});
  }return result;
 }
 function dropStates(frame,next,alpha){

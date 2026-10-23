@@ -5,18 +5,18 @@ const runtimeRequire=createRequire(path.join(process.env.SKYDUEL_RUNTIME_ROOT||(
 const {pathfinder,Movements,goals}=runtimeRequire('mineflayer-pathfinder');
 const {Vec3}=require('../bot-controller/node_modules/vec3');
 const {defenseBoxes,navigationPenalty}=require('./bedwars-navigation.cjs');
-const {Agent,run,getMatch,rules,root,logits,roster,modelFor}=require('./showcase-agents.cjs');
+const {Agent,run,getMatch,rules,root,logits,loadModel,roster,modelFor}=require('./showcase-agents.cjs');
 const modelDir=path.resolve(root,process.env.SKYDUEL_MODEL_DIR||'models/showcase');
 const {baseX,bedX,footX,feetY,nearBase,home,approach}=require('./arena-geometry.cjs').forMap(rules.map);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const sha=file=>crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
-const controllerSources=Object.fromEntries(['scripts/showcase-v2.cjs','scripts/showcase-agents.cjs','scripts/minecraft-client.cjs','scripts/advanced-tactics.cjs','scripts/bedwars-navigation.cjs','scripts/bedwars-skills.cjs','scripts/arena-geometry.cjs','scripts/strategy-planner.cjs','competition/rules.json'].map(f=>[f,sha(path.join(root,f))]));
+const controllerSources=Object.fromEntries(['scripts/showcase-v2.cjs','scripts/showcase-agents.cjs','scripts/policy-runtime.cjs','scripts/minecraft-client.cjs','scripts/advanced-tactics.cjs','scripts/bedwars-navigation.cjs','scripts/bedwars-skills.cjs','scripts/arena-geometry.cjs','scripts/strategy-planner.cjs','scripts/squad-agents.cjs','scripts/squad-planner.cjs','scripts/match-format.cjs',process.env.SKYDUEL_RULES_FILE||'competition/rules.json'].map(f=>[f,sha(path.join(root,f))]));
 const controllerHash=crypto.createHash('sha256').update(JSON.stringify(controllerSources)).digest('hex'),manifested=new Set();
 const itemNames=i=>JSON.stringify({name:i.customName,nbt:i.nbt,components:i.components},(_,v)=>typeof v==='bigint'?String(v):v);
 
 class ClassicAgent extends Agent {
  constructor(name,style){
-  super(name,style);this.model=JSON.parse(fs.readFileSync(path.join(modelDir,modelFor(name)+'.json'),'utf8'));
+  super(name,style);this.model=loadModel(path.join(modelDir,modelFor(name)+'.json'));
   this.modelHash=sha(path.join(modelDir,modelFor(name)+'.json'));this.bot.loadPlugin(pathfinder);
   this.bridgeWidth=style==='rush'?2:3;this.usingItem=false;this.lastHeal=-1000;this.lastShot=-1000;this.lastSpecial=-1000;this.diamondTrip=false;this.diamondTripDone=false;this.needDiamondPick=false;this.engaging=false;this.failUntil=0;
   this.bot.once('spawn',()=>{const m=new Movements(this.bot);m.canDig=false;m.allow1by1towers=false;m.allowParkour=true;m.maxDropDown=1;m.scafoldingBlocks=[];this.bot.pathfinder.setMovements(m);this.bot.pathfinder.thinkTimeout=1200;this.bot.pathfinder.tickTimeout=8;this.bot.pathfinder.searchRadius=128;});
@@ -68,7 +68,8 @@ class ClassicAgent extends Agent {
   const avoid=block=>Math.floor(target.y)===rules.map.surface_y+1?navigationPenalty(block.position,target,origin,boxes):0;
   movement.exclusionAreasStep.push(avoid);
   try{
-   const task=this.bot.pathfinder.goto(new goals.GoalBlock(Math.floor(target.x),Math.floor(target.y),Math.floor(target.z)));
+   const goal=new goals.GoalBlock(Math.floor(target.x),Math.floor(target.y),Math.floor(target.z));
+   const task=this.bot.pathfinder.goto(goal);
    const deadline=Date.now()+timeout;let checkpoint=this.bot.entity.position.clone(),progress=Date.now();
    const abort=new Promise((_,reject)=>{timer=setInterval(()=>{
     if(token!==this.token||!this.active())return reject(new Error('interrupted'));
@@ -77,6 +78,9 @@ class ClassicAgent extends Agent {
     if(Date.now()>deadline)reject(new Error('walk_timeout'));
    },100)});
    await Promise.race([task,abort]);this.check(token);
+   const actual=this.bot.entity.position.floored();
+   // pathfinder's goto also resolves an empty failed path; confirm real arrival.
+   if(!goal.isEnd(actual)&&!goal.isEnd(actual.offset(0,1,0)))throw Error('path_goal_unreached');
   }finally{clearInterval(timer);movement.exclusionAreasStep=movement.exclusionAreasStep.filter(f=>f!==avoid);if(token===this.token){this.bot.pathfinder.setGoal(null);this.bot.clearControlStates()}}
  }
  async bridgeTo(target,token){
@@ -122,8 +126,8 @@ class ClassicAgent extends Agent {
   const cost=entry.price*quantity/entry.amount;
   if(this.count(currency)<cost)return this.collect(entry.currency,cost,token);
   this.label='购买'+entry.label;
-  const stores=Object.values(rules.map.teams).map(t=>t.shop).sort((a,b)=>new Vec3(a[0],65,a[2]).distanceTo(this.bot.entity.position)-new Vec3(b[0],65,b[2]).distanceTo(this.bot.entity.position));
-  const loc=stores[0];await this.route(new Vec3(loc[0],65,loc[2]+2),token);
+  const stores=Object.values(rules.map.teams).sort((a,b)=>new Vec3(...a.shop.slice(0,3)).distanceTo(this.bot.entity.position)-new Vec3(...b.shop.slice(0,3)).distanceTo(this.bot.entity.position));
+  const store=stores[0],loc=store.shop;await this.route(new Vec3(...(store.shop_approach||[loc[0],feetY,loc[2]+2])),token);
   const npc=this.bot.nearestEntity(e=>e.name==='villager'&&e.position.distanceTo(new Vec3(loc[0],65,loc[2]))<1.5);
   if(!npc)throw new Error('shop_missing');await this.bot.lookAt(npc.position.offset(0,1.4,0),true);await this.bot.activateEntity(npc);
   const deadline=Date.now()+4000;while(!this.bot.currentWindow&&Date.now()<deadline){this.check(token);await sleep(50)}
@@ -137,7 +141,7 @@ class ClassicAgent extends Agent {
  }
  async upgrade(id,token){
   this.label='升级'+rules.team_upgrades.find(u=>u.id===id).label;const loc=this.teamConfig().upgrade_shop;
-  await this.route(new Vec3(loc[0],65,loc[2]+2),token);this.bot.chat('/teamshop');
+  await this.route(new Vec3(...(this.teamConfig().upgrade_approach||[loc[0],feetY,loc[2]+2])),token);this.bot.chat('/teamshop');
   const end=Date.now()+4000;while(!this.bot.currentWindow&&Date.now()<end){this.check(token);await sleep(50)}
   if(!this.bot.currentWindow)throw new Error('upgrade_shop_timeout');
   try{const icon=rules.team_upgrades.find(u=>u.id===id).icon.toLowerCase();const slot=this.bot.currentWindow.slots.findIndex((i,n)=>n<27&&i?.name===icon);if(slot<0)throw new Error('upgrade_missing');await this.bot.clickWindow(slot,0,0);await sleep(250)}finally{if(this.bot.currentWindow)this.bot.closeWindow(this.bot.currentWindow)}
@@ -218,7 +222,7 @@ class ClassicAgent extends Agent {
    if(this.bot.game.gameMode==='survival'&&this.bot.entity.position.y>=100&&!this.bot.inventory.items().some(i=>i.name==='compass')&&Date.now()-this.lastQueue>10000){this.lastQueue=Date.now();this.joinArena()}
    return;
   }
-  if(this.currentMatch!==match.match_id){this.cancel();this.currentMatch=match.match_id;this.side=match.players?.find(p=>p.name===this.name)?.team==='Red'?-1:1;this.defended=false;this.diamondTripDone=false;this.needDiamondPick=false;this.combatStart=0;this.hits=this.taken=0;this.actions.fill(0);this.onMatch?.();}
+  if(this.currentMatch!==match.match_id){this.cancel();this.currentMatch=match.match_id;this.activeSteps=0;this.side=match.players?.find(p=>p.name===this.name)?.team==='Red'?-1:1;this.defended=false;this.diamondTripDone=false;this.needDiamondPick=false;this.combatStart=0;this.hits=this.taken=0;this.actions.fill(0);this.onMatch?.();}
   if(!this.side||Date.now()<this.failUntil)return;
   const enemy=this.visibleEnemy();
   if(this.usingItem){
@@ -226,7 +230,8 @@ class ClassicAgent extends Agent {
    // Do not interrupt a nearly finished apple or the immediate TNT evacuation.
    const distance=enemy?.position.distanceTo(this.bot.entity.position)??Infinity;
    const self=match.players?.find(p=>p.name===this.name);
-   if(distance<2.8&&this.intent!=='TNT打开床防'&&this.intent!=='避开已点燃的TNT'&&!(self?.use_action==='EAT'&&self.use_remaining_ticks<10))this.cancel();
+   if(this.breaching&&this.bot.health<(this.breachHealthFloor?.()??10))this.cancel();
+   else if(distance<2.8&&this.intent!=='TNT打开床防'&&this.intent!=='避开已点燃的TNT'&&!(self?.use_action==='EAT'&&self.use_remaining_ticks<10)&&!this.canContinueUtility?.(enemy))this.cancel();
    return;
   }
   const healThreshold=this.style==='fortify'?12:8;
@@ -243,12 +248,12 @@ class ClassicAgent extends Agent {
   if(this.engaging)this.cancel();this.combatStart=0;
   if(this.pendingTask)return;this.task(t=>this.macro(t));
  }
- status(){return {...super.status(),model_sha256:this.modelHash,controller_sha256:controllerHash,armor:this.bot.inventory.slots.slice(5,9).map(i=>i?.name||'empty'),upgrades:this.ownUpgrades()};}
+ status(){return {...super.status(),model_sha256:this.modelHash,model_weights_sha256:this.model.weights_sha256||this.modelHash,model_parameters:this.model.parameter_count||22027,model_parameter_bytes:this.model.parameter_bytes||88108,model_version:this.model.model_version||'showcase-v2-v3',controller_sha256:controllerHash,armor:this.bot.inventory.slots.slice(5,9).map(i=>i?.name||'empty'),upgrades:this.ownUpgrades()};}
 }
 const SkilledAgent=require('./bedwars-skills.cjs').extend(ClassicAgent,{rules,getMatch,logits});
 function runDemo(){
 const RuntimeBase=process.env.SKYDUEL_SKILLS==='classic'?ClassicAgent:SkilledAgent;
-const AgentType=process.env.SKYDUEL_TACTICS==='classic'?ClassicAgent:require('./advanced-tactics.cjs').extend(RuntimeBase,{rules,getMatch});
+const AgentType=rules.match.players_per_team>1?require('./squad-agents.cjs').extend(SkilledAgent,{rules,getMatch,roster}):(process.env.SKYDUEL_TACTICS==='classic'?ClassicAgent:require('./advanced-tactics.cjs').extend(RuntimeBase,{rules,getMatch}));
 const reportDir=path.resolve(root,process.env.SKYDUEL_REPORT_DIR||'runs/showcase-selected');fs.mkdirSync(reportDir,{recursive:true});
 const archived=path.join(reportDir,'controllers',controllerHash);fs.mkdirSync(archived,{recursive:true});
 for(const source of Object.keys(controllerSources)){const dest=path.join(archived,source);fs.mkdirSync(path.dirname(dest),{recursive:true});fs.copyFileSync(path.join(root,source),dest);}

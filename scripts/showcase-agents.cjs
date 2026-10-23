@@ -5,14 +5,17 @@ const path=require('node:path');
 const net=require('node:net');
 const mineflayer=require('./minecraft-client.cjs');
 const {Vec3}=require('../bot-controller/node_modules/vec3');
-const rules=require('../competition/rules.json');
+const {loadRules,defaultRoster,validateRoster}=require('./match-format.cjs');
+const rules=loadRules();
 const root=path.resolve(__dirname,'..');
-const roster=JSON.parse(process.env.SKYDUEL_ROSTER||'[{"name":"EmberAI","model":"EmberAI","style":"rush","seed":101},{"name":"BastionAI","model":"BastionAI","style":"fortify","seed":202}]');
+const roster=validateRoster(process.env.SKYDUEL_ROSTER?JSON.parse(process.env.SKYDUEL_ROSTER):defaultRoster(rules),rules);
 const arenaName=process.env.SKYDUEL_ARENA_NAME||'SkyDuel';
 const expectedMatch=process.env.SKYDUEL_MATCH_ID||'';
 const managed=Boolean(expectedMatch);
 const modelFor=name=>roster.find(p=>p.name===name)?.model||name;
 const output=path.resolve(root,process.env.SKYDUEL_MODEL_DIR||'models/showcase');
+const agentViewDistance=Number(process.env.SKYDUEL_AGENT_VIEW_DISTANCE||(rules.match.players_per_team>1?4:16));
+if(!Number.isInteger(agentViewDistance)||agentViewDistance<2||agentViewDistance>32)throw Error('AI view distance must be 2..32 chunks');
 let match={phase:'waiting',players:[],teams:[]};
 const {baseX,bedX,footX,feetY,nearBase,home,approach}=require('./arena-geometry.cjs').forMap(rules.map);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -23,21 +26,12 @@ function connectReferee(){
  socket.on('error',()=>{});socket.on('close',()=>setTimeout(connectReferee,1000));
 }
 connectReferee();
-function logits(model,features){
- let x=features;
- for(const layer of model.layers){
-  if(layer.type==='linear')x=layer.weight.map((row,i)=>row.reduce((sum,w,j)=>sum+w*x[j],layer.bias[i]));
-  else if(layer.type==='relu')x=x.map(v=>Math.max(0,v));
-  else if(layer.type==='tanh')x=x.map(Math.tanh);
-  else throw new Error('Unknown layer');
- }
- return x;
-}
+const {loadModel,logits}=require('./policy-runtime.cjs');
 class Agent{
  constructor(name,style){
-  this.name=name;this.style=style;this.model=JSON.parse(fs.readFileSync(path.join(output,modelFor(name)+'.json'),'utf8'));
-  this.bot=mineflayer.createBot({host:'127.0.0.1',port:Number(process.env.BEDWARS_PORT||25567),username:name,auth:'offline',version:'1.21'});
-  this.token=0;this.busy=false;this.currentMatch='';this.label='等待开局';this.side=0;this.steps=0;this.lastAttack=-100;this.lastHurt=-100;this.lastEnemyHurt=-100;this.lastEnemySwing=-100;this.hits=0;this.taken=0;this.actions=Array(11).fill(0);this.lastQueue=0;this.defended=false;this.lastError='';this.errors=0;
+  this.name=name;this.style=style;this.model=loadModel(path.join(output,modelFor(name)+'.json'));
+  this.bot=mineflayer.createBot({host:'127.0.0.1',port:Number(process.env.BEDWARS_PORT||25567),username:name,auth:'offline',version:'1.21',viewDistance:agentViewDistance});
+  this.token=0;this.busy=false;this.currentMatch='';this.label='等待开局';this.side=0;this.steps=0;this.activeSteps=0;this.lastAttack=-100;this.lastHurt=-100;this.lastEnemyHurt=-100;this.lastEnemySwing=-100;this.hits=0;this.taken=0;this.actions=Array(11).fill(0);this.lastQueue=0;this.defended=false;this.lastError='';this.errors=0;
   this.randomSeed=roster.find(p=>p.name===name)?.seed||(style==='rush'?101:202);
   this.bot.on('forcedMove',()=>{this.cancel();if(this.bot.entity?.velocity)this.bot.entity.velocity.set(0,0,0)});
   this.bot.on('game',()=>{this.bot.physicsEnabled=this.bot.game.gameMode==='survival';if(this.bot.game.gameMode!=='survival')this.cancel()});
@@ -51,12 +45,12 @@ class Agent{
  }
  cancel(){this.token++;this.bot.clearControlStates();if(this.bot.targetDigBlock)this.bot.stopDigging();}
  joinArena(){if(!managed||!this.currentMatch)this.bot.chat('/bw join '+arenaName);}
- active(){return (!managed||match.match_id===expectedMatch)&&!this.ended&&this.bot.entity&&match.phase==='running'&&this.bot.game.gameMode==='survival'&&this.bot.entity.position.y>60&&this.bot.health>0;}
+ active(){return !match.test_controls_paused&&(!managed||match.match_id===expectedMatch)&&!this.ended&&this.bot.entity&&match.phase==='running'&&this.bot.game.gameMode==='survival'&&this.bot.entity.position.y>60&&this.bot.health>0;}
  check(token){if(token!==this.token||!this.active())throw new Error('interrupted');}
  count(id){return this.bot.inventory.items().filter(i=>id==='wool'?i.name.endsWith('_wool'):i.name===id).reduce((n,i)=>n+i.count,0)}
  item(id){return this.bot.inventory.items().find(i=>id==='wool'?i.name.endsWith('_wool'):i.name===id)}
  async equip(id){const item=this.item(id);if(item&&this.bot.heldItem?.type!==item.type)await this.bot.equip(item,'hand');}
- teamConfig(){return rules.map.teams[this.side<0?'Red':'Blue'];}
+ teamConfig(){return rules.map.teams[this.ownTeam?this.ownTeam():this.side<0?'Red':'Blue'];}
  visibleEnemy(){
   if(!this.bot.entity)return null;
   return this.bot.nearestEntity(e=>{
@@ -210,17 +204,17 @@ class Agent{
   this.macro(token).catch(e=>this.failure(e)).finally(()=>{this.busy=false;if(token===this.token)this.bot.clearControlStates()});
  }
  failure(error){if(error.message==='interrupted')return;this.errors++;this.lastError=error.message;this.label='重新规划';console.error(this.name,error.message);this.bot.clearControlStates()}
- status(){return {name:this.name,style:this.style,label:this.label,health:this.bot.health,position:this.bot.entity?.position,inventory:this.bot.inventory.items().map(i=>({name:i.name,count:i.count})),actions:this.actions,last_error:this.lastError,errors:this.errors,match_id:this.currentMatch}}
+ status(){return {name:this.name,steps:this.steps,active_steps:this.activeSteps,style:this.style,label:this.label,health:this.bot.health,position:this.bot.entity?.position,inventory:this.bot.inventory.items().map(i=>({name:i.name,count:i.count})),actions:this.actions,last_error:this.lastError,errors:this.errors,match_id:this.currentMatch}}
 }
 function run(AgentType=Agent, reportDir=output) {
 const agents=roster.map(p=>new AgentType(p.name,p.style));
 for(const agent of agents)clearInterval(agent.timer);
 const {monitorEventLoopDelay,performance}=require('node:perf_hooks'),loop=monitorEventLoopDelay({resolution:10});loop.enable();
 let sequence=0,decisionsInWindow=0,lastReport=performance.now();
-const decisions=setInterval(()=>{decisionsInWindow++;const offset=sequence++%agents.length;for(let i=0;i<agents.length;i++){const agent=agents[(offset+i)%agents.length];if(agent.updating)continue;agent.updating=true;agent.update().catch(e=>agent.failure(e)).finally(()=>agent.updating=false);}},100);
+const decisions=setInterval(()=>{decisionsInWindow++;const offset=sequence++%agents.length;for(let i=0;i<agents.length;i++){const agent=agents[(offset+i)%agents.length];if(agent.updating)continue;agent.updating=true;if(agent.active())agent.activeSteps++;agent.update().catch(e=>agent.failure(e)).finally(()=>agent.updating=false);}},100);
 const reports=setInterval(()=>{
  const elapsed=performance.now()-lastReport;lastReport=performance.now();
- const runtime={decision_hz:decisionsInWindow*1000/elapsed,event_loop_p95_ms:loop.percentile(95)/1e6,event_loop_max_ms:loop.max/1e6,rss_mb:process.memoryUsage().rss/1048576};decisionsInWindow=0;loop.reset();
+ const runtime={decision_hz:decisionsInWindow*1000/elapsed,event_loop_p95_ms:loop.percentile(95)/1e6,event_loop_max_ms:loop.max/1e6,rss_mb:process.memoryUsage().rss/1048576,view_distance_chunks:agentViewDistance};decisionsInWindow=0;loop.reset();
  const data={updated_at:new Date().toISOString(),runtime,method:'trained_melee_with_public_macro_plans',agents:agents.map(a=>a.status())};
  for(const file of managed?[path.join(reportDir,'live.json')]:[path.join(reportDir,'live.json'),path.join(root,'runs/showcase-live.json')]){const temp=file+'.tmp';fs.writeFileSync(temp,JSON.stringify(data));fs.renameSync(temp,file);}
 },2000);
@@ -231,5 +225,5 @@ process.on('SIGTERM',stop);
 process.on('SIGINT',()=>{clearInterval(decisions);clearInterval(reports);for(const a of agents)a.bot.quit();setTimeout(()=>process.exit(),500)});
 return agents;
 }
-module.exports={Agent,run,getMatch:()=>match,rules,root,logits,roster,modelFor};
+module.exports={Agent,run,getMatch:()=>match,rules,root,logits,loadModel,roster,modelFor};
 if(require.main===module)run();
