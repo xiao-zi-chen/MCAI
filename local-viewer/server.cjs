@@ -2,18 +2,11 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const http = require('node:http');
-const gzip=require('node:util').promisify(require('node:zlib').gzip);
-const compressedAssets=new Map();
-function asset(req,res,next,key,type,load){
- res.type(type);res.vary('Accept-Encoding');
- if(!req.acceptsEncodings('gzip')){load().then(data=>res.send(data)).catch(next);return;}
- if(!compressedAssets.has(key)){const pending=load().then(data=>gzip(data,{level:3}));compressedAssets.set(key,pending);pending.catch(()=>compressedAssets.delete(key));}
- compressedAssets.get(key).then(data=>res.set('Content-Encoding','gzip').send(data)).catch(next);
-}
 const net = require('node:net');
 const { execFile } = require('node:child_process');
 const { createRequire } = require('node:module');
 const viewerRequire = process.env.BEDWARS_VIEWER_MODULES ? createRequire(path.join(process.env.BEDWARS_VIEWER_MODULES, '..', 'package.json')) : require;
+const asset=require('./viewer-asset-http.cjs').createAssetSender({Negotiator:viewerRequire('negotiator')});
 const express = viewerRequire('express');
 const { Server } = viewerRequire('socket.io');
 const { WorldView } = viewerRequire('prismarine-viewer/viewer/lib/worldView');
@@ -42,6 +35,7 @@ function connectReferee() {
 }
 connectReferee();
 const app = express();
+require('./replay-map-http.cjs').mountReplayMaps(app,replayWorld);
 const server = http.createServer(app);
 const io = new Server(server, { path: '/scene/socket.io' });
 const assets = path.join(path.dirname(viewerRequire.resolve('prismarine-viewer')), 'public');
@@ -50,12 +44,12 @@ const controlAnchor = 'new THREE.OrbitControls(u.camera,l.domElement);';
 if (!bundle.includes(controlAnchor)) throw new Error('Pinned viewer bundle changed; review camera integration.');
 bundle = bundle.replace(controlAnchor, controlAnchor + 'window.localView={viewer:u,controls:h,socket:o};o.on("replayReady",m=>window.localView.replay=m);o.on("replayError",m=>window.localView.error=m);u.camera.fov=65;u.camera.updateProjectionMatrix();h.minDistance=2;h.maxDistance=180;h.minPolarAngle=Math.PI*5/12;h.maxPolarAngle=Math.PI*7/12;');
 bundle = bundle.replace('u.camera.position.set(t.x,t.y+20,t.z+20)', '(h.target.set(t.x,t.y+2.2,t.z),u.camera.position.set(t.x,t.y+2.2,t.z+95))');
-bundle = bundle.replace('path:window.location.pathname+"socket.io"', 'path:window.location.pathname+"socket.io",query:{replay:new URLSearchParams(window.location.search).get("replay")||""}');
+bundle = bundle.replace('path:window.location.pathname+"socket.io"', 'path:window.location.pathname+"socket.io",query:{replay:new URLSearchParams(window.location.search).get("replay")||"",replayMap:new URLSearchParams(window.location.search).get("map")||""}');
 bundle = bundle.replace(/(\w+)\.position\.y\+=(\w+)\.height\+\.6/, '$1.position.y+=$2.height+.6;$1.scale.set(3.4,.68,1)');
 app.get('/', (_req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/rules-source',(_req,res)=>{const source=path.join(path.dirname(rulesPath),'RULES.zh-CN.md');res.type('text/plain').sendFile(fs.existsSync(source)?source:path.join(projectRoot,'competition/RULES.zh-CN.md'));});
 app.get('/rules', (_req,res)=>res.sendFile(path.join(__dirname,'rules.html')));
-for(const file of ['effects.js','spectator-camera.js','replay.js','replay-timeline.js','player-motion.js','spectator-actors.js','world-objects.js','native-items.js','native-poses.js','map-loading.js','replay-codec.js','paged-replay.js','actor-roster.js','arena-ui.css']) app.get('/'+file, (_req,res)=>res.sendFile(path.join(__dirname,file)));
+for(const file of ['effects.js','spectator-camera.js','replay.js','replay-timeline.js','player-motion.js','spectator-actors.js','world-objects.js','native-items.js','native-poses.js','map-loading.js','replay-codec.js','paged-replay.js','replay-request.js','replay-map-loader.js','actor-roster.js','arena-ui.css']) app.get('/'+file, (_req,res)=>res.sendFile(path.join(__dirname,file)));
 app.get('/api/native-items',(_req,res)=>res.sendFile(path.join(projectRoot,'runs/native-assets-1.21/items.json')));
 app.use('/native-assets',express.static(path.join(projectRoot,'downloads/minecraft-assets-1.21/assets/minecraft')));
 app.get('/favicon.ico', (_req,res)=>res.status(204).end());
@@ -172,7 +166,7 @@ io.on('connection', async socket => {
       if(typeof id!=='string'||!/^[a-f0-9-]{36}$/.test(id))throw new Error('比赛编号无效');
       const summary=path.join(replayDir,'results',id+'.json');
       const record=JSON.parse(fs.readFileSync(fs.existsSync(summary)?summary:path.join(replayDir,id+'.json'),'utf8'));
-      replayWorld.stream(socket,record);
+      replayWorld.stream(socket,record,{pagedMap:socket.handshake.query.replayMap==='http-v1'});
     } catch(error) { socket.emit('replayError',error.message); }
     return;
   }

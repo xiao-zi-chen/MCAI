@@ -2,5 +2,8 @@
   "name": "local-bedwars-spectator",
   "private": true,
   "type": "commonjs",
-  "dependencies": { "prismarine-viewer": "1.33.0" }
+  "dependencies": {
+    "negotiator": "0.6.4",
+    "prismarine-viewer": "1.33.0"
+  }
 }
