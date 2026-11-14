@@ -1,7 +1,7 @@
 const scene=document.querySelector('#scene'),seek=document.querySelector('#seek'),play=document.querySelector('#play'),loading=document.querySelector('#loading');
 const avatarLayer=new SpectatorActors(scene);
 const camera=new SpectatorCamera(scene,{defaultMode:new URLSearchParams(location.search).get('view')||'auto',onStatus:s=>document.querySelector('#camera-status').textContent=s});camera.bind();
-let pages,fetchingFrame=-1;
+let pages,fetchingFrame=-1,mapLoader,mapSource,loadController;
 const frameAt=i=>pages?.get(i);
 let rules,record,index=0,playing=false,last=0,clock=0,ready=false,timeline,renderView=null,loadSequence=0,lastDraw=-1,actors=new Set(),ReplayVec;
 const fmt=s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(Math.floor(s%60)).padStart(2,'0');
@@ -14,8 +14,8 @@ function pendingRespawn(player,tick){
   while(lo<hi){const mid=(lo+hi)>>1;if(history[mid].tick<=tick)lo=mid+1;else hi=mid;}
   return lo>0&&history[lo-1].pending;
 }
-function error(message){loading.hidden=false;loading.textContent=message;playing=false;play.disabled=true;seek.disabled=true;document.querySelector('#retry-load').hidden=false;}
-async function json(url,signal){const timeout=AbortSignal.timeout(20000);const r=await fetch(url,{signal:signal?AbortSignal.any([signal,timeout]):timeout});if(!r.ok)throw new Error('读取比赛失败（'+r.status+'）');return r.json();}
+function error(message){loading.hidden=false;loading.textContent=message;playing=false;play.textContent='播放';play.disabled=true;seek.disabled=true;document.querySelector('#retry-load').hidden=false;}
+function json(url,signal){return ReplayRequest.json(url,{signal});}
 function jump(seconds){if(!ready)return;const target=Math.max(0,Math.min(record.duration_ticks,seconds*20));let lo=0,hi=record.frame_count-1;while(lo<hi){const mid=Math.ceil((lo+hi)/2);if(record.frame_ticks[mid]<=target)lo=mid;else hi=mid-1;}index=lo;clock=record.frame_ticks[index]/20;seek.value=index;camera.snap=true;lastDraw=-1;bufferFrame(index);}
 function drawFrame(){
   const frame=frameAt(index);if(!frame)return;
@@ -38,11 +38,13 @@ function drawActors(){
 }
 async function load(id){
   const sequence=++loadSequence;
+  loadController?.abort();const controller=loadController=new AbortController();
+  mapLoader?.close();mapLoader=null;mapSource=null;scene.src='about:blank';
   pages?.close();pages=null;fetchingFrame=-1;ready=false;playing=false;record=null;play.disabled=true;seek.disabled=true;loading.hidden=false;loading.textContent='正在载入比赛与真实地图…';document.querySelector('#retry-load').hidden=true;
   try{
     let data;const deadline=Date.now()+180000;
     for(;;){
-      const response=await fetch('/api/replays/'+encodeURIComponent(id)+'/meta',{signal:AbortSignal.timeout(20000)});data=await response.json();if(sequence!==loadSequence)return;
+      const result=await ReplayRequest.readJson('/api/replays/'+encodeURIComponent(id)+'/meta',{signal:controller.signal});const response=result.response;data=result.data;if(sequence!==loadSequence)return;
       if(response.status===202){if(Date.now()>deadline)throw Error('录像准备超时，请点击重新加载');loading.textContent='正在准备完整录像'+(data.total?' '+Math.floor(data.processed*100/data.total)+'%':'，请稍候…');await new Promise(r=>setTimeout(r,750));continue;}
       if(!response.ok)throw Error(data.error||'录像索引无法读取');break;
     }
@@ -70,7 +72,7 @@ async function load(id){
     document.querySelector('#replay-summary').textContent=Object.keys(rules.map.teams).length+' 队 · '+record.actors.length+' 位 AI · '+fmt(record.duration_ticks/20)+'\n'+record.events.filter(e=>e.type==='bed_destroyed'&&e.player).length+' 次拆床 · '+counts('upgrade')+' 次升级 · '+counts('block_place')+' 次搭建';
     seek.max=record.frame_count-1;seek.value=index;
     document.querySelector('#result').textContent=record.status==='test'?'规则验收 · 非比赛':record.status!=='complete'?'对局中断':record.winner?teamName(record.winner)+'获胜':'平局';
-    scene.src='/scene/?replay='+encodeURIComponent(id);
+    scene.src='/scene/?replay='+encodeURIComponent(id)+'&map=http-v1';
     const params=new URLSearchParams(location.search);params.set('match',id);history.replaceState(null,'','/replays?'+params);
     playing=params.get('autoplay')!=='0';play.textContent=playing?'暂停':'播放';
   }catch(e){if(sequence===loadSequence)error(e.message);}
@@ -79,7 +81,7 @@ seek.oninput=()=>{if(!ready)return;index=+seek.value;clock=record.frame_ticks[in
 play.onclick=()=>{if(!ready)return;if(index>=record.frame_count-1){index=0;clock=record.frame_ticks[0]/20;lastDraw=-1;camera.snap=true;}playing=!playing;play.textContent=playing?'暂停':'播放';};
 document.querySelector('#back-five').onclick=()=>jump(clock-5);document.querySelector('#forward-five').onclick=()=>jump(clock+5);
 document.querySelector('#team-camera').onchange=e=>{if(e.target.value)camera.setMode(e.target.value);};
-document.querySelector('#retry-load').onclick=()=>{const id=document.querySelector('#matches').value;if(id)load(id);else refreshList().catch(e=>error(e.message));};
+document.querySelector('#retry-load').onclick=()=>{if(mapLoader?.error){document.querySelector('#retry-load').hidden=true;startMap();return;}const id=document.querySelector('#matches').value;if(id)load(id);else refreshList().catch(e=>error(e.message));};
 document.querySelector('#fullscreen').onclick=()=>{const action=document.fullscreenElement?document.exitFullscreen():document.querySelector('.playback').requestFullscreen();action.catch(()=>{});};
 document.addEventListener('keydown',e=>{if(['INPUT','SELECT','TEXTAREA','BUTTON'].includes(e.target.tagName))return;if(e.code==='Space'){e.preventDefault();play.click();}else if(e.code==='ArrowLeft'){e.preventDefault();jump(clock-5);}else if(e.code==='ArrowRight'){e.preventDefault();jump(clock+5);}});
 function bufferFrame(wanted){
@@ -88,12 +90,21 @@ function bufferFrame(wanted){
  loading.hidden=false;loading.textContent='正在读取这一段录像…';
  pages.ensure(wanted).then(()=>{if(sequence===loadSequence){lastDraw=-1;if(ready)loading.hidden=true;}}).catch(e=>{if(sequence===loadSequence&&e.name!=='AbortError')error(e.message);}).finally(()=>{if(fetchingFrame===wanted)fetchingFrame=-1;});
 }
+function startMap(){
+ const active=mapLoader,sequence=loadSequence;
+ active.start().catch(e=>{if(sequence===loadSequence&&active===mapLoader&&e.name!=='AbortError')error(e.message);});
+}
 function animate(now){
   const v=scene.contentWindow?.localView;
   if(record&&!ready&&v){
-    if(v.error)error(v.error);
+    if(v.replay?.match_id===record.match_id&&v.replay.map_pages&&mapSource!==v.replay){
+      mapLoader?.close();mapLoader=null;mapSource=v.replay;
+      try{mapLoader=new ReplayMapLoader(v.replay.map_pages,{load:json,apply:c=>v.viewer.addColumn(c.x,c.z,c.chunk)});startMap();}
+      catch(e){v.error=e.message;error(e.message);}
+    }
+    if(v.error||mapLoader?.error)error(v.error||mapLoader.error.message);
     else{const total=v.replay?.chunks||0,loaded=Object.keys(v.viewer.world.loadedChunks).length,pending=v.viewer.world.sectionsOutstanding.size;loading.textContent=total?'正在载入地图 '+loaded+' / '+total+(pending?' · 整理场景 '+pending+' 块':''):'正在连接录像场景…';}
-    if(v.replay?.match_id===record.match_id&&Object.keys(v.viewer.world.loadedChunks).length>=v.replay.chunks&&v.viewer.world.sectionsOutstanding.size===0){
+    if(!v.error&&!mapLoader?.error&&(!v.replay?.map_pages||mapLoader?.completed.size===v.replay.map_pages.count)&&v.replay?.match_id===record.match_id&&Object.keys(v.viewer.world.loadedChunks).length>=v.replay.chunks&&v.viewer.world.sectionsOutstanding.size===0){
       ready=true;renderView=v;timeline=new ReplayTimeline(record,v.replay);const T=scene.contentWindow.THREE;
       ReplayVec=class extends T.Vector3{offset(x,y,z){return new ReplayVec(this.x+x,this.y+y,this.z+z)}};
       loading.hidden=true;play.disabled=false;seek.disabled=false;

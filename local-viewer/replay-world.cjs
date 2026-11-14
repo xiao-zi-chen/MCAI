@@ -27,9 +27,16 @@ class ReplayWorld {
       file=path.join(this.directory,legacy+'.json.gz');
     }
     if(!fs.existsSync(file))return null;
-    const snapshot=JSON.parse(zlib.gunzipSync(fs.readFileSync(file)).toString('utf8'));
+    const archive=fs.readFileSync(file);
+    const snapshot=JSON.parse(zlib.gunzipSync(archive).toString('utf8'));
+    snapshot.archiveKey=crypto.createHash('sha256').update(archive).digest('hex');
     snapshot.columns=new Map(snapshot.chunks.map(c=>[c.x+','+c.z,this.Chunk.fromJson(c.chunk)]));
     this.cache.set(key,snapshot);return snapshot;
+  }
+  mapChunk(key,index) {
+    if(!Number.isSafeInteger(index)||index<0)return null;
+    for(const snapshot of this.cache.values())if(snapshot.archiveKey===key)return snapshot.chunks[index]||null;
+    return null;
   }
   capture(bot,state) {
     if(state.phase!=='waiting'||this.read(this.rules))return;
@@ -76,13 +83,14 @@ class ReplayWorld {
     }
     return {match_id:record.match_id,initial,states,beds,chunks:snapshot.chunks.length,map_id:snapshot.map_id};
   }
-  stream(socket,record) {
+  stream(socket,record,{pagedMap=false}={}) {
     if(!record.rules)throw new Error('这份早期记录没有冻结地图，暂不能还原 3D 场景。');
     const snapshot=this.read(record.rules);
     if(!snapshot)throw new Error('还未保存这张地图的初始场景，请在本地比赛复位后重试。');
     const metadata=this.metadata(record,snapshot);
     socket.emit('version',snapshot.version);
-    for(const c of snapshot.chunks)socket.emit('loadChunk',c);
+    if(pagedMap)metadata.map_pages={format:1,key:snapshot.archiveKey,count:snapshot.chunks.length};
+    else for(const c of snapshot.chunks)socket.emit('loadChunk',c);
     socket.emit('position',{pos:{x:0,y:record.rules.map.surface_y,z:0},addMesh:false});
     // Merchant meshes use the same frozen map in SpectatorActors, including old replays.
     socket.emit('replayReady',metadata);
